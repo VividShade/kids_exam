@@ -9,7 +9,7 @@
     "d": "next dev",
     "b": "next build",
     "s": "next start",
-    "bs": "next biuld && next start",
+    "bs": "next build && next start",
     "lint": "eslint"
   },
   "dependencies": {
