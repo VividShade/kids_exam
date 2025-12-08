@@ -16,6 +16,36 @@ const QUIZZES: QuizLink[] = [
     description: '20문제로 구성된 영어/한국어 복습 퀴즈',
     questionsLabel: '20문제',
   },
+  {
+    slug: '/l',
+    title: 'A to Z Mysteries: The Lucky Lottery',
+    description: '20문제로 구성된 영어/한국어 복습 퀴즈',
+    questionsLabel: '20문제',
+  },
+  {
+    slug: '/m',
+    title: 'A to Z Mysteries: The Missing Mummy',
+    description: '20문제로 구성된 영어/한국어 복습 퀴즈',
+    questionsLabel: '20문제',
+  },
+  {
+    slug: '/n',
+    title: 'A to Z Mysteries: The Ninth Nugget',
+    description: '20문제로 구성된 영어/한국어 복습 퀴즈',
+    questionsLabel: '20문제',
+  },
+  {
+    slug: '/o',
+    title: 'A to Z Mysteries: The Orange Outlaw',
+    description: '20문제로 구성된 영어/한국어 복습 퀴즈',
+    questionsLabel: '20문제',
+  },
+  {
+    slug: '/p',
+    title: 'A to Z Mysteries: The Panda Puzzle',
+    description: '20문제로 구성된 영어/한국어 복습 퀴즈',
+    questionsLabel: '20문제',
+  },
 ];
 
 export const metadata: Metadata = {
