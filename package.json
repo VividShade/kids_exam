@@ -6,6 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "d": "next dev",
+    "b": "next build",
+    "s": "next start",
+    "bs": "next biuld && next start",
     "lint": "eslint"
   },
   "dependencies": {
