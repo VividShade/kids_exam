@@ -28,7 +28,7 @@ const QUESTIONS: Question[] = [
     questionEn: 'Where are Dink, Josh, and Ruth Rose at the beginning of the story?',
     questionKo: '이야기의 처음에 Dink, Josh, Ruth Rose는 어디에 있나요?',
     options: [
-      { key: 'A', textEn: "On Uncle Warren’s balcony in New York City", textKo: '뉴욕에 있는 Warren 삼촌의 발코니 위' },
+      { key: 'A', textEn: 'On Uncle Warren’s balcony in New York City', textKo: '뉴욕에 있는 Warren 삼촌의 발코니 위' },
       { key: 'B', textEn: 'In their school library', textKo: '학교 도서관 안' },
       { key: 'C', textEn: 'At a farm in the country', textKo: '시골 농장' },
       { key: 'D', textEn: 'Inside the Central Park Zoo', textKo: '센트럴 파크 동물원 안' },
@@ -43,7 +43,11 @@ const QUESTIONS: Question[] = [
     options: [
       { key: 'A', textEn: 'To celebrate New Year’s Day', textKo: '새해를 축하하기 위해' },
       { key: 'B', textEn: 'To welcome new neighbors', textKo: '새 이웃을 환영하기 위해' },
-      { key: 'C', textEn: 'To raise money for the Central Park Zoo', textKo: '센트럴 파크 동물원을 위한 기금을 모으기 위해' },
+      {
+        key: 'C',
+        textEn: 'To raise money for the Central Park Zoo',
+        textKo: '센트럴 파크 동물원을 위한 기금을 모으기 위해',
+      },
       { key: 'D', textEn: 'To protest traffic in the city', textKo: '도시의 교통을 항의하기 위해' },
       { key: 'E', textEn: 'To celebrate Uncle Warren’s birthday', textKo: 'Warren 삼촌의 생일을 축하하기 위해' },
     ],
@@ -68,7 +72,11 @@ const QUESTIONS: Question[] = [
     questionKo: '훔쳐진 그림에는 무엇이 그려져 있나요?',
     options: [
       { key: 'A', textEn: 'A tiger in a jungle', textKo: '정글 속 호랑이' },
-      { key: 'B', textEn: 'A rowboat floating on a pond with lily pads', textKo: '수련이 있는 연못 위에 떠 있는 조각배' },
+      {
+        key: 'B',
+        textEn: 'A rowboat floating on a pond with lily pads',
+        textKo: '수련이 있는 연못 위에 떠 있는 조각배',
+      },
       { key: 'C', textEn: 'A tall building in New York City', textKo: '뉴욕의 높은 빌딩' },
       { key: 'D', textEn: 'A girl feeding birds in a park', textKo: '공원에서 새에게 먹이를 주는 소녀' },
       { key: 'E', textEn: 'A stormy ocean', textKo: '폭풍우 치는 바다' },
@@ -160,7 +168,11 @@ const QUESTIONS: Question[] = [
     options: [
       { key: 'A', textEn: 'A telescope', textKo: '망원경' },
       { key: 'B', textEn: 'A pair of binoculars', textKo: '쌍안경' },
-      { key: 'C', textEn: 'A large round magnifying glass on the balcony door', textKo: '발코니 문에 붙어 있는 둥근 확대경' },
+      {
+        key: 'C',
+        textEn: 'A large round magnifying glass on the balcony door',
+        textKo: '발코니 문에 붙어 있는 둥근 확대경',
+      },
       { key: 'D', textEn: 'A camera with a zoom lens', textKo: '줌 렌즈가 달린 카메라' },
       { key: 'E', textEn: 'A pair of special glasses', textKo: '특별한 안경' },
     ],
@@ -199,8 +211,8 @@ const QUESTIONS: Question[] = [
     options: [
       { key: 'A', textEn: 'Evans Animal Shows', textKo: 'Evans Animal Shows' },
       { key: 'B', textEn: 'Central Park Animal Acts', textKo: 'Central Park Animal Acts' },
-      { key: 'C', textEn: "Fowler’s Farm Animal Acts", textKo: 'Fowler’s Farm Animal Acts' },
-      { key: 'D', textEn: "Booker’s Circus Animals", textKo: 'Booker’s Circus Animals' },
+      { key: 'C', textEn: 'Fowler’s Farm Animal Acts', textKo: 'Fowler’s Farm Animal Acts' },
+      { key: 'D', textEn: 'Booker’s Circus Animals', textKo: 'Booker’s Circus Animals' },
       { key: 'E', textEn: 'New York Party Animals', textKo: 'New York Party Animals' },
     ],
     correctKey: 'C',
@@ -251,9 +263,13 @@ const QUESTIONS: Question[] = [
     options: [
       { key: 'A', textEn: 'Under Uncle Warren’s bed', textKo: 'Warren 삼촌 침대 밑' },
       { key: 'B', textEn: 'In Miss Booker’s basement apartment', textKo: 'Miss Booker의 지하 아파트' },
-      { key: 'C', textEn: "In Roger’s desk in the lobby", textKo: '로비에 있는 Roger의 책상 속' },
-      { key: 'D', textEn: "Under a false bottom in Ollie’s cage in the trailer", textKo: '트레일러 안, Ollie 우리 바닥의 가짜 바닥 아래' },
-      { key: 'E', textEn: "Behind a picture in Mrs. Cornelius’s living room", textKo: 'Mrs. Cornelius 거실 그림 뒤' },
+      { key: 'C', textEn: 'In Roger’s desk in the lobby', textKo: '로비에 있는 Roger의 책상 속' },
+      {
+        key: 'D',
+        textEn: 'Under a false bottom in Ollie’s cage in the trailer',
+        textKo: '트레일러 안, Ollie 우리 바닥의 가짜 바닥 아래',
+      },
+      { key: 'E', textEn: 'Behind a picture in Mrs. Cornelius’s living room', textKo: 'Mrs. Cornelius 거실 그림 뒤' },
     ],
     correctKey: 'D',
   },
@@ -289,7 +305,7 @@ export default function OrangeOutlawQuizPage() {
   const [answers, setAnswers] = useState<Record<number, ChoiceKey | null>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
-  const [langMode, setLangMode] = useState<LanguageMode>('both');
+  const [langMode, setLangMode] = useState<LanguageMode>('en');
 
   const handleSelect = (questionId: number, key: ChoiceKey) => {
     setAnswers((prev) => ({ ...prev, [questionId]: key }));
@@ -476,7 +492,8 @@ export default function OrangeOutlawQuizPage() {
                     <span className="font-semibold text-green-600">✅ 정답입니다!</span>
                   ) : (
                     <span className="text-red-600">
-                      ❌ 오답이에요. 정답은 <strong>{correctOption.key}</strong>번 ({correctOption.textEn} / {correctOption.textKo}) 입니다.
+                      ❌ 오답이에요. 정답은 <strong>{correctOption.key}</strong>번 ({correctOption.textEn} /{' '}
+                      {correctOption.textKo}) 입니다.
                     </span>
                   )}
                 </div>

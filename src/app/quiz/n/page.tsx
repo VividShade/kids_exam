@@ -289,7 +289,7 @@ export default function NinthNuggetQuizPage() {
   const [answers, setAnswers] = useState<Record<number, ChoiceKey | null>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
-  const [langMode, setLangMode] = useState<LanguageMode>('both');
+  const [langMode, setLangMode] = useState<LanguageMode>('en');
 
   const handleSelect = (questionId: number, key: ChoiceKey) => {
     setAnswers((prev) => ({ ...prev, [questionId]: key }));
@@ -476,7 +476,8 @@ export default function NinthNuggetQuizPage() {
                     <span className="font-semibold text-green-600">✅ 정답입니다!</span>
                   ) : (
                     <span className="text-red-600">
-                      ❌ 오답이에요. 정답은 <strong>{correctOption.key}</strong>번 ({correctOption.textEn} / {correctOption.textKo}) 입니다.
+                      ❌ 오답이에요. 정답은 <strong>{correctOption.key}</strong>번 ({correctOption.textEn} /{' '}
+                      {correctOption.textKo}) 입니다.
                     </span>
                   )}
                 </div>

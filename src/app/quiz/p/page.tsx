@@ -41,7 +41,11 @@ const QUESTIONS: Question[] = [
     questionEn: 'What was special about Ruth Rose’s clothes that day?',
     questionKo: '그날 루스 로즈의 옷차림은 어떤 점이 특별했나요?',
     options: [
-      { key: 'A', textEn: 'She wore all sky blue from head to toe', textKo: '머리부터 발끝까지 하늘색 한 가지 색만 입었다' },
+      {
+        key: 'A',
+        textEn: 'She wore all sky blue from head to toe',
+        textKo: '머리부터 발끝까지 하늘색 한 가지 색만 입었다',
+      },
       { key: 'B', textEn: 'She wore a panda costume', textKo: '판다 의상을 입었다' },
       { key: 'C', textEn: 'She wore her school uniform', textKo: '학교 교복을 입었다' },
       { key: 'D', textEn: 'She wore black and white like a panda', textKo: '판다처럼 검은색과 흰색만 입었다' },
@@ -95,7 +99,11 @@ const QUESTIONS: Question[] = [
     options: [
       { key: 'A', textEn: 'From Tom Steele’s office', textKo: '톰 스틸의 사무실에서' },
       { key: 'B', textEn: 'From ticket sales at the petting zoo', textKo: '애완동물원 입장료에서' },
-      { key: 'C', textEn: 'From the money Winifred Francis left to Green Lawn', textKo: '위니프레드 프랜시스가 그린론에 남긴 돈에서' },
+      {
+        key: 'C',
+        textEn: 'From the money Winifred Francis left to Green Lawn',
+        textKo: '위니프레드 프랜시스가 그린론에 남긴 돈에서',
+      },
       { key: 'D', textEn: 'From the police station’s safe', textKo: '경찰서 금고에서' },
       { key: 'E', textEn: 'From Irene’s savings', textKo: '아이린의 저금에서' },
     ],
@@ -120,7 +128,11 @@ const QUESTIONS: Question[] = [
     questionKo: '루스 로즈가 찍은 영상을 다시 보았을 때, 아이들은 핑에 대해 무엇을 알아냈나요?',
     options: [
       { key: 'A', textEn: 'Ping was afraid of water', textKo: '핑은 물을 무서워했다' },
-      { key: 'B', textEn: 'Ping was looking toward the microphone area', textKo: '핑은 마이크가 있는 쪽을 바라보고 있었다' },
+      {
+        key: 'B',
+        textEn: 'Ping was looking toward the microphone area',
+        textKo: '핑은 마이크가 있는 쪽을 바라보고 있었다',
+      },
       { key: 'C', textEn: 'Ping was smiling at the crowd', textKo: '핑은 관중을 향해 웃고 있었다' },
       { key: 'D', textEn: 'Ping was trying to escape from her cave', textKo: '핑은 동굴에서 도망치려고 했다' },
       { key: 'E', textEn: 'Ping was eating bamboo the whole time', textKo: '핑은 내내 대나무만 먹고 있었다' },
@@ -155,13 +167,22 @@ const QUESTIONS: Question[] = [
   },
   {
     id: 11,
-    questionEn: 'Why did the kids say they were “writing a story for the Panda Paper” when they questioned Irene and Tom?',
+    questionEn:
+      'Why did the kids say they were “writing a story for the Panda Paper” when they questioned Irene and Tom?',
     questionKo: '아이들이 아이린과 톰을 조사할 때 “판다 페이퍼에 실을 기사”를 쓴다고 한 이유는 무엇인가요?',
     options: [
       { key: 'A', textEn: 'They really worked for the newspaper', textKo: '실제로 신문사에서 일하기 때문에' },
       { key: 'B', textEn: 'They wanted free newspapers', textKo: '무료 신문을 받기 위해' },
-      { key: 'C', textEn: 'They wanted to make the suspects feel important', textKo: '어른들이 기분이 좋아지게 하려고' },
-      { key: 'D', textEn: 'They needed an excuse so the adults wouldn’t be suspicious', textKo: '어른들이 의심하지 않도록 핑계가 필요해서' },
+      {
+        key: 'C',
+        textEn: 'They wanted to make the suspects feel important',
+        textKo: '어른들이 기분이 좋아지게 하려고',
+      },
+      {
+        key: 'D',
+        textEn: 'They needed an excuse so the adults wouldn’t be suspicious',
+        textKo: '어른들이 의심하지 않도록 핑계가 필요해서',
+      },
       { key: 'E', textEn: 'They wanted to win a writing contest', textKo: '글짓기 대회에서 우승하려고' },
     ],
     correctKey: 'D',
@@ -172,7 +193,11 @@ const QUESTIONS: Question[] = [
     questionKo: '톰 스틸의 사무실에서 아이들이 협박 편지를 떠올리게 된 이유가 된 물건은 무엇인가요?',
     options: [
       { key: 'A', textEn: 'A stack of bamboo stalks in the corner', textKo: '구석에 쌓인 대나무' },
-      { key: 'B', textEn: 'Newspapers with holes and scissors and glue on his desk', textKo: '책상 위의 구멍 뚫린 신문들과 가위, 풀' },
+      {
+        key: 'B',
+        textEn: 'Newspapers with holes and scissors and glue on his desk',
+        textKo: '책상 위의 구멍 뚫린 신문들과 가위, 풀',
+      },
       { key: 'C', textEn: 'A secret map of Goose Island', textKo: '구스 아일랜드 비밀 지도' },
       { key: 'D', textEn: 'A photo of Winnie on the wall', textKo: '벽에 걸린 위니 사진' },
       { key: 'E', textEn: 'A box labeled “ransom letters”', textKo: '“몸값 편지”라고 쓰인 상자' },
@@ -199,7 +224,11 @@ const QUESTIONS: Question[] = [
     options: [
       { key: 'A', textEn: 'It was far away from Panda Park', textKo: '판다 공원에서 아주 멀리 떨어져 있어서' },
       { key: 'B', textEn: 'It had many empty rooms and a big basement', textKo: '비어 있는 방과 큰 지하실이 많아서' },
-      { key: 'C', textEn: 'It was already noisy and smelly, so a crying panda wouldn’t be noticed', textKo: '이미 시끄럽고 냄새도 나서 아기 판다 울음소리가 티 나지 않기 때문에' },
+      {
+        key: 'C',
+        textEn: 'It was already noisy and smelly, so a crying panda wouldn’t be noticed',
+        textKo: '이미 시끄럽고 냄새도 나서 아기 판다 울음소리가 티 나지 않기 때문에',
+      },
       { key: 'D', textEn: 'It belonged to Irene', textKo: '아이린이 그 건물 주인이기 때문에' },
       { key: 'E', textEn: 'It was always closed on Sundays', textKo: '일요일마다 항상 문을 닫기 때문에' },
     ],
@@ -211,8 +240,16 @@ const QUESTIONS: Question[] = [
     questionKo: '아이들은 어떻게 해서 피트니스 센터 안의 어두운 계단으로 들어가게 되었나요?',
     options: [
       { key: 'A', textEn: 'Flip invited them in', textKo: '플립이 직접 안으로 초대해서' },
-      { key: 'B', textEn: 'They followed Irene through a secret passage', textKo: '아이린을 따라 비밀 통로로 들어가서' },
-      { key: 'C', textEn: 'They slipped through an unmarked door during Adult Swim', textKo: '어른 수영 시간 동안 표시 없는 문으로 살짝 들어가서' },
+      {
+        key: 'B',
+        textEn: 'They followed Irene through a secret passage',
+        textKo: '아이린을 따라 비밀 통로로 들어가서',
+      },
+      {
+        key: 'C',
+        textEn: 'They slipped through an unmarked door during Adult Swim',
+        textKo: '어른 수영 시간 동안 표시 없는 문으로 살짝 들어가서',
+      },
       { key: 'D', textEn: 'They broke a locked door', textKo: '자물쇠를 부수고 억지로 열어서' },
       { key: 'E', textEn: 'They came in from the bowling alley', textKo: '볼링장에서 올라와서' },
     ],
@@ -238,7 +275,11 @@ const QUESTIONS: Question[] = [
     options: [
       { key: 'A', textEn: 'In Tom Steele’s office closet', textKo: '톰 스틸 사무실의 옷장 안' },
       { key: 'B', textEn: 'In Irene’s duck-feeding area', textKo: '아이린이 오리에게 먹이를 주는 곳' },
-      { key: 'C', textEn: 'In an old coal cellar under the fitness center', textKo: '피트니스 센터 아래의 오래된 석탄 저장고' },
+      {
+        key: 'C',
+        textEn: 'In an old coal cellar under the fitness center',
+        textKo: '피트니스 센터 아래의 오래된 석탄 저장고',
+      },
       { key: 'D', textEn: 'In the Book Nook bookstore', textKo: '북 누크 서점 안' },
       { key: 'E', textEn: 'In the hollow tree on Goose Island', textKo: '구스 아일랜드의 속이 빈 나무 안' },
     ],
@@ -250,8 +291,16 @@ const QUESTIONS: Question[] = [
     questionKo: '아이들은 석탄 저장고에서 어떻게 탈출구를 만들었나요?',
     options: [
       { key: 'A', textEn: 'They dug a tunnel with their hands', textKo: '손으로 땅을 파서 터널을 만들었다' },
-      { key: 'B', textEn: 'They broke open a coal chute and built a pile of coal to climb up', textKo: '석탄 슈트를 부수고 석탄을 쌓아 올라갔다' },
-      { key: 'C', textEn: 'They shouted until someone heard them', textKo: '계속 소리 질러서 누군가 들을 때까지 기다렸다' },
+      {
+        key: 'B',
+        textEn: 'They broke open a coal chute and built a pile of coal to climb up',
+        textKo: '석탄 슈트를 부수고 석탄을 쌓아 올라갔다',
+      },
+      {
+        key: 'C',
+        textEn: 'They shouted until someone heard them',
+        textKo: '계속 소리 질러서 누군가 들을 때까지 기다렸다',
+      },
       { key: 'D', textEn: 'They picked the lock on the trapdoor', textKo: '바닥 문 자물쇠를 땄다' },
       { key: 'E', textEn: 'They used a hidden elevator', textKo: '숨겨진 엘리베이터를 사용했다' },
     ],
@@ -276,7 +325,11 @@ const QUESTIONS: Question[] = [
     questionKo: '아이들은 플립이 일부 징역 대신 할 수 있는 봉사활동으로 무엇을 제안했나요?',
     options: [
       { key: 'A', textEn: 'Clean the coal cellar and the pool', textKo: '석탄 저장고와 수영장을 청소하게 하기' },
-      { key: 'B', textEn: 'Teach free gymnastics to kids and help seniors exercise', textKo: '아이들에게 무료 체조를 가르치고, 노인들에게 운동을 도와주게 하기' },
+      {
+        key: 'B',
+        textEn: 'Teach free gymnastics to kids and help seniors exercise',
+        textKo: '아이들에게 무료 체조를 가르치고, 노인들에게 운동을 도와주게 하기',
+      },
       { key: 'C', textEn: 'Work at the Book Nook bookstore', textKo: '북 누크 서점에서 일하게 하기' },
       { key: 'D', textEn: 'Guard the panda enclosure at night', textKo: '밤마다 판다 우리를 지키게 하기' },
       { key: 'E', textEn: 'Deliver the Panda Paper to every house', textKo: '판다 페이퍼를 집집마다 배달하게 하기' },
@@ -289,7 +342,7 @@ export default function PandaPuzzleQuizPage() {
   const [answers, setAnswers] = useState<Record<number, ChoiceKey | null>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
-  const [langMode, setLangMode] = useState<LanguageMode>('both');
+  const [langMode, setLangMode] = useState<LanguageMode>('en');
 
   const handleSelect = (questionId: number, key: ChoiceKey) => {
     setAnswers((prev) => ({ ...prev, [questionId]: key }));
@@ -476,7 +529,8 @@ export default function PandaPuzzleQuizPage() {
                     <span className="font-semibold text-green-600">✅ 정답입니다!</span>
                   ) : (
                     <span className="text-red-600">
-                      ❌ 오답이에요. 정답은 <strong>{correctOption.key}</strong>번 ({correctOption.textEn} / {correctOption.textKo}) 입니다.
+                      ❌ 오답이에요. 정답은 <strong>{correctOption.key}</strong>번 ({correctOption.textEn} /{' '}
+                      {correctOption.textKo}) 입니다.
                     </span>
                   )}
                 </div>

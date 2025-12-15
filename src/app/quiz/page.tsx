@@ -11,37 +11,37 @@ type QuizLink = {
 
 const QUIZZES: QuizLink[] = [
   {
-    slug: '/k',
+    slug: '/quiz/k',
     title: 'A to Z Mysteries: The Kidnapped King',
     description: '20문제로 구성된 영어/한국어 복습 퀴즈',
     questionsLabel: '20문제',
   },
   {
-    slug: '/l',
+    slug: '/quiz/l',
     title: 'A to Z Mysteries: The Lucky Lottery',
     description: '20문제로 구성된 영어/한국어 복습 퀴즈',
     questionsLabel: '20문제',
   },
   {
-    slug: '/m',
+    slug: '/quiz/m',
     title: 'A to Z Mysteries: The Missing Mummy',
     description: '20문제로 구성된 영어/한국어 복습 퀴즈',
     questionsLabel: '20문제',
   },
   {
-    slug: '/n',
+    slug: '/quiz/n',
     title: 'A to Z Mysteries: The Ninth Nugget',
     description: '20문제로 구성된 영어/한국어 복습 퀴즈',
     questionsLabel: '20문제',
   },
   {
-    slug: '/o',
+    slug: '/quiz/o',
     title: 'A to Z Mysteries: The Orange Outlaw',
     description: '20문제로 구성된 영어/한국어 복습 퀴즈',
     questionsLabel: '20문제',
   },
   {
-    slug: '/p',
+    slug: '/quiz/p',
     title: 'A to Z Mysteries: The Panda Puzzle',
     description: '20문제로 구성된 영어/한국어 복습 퀴즈',
     questionsLabel: '20문제',

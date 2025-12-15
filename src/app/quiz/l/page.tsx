@@ -69,7 +69,11 @@ const QUESTIONS: Question[] = [
     options: [
       { key: 'A', textEn: 'A box of cookies', textKo: '쿠키 상자' },
       { key: 'B', textEn: 'A new toy', textKo: '새 장난감' },
-      { key: 'C', textEn: 'A Christmas card with seven lottery tickets', textKo: '복권 7장이 들어 있는 크리스마스 카드' },
+      {
+        key: 'C',
+        textEn: 'A Christmas card with seven lottery tickets',
+        textKo: '복권 7장이 들어 있는 크리스마스 카드',
+      },
       { key: 'D', textEn: 'A pair of mittens', textKo: '털장갑 한 켤레' },
       { key: 'E', textEn: 'A book of Christmas stories', textKo: '크리스마스 이야기 책' },
     ],
@@ -82,8 +86,16 @@ const QUESTIONS: Question[] = [
     options: [
       { key: 'A', textEn: 'It is Lucky’s first lottery ticket ever', textKo: '럭키가 받은 첫 번째 복권이기 때문에' },
       { key: 'B', textEn: 'The winning numbers are Hector’s birthday', textKo: '당첨 번호가 헥터의 생일이기 때문에' },
-      { key: 'C', textEn: 'The ticket is worth seven million dollars', textKo: '복권이 700만 달러짜리 당첨권이기 때문에' },
-      { key: 'D', textEn: 'It is the last ticket Hector will ever buy', textKo: '헥터가 마지막으로 산 복권이기 때문에' },
+      {
+        key: 'C',
+        textEn: 'The ticket is worth seven million dollars',
+        textKo: '복권이 700만 달러짜리 당첨권이기 때문에',
+      },
+      {
+        key: 'D',
+        textEn: 'It is the last ticket Hector will ever buy',
+        textKo: '헥터가 마지막으로 산 복권이기 때문에',
+      },
       { key: 'E', textEn: 'It was bought on Christmas Day', textKo: '크리스마스 당일에 산 복권이기 때문에' },
     ],
     correctKey: 'C',
@@ -215,9 +227,21 @@ const QUESTIONS: Question[] = [
     questionKo: '도로시(“닷”)는 처음에 아이들에게 어떤 용의자 정보를 알려 주나요?',
     options: [
       { key: 'A', textEn: 'His name is Sam and he is a mailman', textKo: '이름은 샘이고 우편배달부라고 했다' },
-      { key: 'B', textEn: 'His name is Joe and he wore a bowling shirt', textKo: '이름은 조이고 볼링 셔츠를 입고 있었다고 했다' },
-      { key: 'C', textEn: 'His name is Mike and he works at Ellie’s', textKo: '이름은 마이크이고 엘리 식당에서 일한다고 했다' },
-      { key: 'D', textEn: 'His name is Tom and he lives at the Atrium', textKo: '이름은 톰이고 에이트리엄에 산다고 했다' },
+      {
+        key: 'B',
+        textEn: 'His name is Joe and he wore a bowling shirt',
+        textKo: '이름은 조이고 볼링 셔츠를 입고 있었다고 했다',
+      },
+      {
+        key: 'C',
+        textEn: 'His name is Mike and he works at Ellie’s',
+        textKo: '이름은 마이크이고 엘리 식당에서 일한다고 했다',
+      },
+      {
+        key: 'D',
+        textEn: 'His name is Tom and he lives at the Atrium',
+        textKo: '이름은 톰이고 에이트리엄에 산다고 했다',
+      },
       { key: 'E', textEn: 'His name is George and he owns a dog', textKo: '이름은 조지이고 개를 키운다고 했다' },
     ],
     correctKey: 'B',
@@ -230,7 +254,11 @@ const QUESTIONS: Question[] = [
       { key: 'A', textEn: 'The man in the picture is Hector', textKo: '그림 속 남자는 헥터다' },
       { key: 'B', textEn: 'The man in the picture is Officer Fallon', textKo: '그림 속 남자는 폴런 경관이다' },
       { key: 'C', textEn: 'The drawing looks like Lucky', textKo: '그림이 럭키를 닮았다' },
-      { key: 'D', textEn: 'The drawing looks like Josh, only older', textKo: '그림이 조시를 나이 든 모습으로 그린 것 같다' },
+      {
+        key: 'D',
+        textEn: 'The drawing looks like Josh, only older',
+        textKo: '그림이 조시를 나이 든 모습으로 그린 것 같다',
+      },
       { key: 'E', textEn: 'The drawing looks like Eric from the store', textKo: '그림이 가게 점원 에릭을 닮았다' },
     ],
     correctKey: 'D',
@@ -241,8 +269,16 @@ const QUESTIONS: Question[] = [
     questionKo: '슈퍼마켓 바닥에 많은 은박 나비넥타이가 흩어져 있는 것을 보고 아이들은 무엇을 알게 되나요?',
     options: [
       { key: 'A', textEn: 'They are decorations for a party', textKo: '파티 장식이라는 것' },
-      { key: 'B', textEn: 'Dot makes bow ties from tinfoil gum wrappers', textKo: '닷이 껌 포장지를 은박 나비넥타이 모양으로 접는다는 것' },
-      { key: 'C', textEn: 'Hector drops bow ties wherever he goes', textKo: '헥터가 가는 곳마다 나비넥타이를 떨어뜨린다는 것' },
+      {
+        key: 'B',
+        textEn: 'Dot makes bow ties from tinfoil gum wrappers',
+        textKo: '닷이 껌 포장지를 은박 나비넥타이 모양으로 접는다는 것',
+      },
+      {
+        key: 'C',
+        textEn: 'Hector drops bow ties wherever he goes',
+        textKo: '헥터가 가는 곳마다 나비넥타이를 떨어뜨린다는 것',
+      },
       { key: 'D', textEn: 'Pal likes to chew on tinfoil', textKo: '팰이 은박지를 씹는 것을 좋아한다는 것' },
       { key: 'E', textEn: 'The bow ties belong to Zelda Zoot', textKo: '그 나비넥타이들이 젤다 주트의 것이라는 것' },
     ],
@@ -255,7 +291,11 @@ const QUESTIONS: Question[] = [
     options: [
       { key: 'A', textEn: 'To follow Dot to her house', textKo: '닷을 집까지 몰래 따라가야겠다고' },
       { key: 'B', textEn: 'To send a letter to Hector', textKo: '헥터에게 편지를 써야겠다고' },
-      { key: 'C', textEn: 'To use fingerprints on the lottery ticket as proof', textKo: '복권에서 지문을 찾아 증거로 써야겠다고' },
+      {
+        key: 'C',
+        textEn: 'To use fingerprints on the lottery ticket as proof',
+        textKo: '복권에서 지문을 찾아 증거로 써야겠다고',
+      },
       { key: 'D', textEn: 'To dig in the snow for the ticket', textKo: '눈 속을 파서 복권을 찾아야겠다고' },
       { key: 'E', textEn: 'To ask Ellie to hide Dot’s money', textKo: '엘리에게 닷의 돈을 숨겨 달라고 부탁해야겠다고' },
     ],
@@ -293,7 +333,7 @@ export default function LotteryQuizPage() {
   const [answers, setAnswers] = useState<Record<number, ChoiceKey | null>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
-  const [langMode, setLangMode] = useState<LanguageMode>('both');
+  const [langMode, setLangMode] = useState<LanguageMode>('en');
 
   const handleSelect = (questionId: number, key: ChoiceKey) => {
     setAnswers((prev) => ({ ...prev, [questionId]: key }));
@@ -480,7 +520,8 @@ export default function LotteryQuizPage() {
                     <span className="font-semibold text-green-600">✅ 정답입니다!</span>
                   ) : (
                     <span className="text-red-600">
-                      ❌ 오답이에요. 정답은 <strong>{correctOption.key}</strong>번 ({correctOption.textEn} / {correctOption.textKo}) 입니다.
+                      ❌ 오답이에요. 정답은 <strong>{correctOption.key}</strong>번 ({correctOption.textEn} /{' '}
+                      {correctOption.textKo}) 입니다.
                     </span>
                   )}
                 </div>

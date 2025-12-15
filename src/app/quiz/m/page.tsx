@@ -95,7 +95,11 @@ const QUESTIONS: Question[] = [
     options: [
       { key: 'A', textEn: 'To show off to visitors', textKo: '방문객들에게 자랑하려고' },
       { key: 'B', textEn: 'Because they were afraid of thieves', textKo: '도둑이 무서워서' },
-      { key: 'C', textEn: 'Because they believed they needed them in the next life', textKo: '다음 세상에서도 필요하다고 믿었기 때문에' },
+      {
+        key: 'C',
+        textEn: 'Because they believed they needed them in the next life',
+        textKo: '다음 세상에서도 필요하다고 믿었기 때문에',
+      },
       { key: 'D', textEn: 'To help the museum later', textKo: '나중에 박물관에 주려고' },
       { key: 'E', textEn: 'To make the tomb look beautiful', textKo: '무덤 장식을 화려하게 하려고' },
     ],
@@ -107,7 +111,11 @@ const QUESTIONS: Question[] = [
     questionKo: '처음에 아이 미라를 훔쳐가는 사람은 누구인가요?',
     options: [
       { key: 'A', textEn: 'A boy with a hat', textKo: '모자를 쓴 남자아이' },
-      { key: 'B', textEn: 'A woman with long blonde hair and a baggy dress', textKo: '긴 금발 머리와 헐렁한 원피스를 입은 여자' },
+      {
+        key: 'B',
+        textEn: 'A woman with long blonde hair and a baggy dress',
+        textKo: '긴 금발 머리와 헐렁한 원피스를 입은 여자',
+      },
       { key: 'C', textEn: 'A man in a black suit', textKo: '검은 정장을 입은 남자' },
       { key: 'D', textEn: 'A girl with red hair', textKo: '빨간 머리 소녀' },
       { key: 'E', textEn: 'A museum guard', textKo: '박물관 경비원' },
@@ -121,7 +129,11 @@ const QUESTIONS: Question[] = [
     options: [
       { key: 'A', textEn: 'In the treasure chamber', textKo: '보물 방 안에서' },
       { key: 'B', textEn: 'In the cafeteria', textKo: '카페테리아에서' },
-      { key: 'C', textEn: 'In the ladies’ restroom on the changing table', textKo: '여자 화장실의 기저귀 가는 테이블 위에서' },
+      {
+        key: 'C',
+        textEn: 'In the ladies’ restroom on the changing table',
+        textKo: '여자 화장실의 기저귀 가는 테이블 위에서',
+      },
       { key: 'D', textEn: 'In the parking lot', textKo: '주차장에서' },
       { key: 'E', textEn: 'In the bank', textKo: '은행 안에서' },
     ],
@@ -134,7 +146,11 @@ const QUESTIONS: Question[] = [
     options: [
       { key: 'A', textEn: 'Someone locks them in on purpose', textKo: '누군가 일부러 문을 잠가서' },
       { key: 'B', textEn: 'The museum closes early', textKo: '박물관이 일찍 문을 닫아서' },
-      { key: 'C', textEn: 'An alarm is set off, and the door closes automatically', textKo: '경보가 울리자 문이 자동으로 닫혀서' },
+      {
+        key: 'C',
+        textEn: 'An alarm is set off, and the door closes automatically',
+        textKo: '경보가 울리자 문이 자동으로 닫혀서',
+      },
       { key: 'D', textEn: 'A power failure shuts the doors', textKo: '정전이 나서 문이 닫혀서' },
       { key: 'E', textEn: 'A mummy pushes the door shut', textKo: '미라가 문을 밀어서' },
     ],
@@ -148,7 +164,11 @@ const QUESTIONS: Question[] = [
       { key: 'A', textEn: 'Behind a mummy', textKo: '미라 뒤에' },
       { key: 'B', textEn: 'Under a bench', textKo: '벤치 아래에' },
       { key: 'C', textEn: 'Inside the sarcophagus', textKo: '관 안에' },
-      { key: 'D', textEn: 'In a small closet full of chairs and carpet squares', textKo: '접이식 의자와 카펫 조각이 있는 작은 벽장 안에' },
+      {
+        key: 'D',
+        textEn: 'In a small closet full of chairs and carpet squares',
+        textKo: '접이식 의자와 카펫 조각이 있는 작은 벽장 안에',
+      },
       { key: 'E', textEn: 'Behind the gold cases', textKo: '유리 진열장 뒤에' },
     ],
     correctKey: 'D',
@@ -233,7 +253,7 @@ const QUESTIONS: Question[] = [
   },
   {
     id: 17,
-    questionEn: "Where do the kids think the gold is hidden after Dink’s nightmare?",
+    questionEn: 'Where do the kids think the gold is hidden after Dink’s nightmare?',
     questionKo: '딩크의 악몽 이후, 아이들은 금이 어디에 숨겨져 있다고 생각하나요?',
     options: [
       { key: 'A', textEn: 'Under the museum floor', textKo: '박물관 바닥 밑' },
@@ -250,7 +270,11 @@ const QUESTIONS: Question[] = [
     questionKo: '주요 도둑 두 사람은 누구인가요?',
     options: [
       { key: 'A', textEn: 'Dr. Tweed and Aunt Frida', textKo: '트위드 박사와 프리다 이모' },
-      { key: 'B', textEn: 'Dr. Tweed and the woman with short dark hair from the restaurant', textKo: '트위드 박사와 식당의 짧은 검은 머리 여자' },
+      {
+        key: 'B',
+        textEn: 'Dr. Tweed and the woman with short dark hair from the restaurant',
+        textKo: '트위드 박사와 식당의 짧은 검은 머리 여자',
+      },
       { key: 'C', textEn: 'Aunt Frida and Dink', textKo: '프리다 이모와 딩크' },
       { key: 'D', textEn: "Josh's dad and a museum guard", textKo: '조쉬 아빠와 박물관 경비원' },
       { key: 'E', textEn: 'Officer Peters and Officer Washington', textKo: '피터스 경관과 워싱턴 경관' },
@@ -264,7 +288,11 @@ const QUESTIONS: Question[] = [
     options: [
       { key: 'A', textEn: 'Through the front doors', textKo: '정문으로 나가려고' },
       { key: 'B', textEn: 'By hiding in the cafeteria', textKo: '카페테리아에 숨으려고' },
-      { key: 'C', textEn: 'By jumping out through the plywood-covered hole into the park', textKo: '합판으로 막아 둔 벽 구멍을 통해 공원으로 뛰어나가려고' },
+      {
+        key: 'C',
+        textEn: 'By jumping out through the plywood-covered hole into the park',
+        textKo: '합판으로 막아 둔 벽 구멍을 통해 공원으로 뛰어나가려고',
+      },
       { key: 'D', textEn: 'By running up the stairs to the roof', textKo: '계단으로 올라가 지붕으로 도망치려고' },
       { key: 'E', textEn: 'By sneaking out a side door to the street', textKo: '옆문으로 나가 길가로 나가려고' },
     ],
@@ -277,7 +305,11 @@ const QUESTIONS: Question[] = [
     options: [
       { key: 'A', textEn: 'He gets away in a taxi', textKo: '택시를 타고 도망간다' },
       { key: 'B', textEn: 'He hides in the restroom', textKo: '화장실에 숨는다' },
-      { key: 'C', textEn: 'He falls into the goldfish pond and gets soaked', textKo: '금붕어 연못에 빠져 온몸이 흠뻑 젖는다' },
+      {
+        key: 'C',
+        textEn: 'He falls into the goldfish pond and gets soaked',
+        textKo: '금붕어 연못에 빠져 온몸이 흠뻑 젖는다',
+      },
       { key: 'D', textEn: 'He disappears in the crowd', textKo: '사람들 속으로 숨어 사라진다' },
       { key: 'E', textEn: 'He climbs a tree and escapes', textKo: '나무를 타고 올라가서 도망친다' },
     ],
@@ -289,7 +321,7 @@ export default function MummyQuizPage() {
   const [answers, setAnswers] = useState<Record<number, ChoiceKey | null>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
-  const [langMode, setLangMode] = useState<LanguageMode>('both');
+  const [langMode, setLangMode] = useState<LanguageMode>('en');
 
   const handleSelect = (questionId: number, key: ChoiceKey) => {
     setAnswers((prev) => ({ ...prev, [questionId]: key }));
@@ -476,7 +508,8 @@ export default function MummyQuizPage() {
                     <span className="font-semibold text-green-600">✅ 정답입니다!</span>
                   ) : (
                     <span className="text-red-600">
-                      ❌ 오답이에요. 정답은 <strong>{correctOption.key}</strong>번 ({correctOption.textEn} / {correctOption.textKo}) 입니다.
+                      ❌ 오답이에요. 정답은 <strong>{correctOption.key}</strong>번 ({correctOption.textEn} /{' '}
+                      {correctOption.textKo}) 입니다.
                     </span>
                   )}
                 </div>
