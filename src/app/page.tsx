@@ -7,6 +7,11 @@ type QuizLink = {
   label: string;
 };
 
+const summaryLinks: QuizLink[] = [
+  { href: '/soy/d/03/summary', label: 'soy/d/03/summary' },
+  { href: '/soy/d/04/summary', label: 'soy/d/04/summary' },
+];
+
 async function getSoyLinks(track: 'c' | 'd'): Promise<QuizLink[]> {
   const baseDir = path.join(process.cwd(), 'src/app/soy', track);
 
@@ -87,6 +92,7 @@ export default async function HomePage() {
         <div style={{ display: 'grid', gap: 14 }}>
           <LinkSection title="soy/c/**" links={cLinks} />
           <LinkSection title="soy/d/**" links={dLinks} />
+          <LinkSection title="soy/d/**/summary" links={summaryLinks} />
         </div>
       </div>
     </main>
