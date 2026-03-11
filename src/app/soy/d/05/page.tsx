@@ -33,452 +33,385 @@ type VocabRow = {
 };
 
 const questions: Question[] = [
-  // Part 1 - Multiple Choice
+  // Part 1: Word Meaning
   {
     id: 1,
     type: 'mc',
-    text: 'Someone who starts their own business',
-    options: ['custodian', 'entrepreneur', 'foundation', 'objective'],
+    text: 'To strongly hope to achieve something.',
+    options: ['donate', 'aspire', 'advocate', 'deliberate'],
     correctIndex: 1,
   },
   {
     id: 2,
     type: 'mc',
-    text: 'The act of putting money into something to make profit',
-    options: ['investment', 'penalty', 'rejection', 'incident'],
+    text: 'To create space for something.',
+    options: ['make room', 'incident', 'annual', 'orderly'],
     correctIndex: 0,
   },
   {
     id: 3,
     type: 'mc',
-    text: 'To refuse an offer',
-    options: ['conquer', 'click', 'turn down', 'impact'],
-    correctIndex: 2,
+    text: 'Feeling worried or anxious about something.',
+    options: ['disciplined', 'concerned', 'inventive', 'preliminary'],
+    correctIndex: 1,
   },
   {
     id: 4,
     type: 'mc',
-    text: 'The act of refusing to accept something',
-    options: ['rejection', 'foundation', 'impact', 'reward'],
+    text: 'To give money or goods to help others.',
+    options: ['donate', 'advocate', 'aspire', 'deliberate'],
     correctIndex: 0,
   },
   {
     id: 5,
     type: 'mc',
-    text: 'To suddenly understand something',
-    options: ['desensitize', 'click', 'conquer', 'quiver'],
-    correctIndex: 1,
+    text: 'Happening once every year.',
+    options: ['annual', 'preliminary', 'orderly', 'deliberate'],
+    correctIndex: 0,
   },
   {
     id: 6,
     type: 'mc',
-    text: 'In a way that affects your feelings',
-    options: ['generally', 'individually', 'personally', 'sly'],
-    correctIndex: 2,
+    text: 'An organization that helps people in need.',
+    options: ['charity', 'incident', 'non-profit', 'advocate'],
+    correctIndex: 0,
   },
   {
     id: 7,
     type: 'mc',
-    text: 'To make someone less sensitive to something',
-    options: ['impact', 'desensitize', 'conquer', 'quiver'],
-    correctIndex: 1,
+    text: 'Not intended to make a profit.',
+    options: ['non-profit', 'inventive', 'critical thinking', 'orderly'],
+    correctIndex: 0,
   },
   {
     id: 8,
     type: 'mc',
-    text: 'Likely to cause harm',
-    options: ['honorable', 'sly', 'menacing', 'preliminary'],
+    text: 'To compare something to understand it better.',
+    options: ['advocate', 'deliberate', 'put into perspective', 'incident'],
     correctIndex: 2,
   },
   {
     id: 9,
     type: 'mc',
-    text: 'A person who cleans and takes care of a school',
-    options: ['custodian', 'entrepreneur', 'maniac', 'judge'],
-    correctIndex: 0,
+    text: 'Not controlled by another country or authority.',
+    options: ['preliminary', 'independent', 'inventive', 'critical'],
+    correctIndex: 1,
   },
   {
     id: 10,
     type: 'mc',
-    text: 'An unpleasant or unusual event',
-    options: ['foundation', 'incident', 'investment', 'objective'],
-    correctIndex: 1,
+    text: 'Well organized and neat.',
+    options: ['orderly', 'immature', 'concerned', 'deliberate'],
+    correctIndex: 0,
   },
   {
     id: 11,
     type: 'mc',
-    text: 'Not letting others know your true intentions',
-    options: ['honest', 'sly', 'honorable', 'respectable'],
-    correctIndex: 1,
+    text: 'Behaving like a much younger person.',
+    options: ['disciplined', 'inventive', 'immature', 'annual'],
+    correctIndex: 2,
   },
   {
     id: 12,
     type: 'mc',
-    text: 'A punishment for breaking rules',
-    options: ['reward', 'penalty', 'investment', 'objective'],
-    correctIndex: 1,
+    text: 'Having strong self-control.',
+    options: ['disciplined', 'preliminary', 'concerned', 'incident'],
+    correctIndex: 0,
   },
   {
     id: 13,
     type: 'mc',
-    text: 'Coming before the final event',
-    options: ['preliminary', 'final', 'menacing', 'individual'],
-    correctIndex: 0,
+    text: 'An unusual or unpleasant event.',
+    options: ['charity', 'incident', 'annual', 'advocate'],
+    correctIndex: 1,
   },
   {
     id: 14,
     type: 'mc',
-    text: 'Shaking slightly',
-    options: ['conquer', 'quivering', 'impact', 'basis'],
-    correctIndex: 1,
+    text: 'Coming before the main event.',
+    options: ['preliminary', 'inventive', 'deliberate', 'independent'],
+    correctIndex: 0,
   },
   {
     id: 15,
     type: 'mc',
-    text: 'To take control by force',
-    options: ['conquer', 'click', 'reject', 'aim'],
+    text: 'Very good at creating new ideas.',
+    options: ['inventive', 'disciplined', 'orderly', 'concerned'],
     correctIndex: 0,
   },
   {
     id: 16,
     type: 'mc',
-    text: 'A person who behaves in an uncontrolled way',
-    options: ['entrepreneur', 'maniac', 'custodian', 'judge'],
+    text: 'Done on purpose.',
+    options: ['preliminary', 'deliberately', 'orderly', 'inventive'],
     correctIndex: 1,
   },
   {
     id: 17,
     type: 'mc',
-    text: 'The base idea something is built on',
-    options: ['impact', 'objective', 'foundation', 'investment'],
-    correctIndex: 2,
+    text: 'Work done to help others without pay.',
+    options: ['community service', 'charity', 'incident', 'annual'],
+    correctIndex: 0,
   },
   {
     id: 18,
     type: 'mc',
-    text: 'A goal someone plans to achieve',
-    options: ['objective', 'basis', 'denial', 'penalty'],
-    correctIndex: 0,
+    text: 'Extremely useful.',
+    options: ['deliberate', 'invaluable', 'immature', 'incident'],
+    correctIndex: 1,
   },
   {
     id: 19,
     type: 'mc',
-    text: 'A strong effect on someone',
-    options: ['impact', 'quiver', 'sly', 'episode'],
+    text: 'To publicly support an idea.',
+    options: ['advocate', 'deliberate', 'aspire', 'donate'],
     correctIndex: 0,
   },
   {
     id: 20,
     type: 'mc',
-    text: 'Honest and fair',
-    options: ['dishonorable', 'honorable', 'menacing', 'cunning'],
-    correctIndex: 1,
+    text: 'Thinking carefully about a problem.',
+    options: ['critical thinking', 'inventive', 'preliminary', 'annual'],
+    correctIndex: 0,
   },
 
-  // Part 2 - Synonym / Antonym
+  // Part 2: Synonym / Antonym
   {
     id: 21,
     type: 'mc',
-    text: 'Synonym of entrepreneur',
-    options: ['businessman', 'custodian', 'judge', 'janitor'],
+    text: 'Synonym of aspire',
+    options: ['desire', 'ignore', 'destroy', 'cancel'],
     correctIndex: 0,
   },
   {
     id: 22,
     type: 'mc',
-    text: 'Antonym of turn down',
-    options: ['reject', 'accept', 'deny', 'refuse'],
-    correctIndex: 1,
+    text: 'Synonym of make room',
+    options: ['accommodate', 'prevent', 'ignore', 'cancel'],
+    correctIndex: 0,
   },
   {
     id: 23,
     type: 'mc',
-    text: 'Synonym of rejection',
-    options: ['approval', 'denial', 'reward', 'basis'],
+    text: 'Antonym of concerned',
+    options: ['distressed', 'calm', 'worried', 'nervous'],
     correctIndex: 1,
   },
   {
     id: 24,
     type: 'mc',
-    text: 'Synonym of click',
-    options: ['dawn on', 'reject', 'conquer', 'aim'],
+    text: 'Synonym of donate',
+    options: ['contribute', 'take', 'destroy', 'refuse'],
     correctIndex: 0,
   },
   {
     id: 25,
     type: 'mc',
-    text: 'Antonym of personally',
-    options: ['individually', 'generally', 'emotionally', 'sincerely'],
+    text: 'Synonym of annual',
+    options: ['monthly', 'yearly', 'daily', 'weekly'],
     correctIndex: 1,
   },
   {
     id: 26,
     type: 'mc',
-    text: 'Synonym of desensitize',
-    options: ['reward', 'deaden', 'accept', 'tremble'],
+    text: 'Synonym of non-profit',
+    options: ['profitable', 'charitable', 'expensive', 'careless'],
     correctIndex: 1,
   },
   {
     id: 27,
     type: 'mc',
-    text: 'Synonym of menacing',
-    options: ['threatening', 'honest', 'honorable', 'final'],
-    correctIndex: 0,
+    text: 'Antonym of non-profit',
+    options: ['charitable', 'profitable', 'generous', 'helpful'],
+    correctIndex: 1,
   },
   {
     id: 28,
     type: 'mc',
-    text: 'Synonym of custodian',
-    options: ['janitor', 'businessman', 'judge', 'maniac'],
-    correctIndex: 0,
+    text: 'Antonym of charity',
+    options: ['kindness', 'giving', 'business', 'support'],
+    correctIndex: 2,
   },
   {
     id: 29,
     type: 'mc',
-    text: 'Synonym of incident',
-    options: ['effect', 'episode', 'goal', 'basis'],
-    correctIndex: 1,
+    text: 'Synonym of independent',
+    options: ['free', 'dependent', 'weak', 'controlled'],
+    correctIndex: 0,
   },
   {
     id: 30,
     type: 'mc',
-    text: 'Synonym of sly',
-    options: ['honest', 'cunning', 'honorable', 'respectable'],
+    text: 'Synonym of orderly',
+    options: ['messy', 'neat', 'careless', 'chaotic'],
     correctIndex: 1,
   },
   {
     id: 31,
     type: 'mc',
-    text: 'Antonym of sly',
-    options: ['cunning', 'honest', 'threatening', 'madman'],
-    correctIndex: 1,
+    text: 'Antonym of orderly',
+    options: ['organized', 'careful', 'disorderly', 'calm'],
+    correctIndex: 2,
   },
   {
     id: 32,
     type: 'mc',
-    text: 'Antonym of penalty',
-    options: ['reward', 'punishment', 'violation', 'impact'],
+    text: 'Synonym of immature',
+    options: ['childish', 'adult', 'careful', 'calm'],
     correctIndex: 0,
   },
   {
     id: 33,
     type: 'mc',
-    text: 'Synonym of preliminary',
-    options: ['final', 'introductory', 'objective', 'episode'],
+    text: 'Antonym of immature',
+    options: ['silly', 'mature', 'childish', 'young'],
     correctIndex: 1,
   },
   {
     id: 34,
     type: 'mc',
-    text: 'Antonym of preliminary',
-    options: ['introductory', 'first', 'final', 'basis'],
-    correctIndex: 2,
+    text: 'Synonym of disciplined',
+    options: ['restrained', 'careless', 'weak', 'messy'],
+    correctIndex: 0,
   },
   {
     id: 35,
     type: 'mc',
-    text: 'Synonym of quivering',
-    options: ['shivering', 'threatening', 'rejecting', 'aiming'],
-    correctIndex: 0,
+    text: 'Antonym of disciplined',
+    options: ['organized', 'restrained', 'unrestrained', 'careful'],
+    correctIndex: 2,
   },
   {
     id: 36,
     type: 'mc',
-    text: 'Synonym of conquer',
-    options: ['lose', 'subjugate', 'reward', 'tremble'],
-    correctIndex: 1,
+    text: 'Synonym of incident',
+    options: ['event', 'silence', 'object', 'machine'],
+    correctIndex: 0,
   },
   {
     id: 37,
     type: 'mc',
-    text: 'Antonym of conquer',
-    options: ['subjugate', 'rule', 'lose', 'defeat'],
-    correctIndex: 2,
+    text: 'Synonym of preliminary',
+    options: ['final', 'introductory', 'complete', 'finished'],
+    correctIndex: 1,
   },
   {
     id: 38,
     type: 'mc',
-    text: 'Synonym of maniac',
-    options: ['madman', 'judge', 'businessman', 'leader'],
+    text: 'Synonym of inventive',
+    options: ['innovative', 'dull', 'boring', 'quiet'],
     correctIndex: 0,
   },
   {
     id: 39,
     type: 'mc',
-    text: 'Synonym of foundation',
-    options: ['basis', 'impact', 'aim', 'episode'],
-    correctIndex: 0,
+    text: 'Synonym of deliberately',
+    options: ['accidentally', 'intentionally', 'suddenly', 'quickly'],
+    correctIndex: 1,
   },
   {
     id: 40,
     type: 'mc',
-    text: 'Synonym of honorable',
-    options: ['dishonest', 'respectable', 'cunning', 'threatening'],
+    text: 'Synonym of critical thinking',
+    options: ['guessing', 'analysis', 'ignoring', 'copying'],
     correctIndex: 1,
   },
 
-  // Part 3 - Spelling
-  {
-    id: 41,
-    type: 'spelling',
-    text: 'Someone who starts a business',
-    answer: 'entrepreneur',
-  },
-  {
-    id: 42,
-    type: 'spelling',
-    text: 'To refuse',
-    answer: 'turn down',
-  },
-  {
-    id: 43,
-    type: 'spelling',
-    text: 'A strong effect',
-    answer: 'impact',
-  },
-  {
-    id: 44,
-    type: 'spelling',
-    text: 'Shaking slightly',
-    answer: 'quivering',
-  },
-  {
-    id: 45,
-    type: 'spelling',
-    text: 'A goal',
-    answer: 'objective',
-  },
-  {
-    id: 46,
-    type: 'spelling',
-    text: 'Not dangerous but seems harmful',
-    answer: 'menacing',
-  },
-  {
-    id: 47,
-    type: 'spelling',
-    text: 'A person who cleans a school',
-    answer: 'custodian',
-  },
-  {
-    id: 48,
-    type: 'spelling',
-    text: 'A punishment',
-    answer: 'penalty',
-  },
-  {
-    id: 49,
-    type: 'spelling',
-    text: 'To suddenly understand',
-    answer: 'click',
-  },
-  {
-    id: 50,
-    type: 'spelling',
-    text: 'An unusual event',
-    answer: 'incident',
-  },
-  {
-    id: 51,
-    type: 'spelling',
-    text: 'A person acting wildly',
-    answer: 'maniac',
-  },
-  {
-    id: 52,
-    type: 'spelling',
-    text: 'To take control by force',
-    answer: 'conquer',
-  },
-  {
-    id: 53,
-    type: 'spelling',
-    text: 'An early round before finals',
-    answer: 'preliminary',
-  },
-  {
-    id: 54,
-    type: 'spelling',
-    text: 'To make less sensitive',
-    answer: 'desensitize',
-  },
-  {
-    id: 55,
-    type: 'spelling',
-    text: 'Honest and fair',
-    answer: 'honorable',
-  },
-  {
-    id: 56,
-    type: 'spelling',
-    text: 'The act of refusing',
-    answer: 'rejection',
-  },
-  {
-    id: 57,
-    type: 'spelling',
-    text: 'The base idea of something',
-    answer: 'foundation',
-  },
-  {
-    id: 58,
-    type: 'spelling',
-    text: 'Putting money into something',
-    answer: 'investment',
-  },
-  {
-    id: 59,
-    type: 'spelling',
-    text: 'Secretly clever',
-    answer: 'sly',
-  },
-  {
-    id: 60,
-    type: 'spelling',
-    text: 'To understand suddenly - synonym phrase',
-    answer: 'dawn on',
-  },
+  // Part 3: Spelling
+  { id: 41, type: 'spelling', text: 'aspier', answer: 'aspire' },
+  { id: 42, type: 'spelling', text: 'concened', answer: 'concerned' },
+  { id: 43, type: 'spelling', text: 'disiplined', answer: 'disciplined' },
+  { id: 44, type: 'spelling', text: 'prelimanary', answer: 'preliminary' },
+  { id: 45, type: 'spelling', text: 'delibrately', answer: 'deliberately' },
+  { id: 46, type: 'spelling', text: 'inventve', answer: 'inventive' },
+  { id: 47, type: 'spelling', text: 'invaluabe', answer: 'invaluable' },
+  { id: 48, type: 'spelling', text: 'advocat', answer: 'advocate' },
+  { id: 49, type: 'spelling', text: 'comunnity service', answer: 'community service' },
+  { id: 50, type: 'spelling', text: 'crtical thinking', answer: 'critical thinking' },
+  { id: 51, type: 'spelling', text: 'non profitt', answer: 'non-profit' },
+  { id: 52, type: 'spelling', text: 'charaty', answer: 'charity' },
+  { id: 53, type: 'spelling', text: 'independant', answer: 'independent' },
+  { id: 54, type: 'spelling', text: 'immuture', answer: 'immature' },
+  { id: 55, type: 'spelling', text: 'ordely', answer: 'orderly' },
+  { id: 56, type: 'spelling', text: 'anual', answer: 'annual' },
+  { id: 57, type: 'spelling', text: 'incdent', answer: 'incident' },
+  { id: 58, type: 'spelling', text: 'acomodate', answer: 'accommodate' },
+  { id: 59, type: 'spelling', text: 'desier', answer: 'desire' },
+  { id: 60, type: 'spelling', text: 'contribut', answer: 'contribute' },
 ];
 
 const vocabTable: VocabRow[] = [
-  { word: 'entrepreneur', pos: 'noun', synonym: 'businessman', antonym: '' },
-  { word: 'investment', pos: 'noun', synonym: '', antonym: '' },
-  { word: 'turn down', pos: 'verb', synonym: 'reject', antonym: 'accept' },
-  { word: 'rejection', pos: 'noun', synonym: 'denial', antonym: 'approval' },
-  { word: 'click', pos: 'verb', synonym: 'dawn on', antonym: '' },
-  { word: 'personally', pos: 'adverb', synonym: 'individually', antonym: 'generally' },
-  { word: 'desensitize', pos: 'verb', synonym: 'deaden', antonym: '' },
-  { word: 'menacing', pos: 'adj', synonym: 'threatening', antonym: '' },
-  { word: 'custodian', pos: 'noun', synonym: 'janitor', antonym: '' },
+  { word: 'aspire', pos: 'verb', synonym: 'desire', antonym: '' },
+  { word: 'make room', pos: 'phrasal verb', synonym: 'accommodate', antonym: '' },
+  { word: 'concerned', pos: 'adj', synonym: 'distressed', antonym: 'calm' },
+  { word: 'donate', pos: 'verb', synonym: 'contribute', antonym: '' },
+  { word: 'annual', pos: 'adj', synonym: 'yearly', antonym: '' },
+  { word: 'non-profit', pos: 'adj', synonym: 'charitable', antonym: 'profitmaking' },
+  { word: 'charity', pos: 'noun', synonym: '', antonym: 'business' },
+  { word: 'put into perspective', pos: 'phrase', synonym: '', antonym: '' },
+  { word: 'independent', pos: 'adj', synonym: 'autonomous', antonym: 'dependent' },
+  { word: 'orderly', pos: 'adj', synonym: 'neat', antonym: 'disorderly' },
+  { word: 'immature', pos: 'adj', synonym: 'childish', antonym: 'mature' },
+  { word: 'disciplined', pos: 'adj', synonym: 'restrained', antonym: 'unrestrained' },
   { word: 'incident', pos: 'noun', synonym: 'episode', antonym: '' },
-  { word: 'sly', pos: 'adj', synonym: 'cunning', antonym: 'honest' },
-  { word: 'penalty', pos: 'noun', synonym: '', antonym: 'reward' },
   { word: 'preliminary', pos: 'adj', synonym: 'introductory', antonym: 'final' },
-  { word: 'quivering', pos: 'adj', synonym: 'shivering', antonym: '' },
-  { word: 'conquer', pos: 'verb', synonym: 'subjugate', antonym: 'lose' },
-  { word: 'maniac', pos: 'noun', synonym: 'madman', antonym: '' },
-  { word: 'foundation', pos: 'noun', synonym: 'basis', antonym: '' },
-  { word: 'objective', pos: 'noun', synonym: 'aim', antonym: '' },
-  { word: 'impact', pos: 'noun', synonym: 'effect', antonym: '' },
-  { word: 'honorable', pos: 'adj', synonym: 'respectable', antonym: 'dishonorable' },
+  { word: 'inventive', pos: 'adj', synonym: 'innovative', antonym: 'dull' },
+  { word: 'deliberately', pos: 'adv', synonym: 'intentionally', antonym: '' },
+  { word: 'community service', pos: 'noun', synonym: 'volunteering', antonym: '' },
+  { word: 'invaluable', pos: 'adj', synonym: 'beneficial', antonym: 'pointless' },
+  { word: 'advocate', pos: 'verb', synonym: 'propose', antonym: 'condemn' },
+  { word: 'critical thinking', pos: 'noun', synonym: 'analysis', antonym: '' },
 ];
 
-const spellingFocusWords = [
-  'entrepreneur',
+const focusWords = [
+  'accommodate',
+  'deliberately',
   'preliminary',
-  'desensitize',
-  'quivering',
-  'honorable',
-  'foundation',
-  'objective',
-  'investment',
-  'incident',
-  'custodian',
+  'disciplined',
+  'independent',
+  'community',
+  'invaluable',
+  'immature',
+  'advocate',
+  'inventive',
 ];
 
-const misspellings = ['entreprenuer', 'prelimenary', 'desentize', 'quiverng', 'honarable'];
+const mnemonicList = [
+  'accommodate = ac + com + mod + ate',
+  'deliberately = de + liber + ate + ly',
+  'preliminary = pre + limin + ary',
+  'disciplined = discipline + d',
+  'independent = in + depend + ent',
+];
 
-const sentenceChallengeWords = ['entrepreneur', 'impact', 'conquer', 'sly', 'penalty'];
+const miniPracticeA: string[] = [
+  '1. ________ means to work hard toward a goal without giving up.',
+  '2. The project was put into perspective before the final decision.',
+  '3. Every member of the club can do ________ service hours.',
+  '4. The room looked neat and ________ before the event.',
+  '5. A major ________ happened during the annual festival.',
+];
+
+const miniPracticeB: string[] = [
+  '6. community service - this is a ________ work.',
+  '7. independent - he is an ________ thinker.',
+  '8. non-profit - a ________ organization is not for profit.',
+  '9. annual - held every ________.',
+  '10. deliberate - done ________ with care.',
+];
+
+const reviewAnswers = [
+  '1. aspire',
+  '2. concerned',
+  '3. disciplined',
+  '4. preliminary',
+  '5. deliberately',
+  '6. inventive',
+  '7. invaluable',
+  '8. advocate',
+  '9. community service',
+  '10. critical thinking',
+];
 
 const normalizeText = (value: string) => value.trim().toLowerCase().replace(/\s+/g, ' ');
 
@@ -497,7 +430,7 @@ export default function VocabQuizPage() {
   const handleCheckAnswer = () => {
     if (currentQuestion.type === 'mc') {
       if (selectedOption === null) {
-        alert('보기를 하나 선택해주세요.');
+        alert('Please select an option.');
         return;
       }
 
@@ -514,7 +447,7 @@ export default function VocabQuizPage() {
     }
 
     if (!spellingInput.trim()) {
-      alert('정답을 입력해주세요.');
+      alert('Please enter your answer.');
       return;
     }
 
@@ -553,20 +486,19 @@ export default function VocabQuizPage() {
   const totalQuestions = questions.length;
   const correctCount = answers.filter((a) => a.isCorrect).length;
   const isAnswered = (q: Question, ans: Answer) => {
-    if (q.type === 'mc') {
-      return ans.choice !== null;
-    }
+    if (q.type === 'mc') return ans.choice !== null;
     return ans.text.trim().length > 0;
   };
+
   const wrongQuestions = questions.filter((q, idx) => {
     const ans = answers[idx];
     return isAnswered(q, ans) && !ans.isCorrect;
   });
   const completedCount = answers.filter((ans, idx) => isAnswered(questions[idx], ans)).length;
-  const wrongCount = answers.filter((ans, idx) => isAnswered(questions[idx], ans) && !ans.isCorrect).length;
+  const wrongCount = wrongQuestions.length;
 
   const partLabel = () => {
-    if (currentIndex < 20) return 'Part 1 · Multiple Choice';
+    if (currentIndex < 20) return 'Part 1 · Word Meaning';
     if (currentIndex < 40) return 'Part 2 · Synonym / Antonym';
     return 'Part 3 · Spelling';
   };
@@ -585,7 +517,7 @@ export default function VocabQuizPage() {
       <div
         style={{
           width: '100%',
-          maxWidth: 800,
+          maxWidth: 840,
           background: '#ffffff',
           borderRadius: 16,
           padding: 24,
@@ -599,9 +531,9 @@ export default function VocabQuizPage() {
             paddingBottom: 12,
           }}
         >
-          <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Week 03 Vocabulary Test</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Week 06 Vocabulary Test</h1>
           <p style={{ color: '#6b7280', fontSize: 14 }}>
-            60문제 · 객관식 40 + 스펠링 20 · 한 문제씩 풀고 바로 정답 확인 · 끝나면 틀린 문제만 모아서 보기
+            60 questions · Part 1 20 + Part 2 20 + Part 3 20 · Instant feedback and review after completion
           </p>
         </header>
 
@@ -615,10 +547,10 @@ export default function VocabQuizPage() {
             }}
           >
             <span>
-              문제 {completedCount} / {totalQuestions}
+              Question {completedCount} / {totalQuestions}
             </span>
             <span>
-              정답 {correctCount}개 / 오답 {wrongCount}개
+              Correct {correctCount} / Wrong {wrongCount}
             </span>
           </div>
           <div
@@ -717,7 +649,7 @@ export default function VocabQuizPage() {
                     if (showFeedback) return;
                     setSpellingInput(event.target.value);
                   }}
-                  placeholder="정답을 입력하세요"
+                  placeholder="Type your answer"
                   style={{
                     width: '100%',
                     padding: '12px 14px',
@@ -743,18 +675,18 @@ export default function VocabQuizPage() {
                   <>
                     {currentQuestion.type === 'mc' ? (
                       selectedOption === currentQuestion.correctIndex ? (
-                        <span style={{ color: '#16a34a', fontWeight: 600 }}>정답입니다!</span>
+                        <span style={{ color: '#16a34a', fontWeight: 600 }}>Correct!</span>
                       ) : (
                         <span style={{ color: '#ef4444', fontWeight: 600 }}>
-                          오답입니다. 정답은 {String.fromCharCode(65 + currentQuestion.correctIndex)}.{' '}
-                          {currentQuestion.options[currentQuestion.correctIndex]}입니다.
+                          Incorrect. The answer is {String.fromCharCode(65 + currentQuestion.correctIndex)}.{' '}
+                          {currentQuestion.options[currentQuestion.correctIndex]}.
                         </span>
                       )
                     ) : normalizeText(spellingInput) === normalizeText(currentQuestion.answer) ? (
-                      <span style={{ color: '#16a34a', fontWeight: 600 }}>정답입니다!</span>
+                      <span style={{ color: '#16a34a', fontWeight: 600 }}>Correct!</span>
                     ) : (
                       <span style={{ color: '#ef4444', fontWeight: 600 }}>
-                        오답입니다. 정답은 {currentQuestion.answer}입니다.
+                        Incorrect. The answer is {currentQuestion.answer}.
                       </span>
                     )}
                   </>
@@ -777,7 +709,7 @@ export default function VocabQuizPage() {
                       fontSize: 14,
                     }}
                   >
-                    정답 확인
+                    Check
                   </button>
                 ) : (
                   <button
@@ -794,7 +726,7 @@ export default function VocabQuizPage() {
                       fontSize: 14,
                     }}
                   >
-                    {currentIndex === questions.length - 1 ? '결과 보기' : '다음 문제'}
+                    {currentIndex === questions.length - 1 ? 'See Results' : 'Next'}
                   </button>
                 )}
               </div>
@@ -802,13 +734,13 @@ export default function VocabQuizPage() {
           </>
         ) : (
           <div>
-            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>결과 요약</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Result Summary</h2>
             <p style={{ fontSize: 14, marginBottom: 4 }}>
-              총 {totalQuestions}문제 중 <strong>{correctCount}개 정답</strong>,{' '}
-              <strong>{totalQuestions - correctCount}개 오답</strong>
+              Out of {totalQuestions} questions: <strong>{correctCount} correct</strong>,{' '}
+              <strong>{totalQuestions - correctCount} wrong</strong>
             </p>
             <p style={{ fontSize: 14, marginBottom: 16 }}>
-              점수: <strong>{Math.round((correctCount / totalQuestions) * 100)}점</strong>
+              Score: <strong>{Math.round((correctCount / totalQuestions) * 100)}%</strong>
             </p>
 
             <button
@@ -826,14 +758,14 @@ export default function VocabQuizPage() {
                 marginBottom: 20,
               }}
             >
-              다시 풀기
+              Restart
             </button>
 
             <hr style={{ margin: '16px 0', borderColor: '#e5e7eb' }} />
 
-            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>내가 틀린 문제 모음</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>Wrong Answers Review</h3>
             {wrongQuestions.length === 0 ? (
-              <p style={{ fontSize: 14 }}>틀린 문제가 없습니다. 완벽해요!</p>
+              <p style={{ fontSize: 14 }}>No wrong answers. Perfect score!</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {wrongQuestions.map((q) => {
@@ -844,9 +776,8 @@ export default function VocabQuizPage() {
                     q.type === 'mc'
                       ? ans.choice !== null
                         ? q.options[ans.choice]
-                        : '선택 안 함'
-                      : ans.text.trim() || '미입력';
-
+                        : 'No choice'
+                      : ans.text.trim() || 'No input';
                   const correctText = q.type === 'mc' ? q.options[q.correctIndex] : q.answer;
 
                   return (
@@ -859,21 +790,13 @@ export default function VocabQuizPage() {
                         border: '1px solid #e5e7eb',
                       }}
                     >
-                      <div
-                        style={{
-                          fontSize: 13,
-                          color: '#6b7280',
-                          marginBottom: 4,
-                        }}
-                      >
-                        문제 {q.id}
-                      </div>
+                      <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 4 }}>Question {q.id}</div>
                       <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{q.text}</div>
                       <div style={{ fontSize: 13, marginBottom: 2 }}>
-                        내가 입력/선택한 답: <strong>{selectedText}</strong>
+                        Your answer: <strong>{selectedText}</strong>
                       </div>
                       <div style={{ fontSize: 13 }}>
-                        정답: <strong>{correctText}</strong>
+                        Correct answer: <strong>{correctText}</strong>
                       </div>
                     </div>
                   );
@@ -883,16 +806,9 @@ export default function VocabQuizPage() {
 
             <hr style={{ margin: '20px 0', borderColor: '#e5e7eb' }} />
 
-            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 10 }}>Vocabulary Table</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 10 }}>Vocabulary Summary Table</h3>
             <div style={{ overflowX: 'auto', marginBottom: 20 }}>
-              <table
-                style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontSize: 13,
-                  minWidth: 560,
-                }}
-              >
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 720 }}>
                 <thead>
                   <tr style={{ background: '#f8fafc' }}>
                     <th style={{ border: '1px solid #e5e7eb', padding: 8, textAlign: 'left' }}>Word</th>
@@ -914,13 +830,12 @@ export default function VocabQuizPage() {
               </table>
             </div>
 
-            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 10 }}>Spelling Intensive Review Set</h3>
-
+            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 10 }}>Difficult Words Intensive Review</h3>
             <div style={{ fontSize: 14, marginBottom: 10 }}>
-              <strong>Step 1 - Look carefully</strong>
+              <strong>Focus Words</strong>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
-              {spellingFocusWords.map((word) => (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+              {focusWords.map((word) => (
                 <span
                   key={word}
                   style={{
@@ -938,37 +853,45 @@ export default function VocabQuizPage() {
             </div>
 
             <div style={{ fontSize: 14, marginBottom: 8 }}>
-              <strong>Step 2 - Cover and Write</strong>: Write each word 3 times.
+              <strong>Quick Memory Method</strong>
             </div>
-
-            <div style={{ fontSize: 14, marginBottom: 8 }}>
-              <strong>Step 3 - Spot the mistake</strong>
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
-              {misspellings.map((word) => (
-                <span
-                  key={word}
-                  style={{
-                    background: '#fef2f2',
-                    color: '#b91c1c',
-                    border: '1px solid #fecaca',
-                    borderRadius: 999,
-                    padding: '5px 10px',
-                    fontSize: 13,
-                  }}
-                >
-                  {word}
-                </span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
+              {mnemonicList.map((item) => (
+                <div key={item} style={{ fontSize: 13, background: '#f8fafc', padding: 8, borderRadius: 8 }}>
+                  {item}
+                </div>
               ))}
             </div>
 
             <div style={{ fontSize: 14, marginBottom: 8 }}>
-              <strong>Step 4 - Sentence Challenge</strong>
+              <strong>Mini Practice A. Fill in the blank</strong>
+            </div>
+            <ol style={{ marginTop: 0, marginBottom: 14, paddingLeft: 20, fontSize: 14 }}>
+              {miniPracticeA.map((item) => (
+                <li key={item} style={{ marginBottom: 4 }}>
+                  {item}
+                </li>
+              ))}
+            </ol>
+
+            <div style={{ fontSize: 14, marginBottom: 8 }}>
+              <strong>Mini Practice B. Word Form Challenge</strong>
+            </div>
+            <ol style={{ marginTop: 0, marginBottom: 14, paddingLeft: 20, fontSize: 14 }}>
+              {miniPracticeB.map((item) => (
+                <li key={item} style={{ marginBottom: 4 }}>
+                  {item}
+                </li>
+              ))}
+            </ol>
+
+            <div style={{ fontSize: 14, marginBottom: 8 }}>
+              <strong>Answer</strong>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {sentenceChallengeWords.map((word) => (
+              {reviewAnswers.map((line) => (
                 <span
-                  key={word}
+                  key={line}
                   style={{
                     background: '#f0fdf4',
                     color: '#166534',
@@ -978,7 +901,7 @@ export default function VocabQuizPage() {
                     fontSize: 13,
                   }}
                 >
-                  {word}
+                  {line}
                 </span>
               ))}
             </div>

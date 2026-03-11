@@ -307,6 +307,8 @@ export default function VocabQuizPage() {
 
   const totalQuestions = questions.length;
   const correctCount = answers.filter((a) => a.isCorrect).length;
+  const completedCount = answers.filter((a) => a.selected !== null).length;
+  const wrongCount = answers.filter((a) => a.selected !== null && !a.isCorrect).length;
   const wrongQuestions = questions.filter((_, idx) => {
     const ans = answers[idx];
     return ans.selected !== null && !ans.isCorrect;
@@ -357,10 +359,10 @@ export default function VocabQuizPage() {
             }}
           >
             <span>
-              문제 {currentIndex + 1} / {totalQuestions}
+              문제 {completedCount} / {totalQuestions}
             </span>
             <span>
-              정답 {correctCount}개 / 오답 {answers.filter((a) => a.selected !== null && !a.isCorrect).length}개
+              정답 {correctCount}개 / 오답 {wrongCount}개
             </span>
           </div>
           <div
@@ -374,7 +376,7 @@ export default function VocabQuizPage() {
             <div
               style={{
                 height: '100%',
-                width: `${((currentIndex + (isFinished ? 1 : 0)) / totalQuestions) * 100}%`,
+                width: `${(completedCount / totalQuestions) * 100}%`,
                 maxWidth: '100%',
                 background: '#3b82f6',
                 transition: 'width 0.3s ease',
