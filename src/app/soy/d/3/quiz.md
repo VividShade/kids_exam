@@ -1,4 +1,4 @@
-## Week 03 Vocabulary Test Data
+## Week 3 Vocabulary Test Data
 
 ### Included Words
 entrepreneur, investment, turn down, rejection, click, personally, desensitize, menacing, custodian, incident, sly, penalty, preliminary, quivering, conquer, maniac, foundation, objective, impact, honorable

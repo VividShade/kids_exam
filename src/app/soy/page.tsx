@@ -21,7 +21,7 @@ async function getNumericQuizLinks(track: 'c' | 'd'): Promise<QuizLink[]> {
       const pagePath = path.join(baseDir, entry.name, 'page.tsx');
       try {
         await access(pagePath);
-        const isHighlighted = track === 'd' && entry.name === '06';
+        const isHighlighted = track === 'd' && entry.name === '6';
         links.push({
           href: `/soy/${track}/${entry.name}`,
           label: `${track}/${entry.name}`,

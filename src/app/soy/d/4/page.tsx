@@ -33,447 +33,477 @@ type VocabRow = {
 };
 
 const questions: Question[] = [
-  // Part 1. Word Meaning
+  // Part A - Multiple Choice
   {
     id: 1,
     type: 'mc',
-    text: 'A person who takes action to solve a social or environmental problem is a ______.',
-    options: ['marine', 'changemaker', 'scrawl', 'tumult'],
+    text: 'Someone who is very good at thinking of new ideas is',
+    options: ['dull', 'inventive', 'inactive', 'suspiciously'],
     correctIndex: 1,
   },
   {
     id: 2,
     type: 'mc',
-    text: 'Something that you plan or want to do is your ______.',
-    options: ['mission', 'disagreement', 'intention', 'conversion'],
-    correctIndex: 2,
+    text: 'If someone looks at you in a way that makes you think something is wrong, they look at you',
+    options: ['trustingly', 'suspiciously', 'warmly', 'smoothly'],
+    correctIndex: 1,
   },
   {
     id: 3,
     type: 'mc',
-    text: 'Animals or plants that live in the sea are called ______ life.',
-    options: ['marine', 'typical', 'unnecessary', 'brisk'],
+    text: 'To move a short distance while sitting is to',
+    options: ['scooch', 'crumple', 'negotiate', 'snarl'],
     correctIndex: 0,
   },
   {
     id: 4,
     type: 'mc',
-    text: 'Something that uses new ideas or methods is ______.',
-    options: ['typical', 'innovative', 'deliberate', 'ordinary'],
+    text: 'A peaceful agreement to stop fighting for a time is called a',
+    options: ['skirmish', 'truce', 'assertion', 'barrier'],
     correctIndex: 1,
   },
   {
     id: 5,
     type: 'mc',
-    text: 'An important task or duty someone believes they must do is a ______.',
-    options: ['mission', 'disagreement', 'tumult', 'scrawl'],
+    text: 'Feeling admiration or respect for someone means you are',
+    options: ['impressed', 'inactive', 'snarly', 'doubtful'],
     correctIndex: 0,
   },
   {
     id: 6,
     type: 'mc',
-    text: 'To make something smaller or less is to ______ it.',
-    options: ['cooperate', 'reduce', 'conserve', 'convert'],
-    correctIndex: 1,
+    text: 'Something that blocks your progress is an',
+    options: ['obstacle', 'outcome', 'interjection', 'generation'],
+    correctIndex: 0,
   },
   {
     id: 7,
     type: 'mc',
-    text: 'Something that is normal for a group is ______.',
-    options: ['typical', 'marine', 'dissenting', 'innovative'],
-    correctIndex: 0,
+    text: 'To think carefully about something before making a decision is to',
+    options: ['embrace', 'consider', 'bargain', 'reject'],
+    correctIndex: 1,
   },
   {
     id: 8,
     type: 'mc',
-    text: 'A soft material made from very thin artificial threads is ______.',
-    options: ['marine', 'microfiber', 'conversion', 'tumult'],
+    text: 'To accept something with enthusiasm is to',
+    options: ['reject', 'embrace', 'crumple', 'snarl'],
     correctIndex: 1,
   },
   {
     id: 9,
     type: 'mc',
-    text: 'The process of changing something from one form to another is ______.',
-    options: ['conversion', 'disagreement', 'mission', 'intention'],
+    text: 'To have formal discussions in order to reach an agreement is to',
+    options: ['negotiate', 'scooch', 'scrunch', 'assert'],
     correctIndex: 0,
   },
   {
     id: 10,
     type: 'mc',
-    text: 'To write quickly and messily is to ______.',
-    options: ['scrawl', 'chime', 'conserve', 'cooperate'],
-    correctIndex: 0,
+    text: 'If students are involved in a lesson, they are',
+    options: ['inactive', 'engaged', 'doubtful', 'smooth'],
+    correctIndex: 1,
   },
   {
     id: 11,
     type: 'mc',
-    text: 'Doing something on purpose means doing it ______.',
-    options: ['briskly', 'deliberately', 'typically', 'softly'],
-    correctIndex: 1,
+    text: 'When a doctor sends you to a specialist, that is a',
+    options: ['referral', 'skirmish', 'truce', 'proof'],
+    correctIndex: 0,
   },
   {
     id: 12,
     type: 'mc',
-    text: 'To protect something from waste or damage is to ______ it.',
-    options: ['convert', 'conserve', 'reduce', 'scrawl'],
+    text: 'All the people of about the same age in society are a',
+    options: ['barrier', 'generation', 'result', 'cause'],
     correctIndex: 1,
   },
   {
     id: 13,
     type: 'mc',
-    text: 'When people work together for a goal, they ______.',
-    options: ['cooperate', 'dissent', 'scrawl', 'chime'],
-    correctIndex: 0,
+    text: 'Showing agreement or approval is',
+    options: ['dissenting', 'affirmative', 'doubtful', 'snarly'],
+    correctIndex: 1,
   },
   {
     id: 14,
     type: 'mc',
-    text: 'When someone walks quickly and energetically, they walk ______.',
-    options: ['slowly', 'briskly', 'deliberately', 'lazily'],
+    text: 'A statement someone strongly believes is true is an',
+    options: ['outcome', 'assertion', 'obstacle', 'interjection'],
     correctIndex: 1,
   },
   {
     id: 15,
     type: 'mc',
-    text: 'When a bell makes a clear ringing sound, it ______.',
-    options: ['chimes', 'scrawls', 'converts', 'cooperates'],
+    text: 'A result of an action is an',
+    options: ['outcome', 'cause', 'barrier', 'referral'],
     correctIndex: 0,
   },
   {
     id: 16,
     type: 'mc',
-    text: 'Loud noise and excitement in a crowd is called ______.',
-    options: ['intention', 'tumult', 'mission', 'conversion'],
+    text: 'Facts that help prove something is true are',
+    options: ['generation', 'evidence', 'fight', 'bargain'],
     correctIndex: 1,
   },
   {
     id: 17,
     type: 'mc',
-    text: 'Showing a strong different opinion is ______.',
-    options: ['dissenting', 'typical', 'marine', 'brisk'],
-    correctIndex: 0,
+    text: 'To crush paper into wrinkles is to',
+    options: ['scooch', 'crumple', 'negotiate', 'embrace'],
+    correctIndex: 1,
   },
   {
     id: 18,
     type: 'mc',
-    text: 'Something that is not needed is ______.',
-    options: ['unnecessary', 'typical', 'innovative', 'marine'],
-    correctIndex: 0,
+    text: 'A short expression of emotion like "Wow!" is an',
+    options: ['outcome', 'interjection', 'barrier', 'truce'],
+    correctIndex: 1,
   },
   {
     id: 19,
     type: 'mc',
-    text: 'An argument between people is a ______.',
-    options: ['disagreement', 'mission', 'conversion', 'scrawl'],
+    text: 'Easily angered and aggressive describes someone who is',
+    options: ['snarly', 'impressed', 'engaged', 'inventive'],
     correctIndex: 0,
   },
   {
     id: 20,
     type: 'mc',
-    text: 'A message that asks people to take action is a ______.',
-    options: ['call to action', 'tumult', 'conversion', 'disagreement'],
-    correctIndex: 0,
+    text: 'A short argument is a',
+    options: ['truce', 'skirmish', 'proof', 'catalyst'],
+    correctIndex: 1,
   },
 
-  // Part 2. Synonym / antonym
+  // Part B - Synonym / Antonym
   {
     id: 21,
     type: 'mc',
-    text: 'Which word is closest in meaning to changemaker?',
-    options: ['reformer', 'marine', 'towel', 'bell'],
+    text: 'inventive',
+    options: ['innovative', 'dull'],
     correctIndex: 0,
   },
   {
     id: 22,
     type: 'mc',
-    text: 'Which word is closest in meaning to intention?',
-    options: ['aim', 'noise', 'plan', 'water'],
+    text: 'suspiciously',
+    options: ['doubtfully', 'trustingly'],
     correctIndex: 0,
   },
   {
     id: 23,
     type: 'mc',
-    text: 'Which word is closest in meaning to marine?',
-    options: ['aquatic', 'noisy', 'land', 'quiet'],
+    text: 'scooch',
+    options: ['move slightly', 'remain still'],
     correctIndex: 0,
   },
   {
     id: 24,
     type: 'mc',
-    text: 'Which word is closest in meaning to innovative?',
-    options: ['ingenious', 'old', 'typical', 'slow'],
+    text: 'truce',
+    options: ['agreement', 'fight'],
     correctIndex: 0,
   },
   {
     id: 25,
     type: 'mc',
-    text: 'Which word is closest in meaning to mission?',
-    options: ['objective', 'bell', 'sound', 'cloth'],
+    text: 'impressed',
+    options: ['amazed', 'bored'],
     correctIndex: 0,
   },
   {
     id: 26,
     type: 'mc',
-    text: 'Which word is closest in meaning to reduce?',
-    options: ['decrease', 'increase', 'grow', 'expand'],
+    text: 'obstacle',
+    options: ['barrier', 'catalyst'],
     correctIndex: 0,
   },
   {
     id: 27,
     type: 'mc',
-    text: 'Which word is closest in meaning to typical?',
-    options: ['ordinary', 'strange', 'noisy', 'marine'],
+    text: 'consider',
+    options: ['contemplate', 'ignore'],
     correctIndex: 0,
   },
   {
     id: 28,
     type: 'mc',
-    text: 'Which word is the opposite of increase?',
-    options: ['conserve', 'reduce', 'convert', 'cooperate'],
-    correctIndex: 1,
+    text: 'embrace',
+    options: ['welcome', 'reject'],
+    correctIndex: 0,
   },
   {
     id: 29,
     type: 'mc',
-    text: 'Which word is closest in meaning to scrawl?',
-    options: ['scribble', 'print', 'speak', 'ring'],
+    text: 'negotiate',
+    options: ['bargain', 'argue violently'],
     correctIndex: 0,
   },
   {
     id: 30,
     type: 'mc',
-    text: 'Which word is closest in meaning to deliberately?',
-    options: ['intentionally', 'quickly', 'softly', 'slowly'],
+    text: 'engaged',
+    options: ['committed', 'inactive'],
     correctIndex: 0,
   },
   {
     id: 31,
     type: 'mc',
-    text: 'Which word is closest in meaning to conserve?',
-    options: ['preserve', 'waste', 'break', 'lose'],
+    text: 'affirmative',
+    options: ['assenting', 'dissenting'],
     correctIndex: 0,
   },
   {
     id: 32,
     type: 'mc',
-    text: 'Which word is closest in meaning to cooperate?',
-    options: ['collaborate', 'argue', 'shout', 'run'],
+    text: 'assertion',
+    options: ['declaration', 'question'],
     correctIndex: 0,
   },
   {
     id: 33,
     type: 'mc',
-    text: 'Which word is closest in meaning to briskly?',
-    options: ['swiftly', 'slowly', 'quietly', 'softly'],
+    text: 'outcome',
+    options: ['result', 'cause'],
     correctIndex: 0,
   },
   {
     id: 34,
     type: 'mc',
-    text: 'Which word is closest in meaning to tumult?',
-    options: ['ruckus', 'silence', 'whisper', 'calm'],
+    text: 'evidence',
+    options: ['proof', 'opinion'],
     correctIndex: 0,
   },
   {
     id: 35,
     type: 'mc',
-    text: 'Which word is closest in meaning to dissenting?',
-    options: ['disagreeing', 'agreeing', 'shouting', 'listening'],
+    text: 'crumple',
+    options: ['scrunch', 'smooth'],
     correctIndex: 0,
   },
   {
     id: 36,
     type: 'mc',
-    text: 'Which word is the opposite of dissenting?',
-    options: ['agreeing', 'arguing', 'shouting', 'rushing'],
+    text: 'interjection',
+    options: ['exclamation', 'paragraph'],
     correctIndex: 0,
   },
   {
     id: 37,
     type: 'mc',
-    text: 'Which word is closest in meaning to unnecessary?',
-    options: ['needless', 'helpful', 'needed', 'important'],
+    text: 'snarly',
+    options: ['bad-tempered', 'calm'],
     correctIndex: 0,
   },
   {
     id: 38,
     type: 'mc',
-    text: 'Which word is the opposite of unnecessary?',
-    options: ['needed', 'waste', 'reduce', 'argue'],
+    text: 'skirmish',
+    options: ['fight', 'peace'],
     correctIndex: 0,
   },
   {
     id: 39,
     type: 'mc',
-    text: 'Which word is closest in meaning to disagreement?',
-    options: ['dispute', 'mission', 'idea', 'plan'],
+    text: 'generation',
+    options: ['age group', 'individual'],
     correctIndex: 0,
   },
   {
     id: 40,
     type: 'mc',
-    text: 'Which word is closest in meaning to call to action?',
-    options: ['appeal', 'noise', 'argument', 'speech'],
+    text: 'referral',
+    options: ['recommendation', 'refusal'],
     correctIndex: 0,
   },
 
-  // Part 3. Spelling
-  { id: 41, type: 'spelling', text: 'A person who tries to improve society: c__________', answer: 'changemaker' },
-  { id: 42, type: 'spelling', text: 'Something you plan to do: i__________', answer: 'intention' },
-  { id: 43, type: 'spelling', text: 'Related to the sea: m__________', answer: 'marine' },
-  { id: 44, type: 'spelling', text: 'Using new ideas: i__________', answer: 'innovative' },
-  { id: 45, type: 'spelling', text: 'An important duty or job: m__________', answer: 'mission' },
-  { id: 46, type: 'spelling', text: 'To make something smaller: r__________', answer: 'reduce' },
-  { id: 47, type: 'spelling', text: 'Normal for a group: t__________', answer: 'typical' },
-  { id: 48, type: 'spelling', text: 'A soft artificial fiber cloth: m__________', answer: 'microfiber' },
-  { id: 49, type: 'spelling', text: 'Changing something into another form: c__________', answer: 'conversion' },
-  { id: 50, type: 'spelling', text: 'To write quickly and messily: s__________', answer: 'scrawl' },
-  { id: 51, type: 'spelling', text: 'On purpose: d__________', answer: 'deliberately' },
-  { id: 52, type: 'spelling', text: 'To protect resources: c__________', answer: 'conserve' },
-  { id: 53, type: 'spelling', text: 'To work together: c__________', answer: 'cooperate' },
-  { id: 54, type: 'spelling', text: 'In a quick energetic way: b__________', answer: 'briskly' },
-  { id: 55, type: 'spelling', text: 'A bell making a ringing sound: c__________', answer: 'chime' },
-  { id: 56, type: 'spelling', text: 'Loud excitement or noise: t__________', answer: 'tumult' },
-  { id: 57, type: 'spelling', text: 'Showing disagreement: d__________', answer: 'dissenting' },
-  { id: 58, type: 'spelling', text: 'Not needed: u__________', answer: 'unnecessary' },
-  { id: 59, type: 'spelling', text: 'An argument between people: d__________', answer: 'disagreement' },
+  // Part C - Spelling
+  {
+    id: 41,
+    type: 'spelling',
+    text: 'in______ive (means creative and original)',
+    answer: 'inventive',
+  },
+  {
+    id: 42,
+    type: 'spelling',
+    text: 'sus______ly (means in a doubtful way)',
+    answer: 'suspiciously',
+  },
+  {
+    id: 43,
+    type: 'spelling',
+    text: 'ne______iate (to discuss to reach agreement)',
+    answer: 'negotiate',
+  },
+  {
+    id: 44,
+    type: 'spelling',
+    text: 'en______ed (involved in something)',
+    answer: 'engaged',
+  },
+  {
+    id: 45,
+    type: 'spelling',
+    text: 're______al (directing someone elsewhere)',
+    answer: 'referral',
+  },
+  {
+    id: 46,
+    type: 'spelling',
+    text: 'gen______ion (people of the same age group)',
+    answer: 'generation',
+  },
+  {
+    id: 47,
+    type: 'spelling',
+    text: 'af______ative (showing approval)',
+    answer: 'affirmative',
+  },
+  {
+    id: 48,
+    type: 'spelling',
+    text: 'as______ion (strong statement believed true)',
+    answer: 'assertion',
+  },
+  {
+    id: 49,
+    type: 'spelling',
+    text: 'out______e (a result)',
+    answer: 'outcome',
+  },
+  {
+    id: 50,
+    type: 'spelling',
+    text: 'ev______ce (proof or facts)',
+    answer: 'evidence',
+  },
+  {
+    id: 51,
+    type: 'spelling',
+    text: 'ob______cle (something that blocks progress)',
+    answer: 'obstacle',
+  },
+  {
+    id: 52,
+    type: 'spelling',
+    text: 'con______er (to think carefully)',
+    answer: 'consider',
+  },
+  {
+    id: 53,
+    type: 'spelling',
+    text: 'em______ce (accept with enthusiasm)',
+    answer: 'embrace',
+  },
+  {
+    id: 54,
+    type: 'spelling',
+    text: 'cr______ple (to wrinkle or crush)',
+    answer: 'crumple',
+  },
+  {
+    id: 55,
+    type: 'spelling',
+    text: 'in______ection (short emotional word)',
+    answer: 'interjection',
+  },
+  {
+    id: 56,
+    type: 'spelling',
+    text: 'sn______ly (bad-tempered)',
+    answer: 'snarly',
+  },
+  {
+    id: 57,
+    type: 'spelling',
+    text: 'sk______ish (short argument)',
+    answer: 'skirmish',
+  },
+  {
+    id: 58,
+    type: 'spelling',
+    text: 'tr______e (temporary peace)',
+    answer: 'truce',
+  },
+  {
+    id: 59,
+    type: 'spelling',
+    text: 'im______ed (feeling admiration)',
+    answer: 'impressed',
+  },
   {
     id: 60,
     type: 'spelling',
-    text: 'A message asking people to act: c__________',
-    answer: 'call to action',
+    text: 'ba______in (to negotiate)',
+    answer: 'bargain',
   },
 ];
 
 const vocabTable: VocabRow[] = [
-  { word: 'changemaker', pos: 'noun', synonym: 'reformer', antonym: '' },
-  { word: 'intention', pos: 'noun', synonym: 'aim', antonym: '' },
-  { word: 'marine', pos: 'adj', synonym: 'aquatic', antonym: 'terrestrial' },
-  { word: 'innovative', pos: 'adj', synonym: 'ingenious', antonym: 'old-fashioned' },
-  { word: 'mission', pos: 'noun', synonym: 'objective', antonym: '' },
-  { word: 'reduce', pos: 'verb', synonym: 'decrease', antonym: 'increase' },
-  { word: 'typical', pos: 'adj', synonym: 'ordinary', antonym: 'extraordinary' },
-  { word: 'microfiber', pos: 'noun', synonym: '', antonym: '' },
-  { word: 'conversion', pos: 'noun', synonym: '', antonym: '' },
-  { word: 'scrawl', pos: 'verb', synonym: 'scribble', antonym: '' },
-  { word: 'deliberately', pos: 'adv', synonym: 'intentionally', antonym: '' },
-  { word: 'conserve', pos: 'verb', synonym: 'preserve', antonym: 'waste' },
-  { word: 'cooperate', pos: 'verb', synonym: 'collaborate', antonym: '' },
-  { word: 'briskly', pos: 'adv', synonym: 'swiftly', antonym: 'slowly' },
-  { word: 'chime', pos: 'verb', synonym: '', antonym: '' },
-  { word: 'tumult', pos: 'noun', synonym: 'ruckus', antonym: '' },
-  { word: 'dissenting', pos: 'adj', synonym: 'disagreeing', antonym: 'assenting' },
-  { word: 'unnecessary', pos: 'adj', synonym: 'needless', antonym: 'necessary' },
-  { word: 'disagreement', pos: 'noun', synonym: 'dispute', antonym: 'agreement' },
-  { word: 'call to action', pos: 'phrase', synonym: 'appeal', antonym: '' },
+  { word: 'inventive', pos: 'adj.', synonym: 'innovative', antonym: 'dull' },
+  { word: 'suspiciously', pos: 'adv.', synonym: 'doubtfully', antonym: 'trustingly' },
+  { word: 'scooch', pos: 'v.', synonym: '', antonym: '' },
+  { word: 'truce', pos: 'n.', synonym: 'agreement', antonym: '' },
+  { word: 'impressed', pos: 'adj.', synonym: 'amazed', antonym: '' },
+  { word: 'obstacle', pos: 'n.', synonym: 'barrier', antonym: '' },
+  { word: 'consider', pos: 'v.', synonym: 'contemplate', antonym: '' },
+  { word: 'embrace', pos: 'v.', synonym: 'welcome', antonym: 'reject' },
+  { word: 'negotiate', pos: 'v.', synonym: 'bargain', antonym: '' },
+  { word: 'engaged', pos: 'adj.', synonym: 'committed', antonym: 'inactive' },
+  { word: 'referral', pos: 'n.', synonym: '', antonym: '' },
+  { word: 'generation', pos: 'n.', synonym: 'age', antonym: '' },
+  { word: 'affirmative', pos: 'adj.', synonym: 'assenting', antonym: 'dissenting' },
+  { word: 'assertion', pos: 'n.', synonym: 'declaration', antonym: 'question' },
+  { word: 'outcome', pos: 'n.', synonym: 'result', antonym: 'cause' },
+  { word: 'evidence', pos: 'n.', synonym: 'proof', antonym: '' },
+  { word: 'crumple', pos: 'v.', synonym: 'scrunch', antonym: 'smooth' },
+  { word: 'interjection', pos: 'n.', synonym: 'exclamation', antonym: '' },
+  { word: 'snarly', pos: 'adj.', synonym: 'bad-tempered', antonym: '' },
+  { word: 'skirmish', pos: 'n.', synonym: 'fight', antonym: '' },
 ];
 
 const focusWords = [
-  'changemaker',
-  'intention',
-  'innovative',
-  'microfiber',
-  'conversion',
-  'scrawl',
-  'deliberately',
-  'conserve',
-  'cooperate',
-  'briskly',
-  'dissenting',
-  'unnecessary',
-  'disagreement',
-  'tumult',
-  'typical',
+  'suspiciously',
+  'negotiate',
+  'referral',
+  'affirmative',
+  'assertion',
+  'interjection',
+  'generation',
+  'obstacle',
+  'crumple',
+  'skirmish',
 ];
 
 const miniPracticeA = [
-  'We must ______ electricity by turning off the lights.',
-  'The class had a loud ______ after the announcement.',
-  'She walked ______ to catch the bus.',
-  'The students decided to ______ on the group project.',
-  'His ______ was to become a scientist.',
+  'The two countries tried to _________ to avoid war.',
+  'The teacher looked at him __________ when he laughed.',
+  'The broken bridge became a major __________.',
+  '"Wow!" is an example of an __________.',
+  'Their argument was only a small __________.',
 ];
 
-const miniSpellingChallenge = ['dissagreemant', 'unneccessary', 'delibrately', 'inovative', 'microfibre'];
-
-const reviewAnswers = ['1 conserve', '2 scrawl', '3 work together', '4 saving resources', '5 something you plan to do'];
-
-const speedReviewPrompts = [
-  { key: 'A', word: 'conserve', meaning: 'saving resources' },
-  { key: 'B', word: 'cooperate', meaning: 'working together' },
-  { key: 'C', word: 'tumult', meaning: 'loud noisy excitement' },
-  { key: 'D', word: 'intention', meaning: 'something you plan to do' },
-  { key: 'E', word: 'scrawl', meaning: 'messy quick writing' },
+const miniPracticeB = [
+  'negotiate - noun form: __________',
+  'assert - noun form: __________',
+  'generate - noun form: __________',
+  'refer - noun form: __________',
+  'affirm - adjective form: __________',
 ];
 
-const answerKey = {
-  mcAnswers: [
-    'B',
-    'C',
-    'A',
-    'B',
-    'A',
-    'B',
-    'A',
-    'B',
-    'A',
-    'A',
-    'B',
-    'B',
-    'A',
-    'B',
-    'A',
-    'B',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'B',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-  ],
-  spellingAnswers: [
-    'changemaker',
-    'intention',
-    'marine',
-    'innovative',
-    'mission',
-    'reduce',
-    'typical',
-    'microfiber',
-    'conversion',
-    'scrawl',
-    'deliberately',
-    'conserve',
-    'cooperate',
-    'briskly',
-    'chime',
-    'tumult',
-    'dissenting',
-    'unnecessary',
-    'disagreement',
-    'call to action',
-  ],
-};
+const reviewAnswers = [
+  '1 negotiate',
+  '2 suspiciously',
+  '3 obstacle',
+  '4 interjection',
+  '5 skirmish',
+  '6 negotiation',
+  '7 assertion',
+  '8 generation',
+  '9 referral',
+  '10 affirmative',
+];
 
 const normalizeText = (value: string) => value.trim().toLowerCase().replace(/\s+/g, ' ');
 
@@ -482,7 +512,7 @@ export default function VocabQuizPage() {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [spellingInput, setSpellingInput] = useState('');
   const [answers, setAnswers] = useState<Answer[]>(() =>
-    questions.map(() => ({ choice: null, text: '', isCorrect: false }))
+    questions.map(() => ({ choice: null, text: '', isCorrect: false })),
   );
   const [showFeedback, setShowFeedback] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -495,11 +525,13 @@ export default function VocabQuizPage() {
     }
 
     const isCorrect = normalizeText(spellingInput) === normalizeText(currentQuestion.answer);
+
     setAnswers((prev) => {
       const next = [...prev];
       next[currentIndex] = { choice: null, text: spellingInput, isCorrect };
       return next;
     });
+
     setShowFeedback(true);
   };
 
@@ -508,6 +540,7 @@ export default function VocabQuizPage() {
       setIsFinished(true);
       return;
     }
+
     setCurrentIndex((prev) => prev + 1);
     setSelectedOption(null);
     setSpellingInput('');
@@ -535,12 +568,13 @@ export default function VocabQuizPage() {
     return isAnswered(q, ans) && !ans.isCorrect;
   });
   const completedCount = answers.filter((ans, idx) => isAnswered(questions[idx], ans)).length;
-  const wrongCount = wrongQuestions.length;
+
+  const wrongCount = answers.filter((ans, idx) => isAnswered(questions[idx], ans) && !ans.isCorrect).length;
 
   const partLabel = () => {
-    if (currentIndex < 20) return 'Part 1 · Word Meaning';
-    if (currentIndex < 40) return 'Part 2 · Synonym / Antonym';
-    return 'Part 3 · Spelling';
+    if (currentIndex < 20) return 'Part A · Multiple Choice';
+    if (currentIndex < 40) return 'Part B · Synonym / Antonym';
+    return 'Part C · Spelling';
   };
 
   return (
@@ -557,22 +591,35 @@ export default function VocabQuizPage() {
       <div
         style={{
           width: '100%',
-          maxWidth: 840,
+          maxWidth: 800,
           background: '#ffffff',
           borderRadius: 16,
           padding: 24,
           boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
         }}
       >
-        <header style={{ borderBottom: '1px solid #e5e7eb', marginBottom: 20, paddingBottom: 12 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Week 06 Vocabulary Test</h1>
+        <header
+          style={{
+            borderBottom: '1px solid #e5e7eb',
+            marginBottom: 20,
+            paddingBottom: 12,
+          }}
+        >
+          <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Week 4 Vocabulary Test</h1>
           <p style={{ color: '#6b7280', fontSize: 14 }}>
-            60 questions · Part 1 20 + Part 2 20 + Part 3 20 · Instant feedback and review after completion
+            60 questions · Part A 20 + Part B 20 + Part C 20 · Instant feedback and review after completion
           </p>
         </header>
 
         <div style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginBottom: 8,
+              fontSize: 14,
+            }}
+          >
             <span>
               Question {completedCount} / {totalQuestions}
             </span>
@@ -806,12 +853,14 @@ export default function VocabQuizPage() {
                 {wrongQuestions.map((q) => {
                   const idx = questions.findIndex((qq) => qq.id === q.id);
                   const ans = answers[idx];
+
                   const selectedText =
                     q.type === 'mc'
                       ? ans.choice !== null
                         ? q.options[ans.choice]
                         : 'No choice'
                       : ans.text.trim() || 'No input';
+
                   const correctText = q.type === 'mc' ? q.options[q.correctIndex] : q.answer;
 
                   return (
@@ -842,7 +891,14 @@ export default function VocabQuizPage() {
 
             <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 10 }}>Vocabulary Summary Table</h3>
             <div style={{ overflowX: 'auto', marginBottom: 20 }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 760 }}>
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: 13,
+                  minWidth: 560,
+                }}
+              >
                 <thead>
                   <tr style={{ background: '#f8fafc' }}>
                     <th style={{ border: '1px solid #e5e7eb', padding: 8, textAlign: 'left' }}>Word</th>
@@ -866,8 +922,8 @@ export default function VocabQuizPage() {
 
             <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 10 }}>Difficult Words Intensive Review</h3>
 
-            <div style={{ fontSize: 14, marginBottom: 8 }}>
-              <strong>Spelling Focus List</strong>
+            <div style={{ fontSize: 14, marginBottom: 10 }}>
+              <strong>Focus Words</strong>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
               {focusWords.map((word) => (
@@ -888,7 +944,7 @@ export default function VocabQuizPage() {
             </div>
 
             <div style={{ fontSize: 14, marginBottom: 8 }}>
-              <strong>Mini Practice 1. Fill in the blank</strong>
+              <strong>Mini Practice A. Fill in the blank</strong>
             </div>
             <ol style={{ marginTop: 0, marginBottom: 14, paddingLeft: 20, fontSize: 14 }}>
               {miniPracticeA.map((item) => (
@@ -899,58 +955,36 @@ export default function VocabQuizPage() {
             </ol>
 
             <div style={{ fontSize: 14, marginBottom: 8 }}>
-              <strong>Mini Practice 2. Spelling challenge</strong>
+              <strong>Mini Practice B. Word Form Challenge</strong>
             </div>
-            <ol style={{ marginTop: 0, marginBottom: 14, paddingLeft: 20, fontSize: 14 }}>
-              {miniSpellingChallenge.map((item, idx) => (
+            <ol style={{ marginTop: 0, marginBottom: 14, paddingLeft: 20, fontSize: 14 }} start={6}>
+              {miniPracticeB.map((item) => (
                 <li key={item} style={{ marginBottom: 4 }}>
-                  {`${idx + 1}. ${item}`}
+                  {item}
                 </li>
               ))}
             </ol>
 
             <div style={{ fontSize: 14, marginBottom: 8 }}>
-              <strong>Mini Practice 3. Speed review</strong>
+              <strong>Answer</strong>
             </div>
-            <ol style={{ marginTop: 0, marginBottom: 8, paddingLeft: 20, fontSize: 14 }}>
-              {speedReviewPrompts.map((item) => (
-                <li key={item.key} style={{ marginBottom: 4 }}>
-                  <strong>{item.key}</strong> {item.word}
-                </li>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {reviewAnswers.map((line) => (
+                <span
+                  key={line}
+                  style={{
+                    background: '#f0fdf4',
+                    color: '#166534',
+                    border: '1px solid #bbf7d0',
+                    borderRadius: 999,
+                    padding: '5px 10px',
+                    fontSize: 13,
+                  }}
+                >
+                  {line}
+                </span>
               ))}
-            </ol>
-            <ul style={{ marginTop: 0, marginBottom: 16, paddingLeft: 20, fontSize: 13 }}>
-              <li>1. loud noisy excitement</li>
-              <li>2. messy quick writing</li>
-              <li>3. working together</li>
-              <li>4. saving resources</li>
-              <li>5. something you plan to do</li>
-            </ul>
-
-            <div style={{ fontSize: 14, marginBottom: 8 }}>
-              <strong>Answer Key</strong>
             </div>
-            <div style={{ fontSize: 13, marginBottom: 8 }}>
-              <strong>Part 1 (1–20):</strong> {answerKey.mcAnswers.slice(0, 20).join(' ')}
-            </div>
-            <div style={{ fontSize: 13, marginBottom: 8 }}>
-              <strong>Part 2 (21–40):</strong> {answerKey.mcAnswers.slice(20, 40).join(' ')}
-            </div>
-            <div style={{ marginBottom: 20 }}>
-              <strong style={{ fontSize: 13 }}>Part 3 (41–60):</strong>
-              <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
-                {answerKey.spellingAnswers.map((item, idx) => (
-                  <div key={item + idx} style={{ background: '#f0fdf4', padding: 6, borderRadius: 8 }}>
-                    {41 + idx}. {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ fontSize: 14 }}>
-              <strong>Wrong answer review</strong>
-            </div>
-            <p style={{ fontSize: 13 }}>{reviewAnswers.join(' | ')}</p>
           </div>
         )}
       </div>

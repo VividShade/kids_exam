@@ -1,27 +1,27 @@
 const summaryRows = [
-  { word: 'changemaker', partOfSpeech: 'noun', synonym: 'reformer', antonym: '' },
-  { word: 'intention', partOfSpeech: 'noun', synonym: 'aim', antonym: '' },
-  { word: 'marine', partOfSpeech: 'adj', synonym: 'aquatic', antonym: 'terrestrial' },
-  { word: 'innovative', partOfSpeech: 'adj', synonym: 'ingenious', antonym: 'old-fashioned' },
-  { word: 'mission', partOfSpeech: 'noun', synonym: 'objective', antonym: '' },
-  { word: 'reduce', partOfSpeech: 'verb', synonym: 'decrease', antonym: 'increase' },
-  { word: 'typical', partOfSpeech: 'adj', synonym: 'ordinary', antonym: 'extraordinary' },
-  { word: 'microfiber', partOfSpeech: 'noun', synonym: '', antonym: '' },
-  { word: 'conversion', partOfSpeech: 'noun', synonym: '', antonym: '' },
-  { word: 'scrawl', partOfSpeech: 'verb', synonym: 'scribble', antonym: '' },
+  { word: 'aspire', partOfSpeech: 'verb', synonym: 'desire', antonym: '' },
+  { word: 'make room', partOfSpeech: 'phrasal verb', synonym: 'accommodate', antonym: '' },
+  { word: 'concerned', partOfSpeech: 'adj', synonym: 'distressed', antonym: 'calm' },
+  { word: 'donate', partOfSpeech: 'verb', synonym: 'contribute', antonym: '' },
+  { word: 'annual', partOfSpeech: 'adj', synonym: 'yearly', antonym: '' },
+  { word: 'non-profit', partOfSpeech: 'adj', synonym: 'charitable', antonym: 'profitmaking' },
+  { word: 'charity', partOfSpeech: 'noun', synonym: '', antonym: 'business' },
+  { word: 'put into perspective', partOfSpeech: 'phrase', synonym: '', antonym: '' },
+  { word: 'independent', partOfSpeech: 'adj', synonym: 'autonomous', antonym: 'dependent' },
+  { word: 'orderly', partOfSpeech: 'adj', synonym: 'neat', antonym: 'disorderly' },
+  { word: 'immature', partOfSpeech: 'adj', synonym: 'childish', antonym: 'mature' },
+  { word: 'disciplined', partOfSpeech: 'adj', synonym: 'restrained', antonym: 'unrestrained' },
+  { word: 'incident', partOfSpeech: 'noun', synonym: 'episode', antonym: '' },
+  { word: 'preliminary', partOfSpeech: 'adj', synonym: 'introductory', antonym: 'final' },
+  { word: 'inventive', partOfSpeech: 'adj', synonym: 'innovative', antonym: 'dull' },
   { word: 'deliberately', partOfSpeech: 'adv', synonym: 'intentionally', antonym: '' },
-  { word: 'conserve', partOfSpeech: 'verb', synonym: 'preserve', antonym: 'waste' },
-  { word: 'cooperate', partOfSpeech: 'verb', synonym: 'collaborate', antonym: '' },
-  { word: 'briskly', partOfSpeech: 'adv', synonym: 'swiftly', antonym: 'slowly' },
-  { word: 'chime', partOfSpeech: 'verb', synonym: '', antonym: '' },
-  { word: 'tumult', partOfSpeech: 'noun', synonym: 'ruckus', antonym: '' },
-  { word: 'dissenting', partOfSpeech: 'adj', synonym: 'disagreeing', antonym: 'assenting' },
-  { word: 'unnecessary', partOfSpeech: 'adj', synonym: 'needless', antonym: 'necessary' },
-  { word: 'disagreement', partOfSpeech: 'noun', synonym: 'dispute', antonym: 'agreement' },
-  { word: 'call to action', partOfSpeech: 'phrase', synonym: 'appeal', antonym: '' },
+  { word: 'community service', partOfSpeech: 'noun', synonym: 'volunteering', antonym: '' },
+  { word: 'invaluable', partOfSpeech: 'adj', synonym: 'beneficial', antonym: 'pointless' },
+  { word: 'advocate', partOfSpeech: 'verb', synonym: 'propose', antonym: 'condemn' },
+  { word: 'critical thinking', partOfSpeech: 'noun', synonym: 'analysis', antonym: '' },
 ];
 
-export default function D06SummaryPage() {
+export default function D05SummaryPage() {
   return (
     <main
       style={{
@@ -41,7 +41,7 @@ export default function D06SummaryPage() {
           boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
         }}
       >
-        <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Week 05 Vocabulary Summary</h1>
+        <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Week 5 Vocabulary Summary</h1>
         <p style={{ marginTop: 0, marginBottom: 16, color: '#4b5563', fontSize: 14 }}>
           Vocabulary Table
         </p>

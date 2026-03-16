@@ -1,5 +1,5 @@
 좋습니다.
-이미지에 나온 Week 01 Vocabulary 전체 단어(1–20번)를 기준으로 다음 3가지를 제공합니다.
+이미지에 나온 Week 1 Vocabulary 전체 단어(1–20번)를 기준으로 다음 3가지를 제공합니다.
 
 1. Vocabulary Test 60문제
 

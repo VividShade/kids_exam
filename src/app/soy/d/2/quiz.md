@@ -1,4 +1,4 @@
-## Week 02 Vocabulary Test Data
+## Week 2 Vocabulary Test Data
 
 ### Included Words
 commotion, courteous, disciplined, bullhorn, ignorant, revolting, huddle, directory, found, self-made, incredibly, exclusive, unlimited, access, extraordinary, play a role, logical, burden of proof, declare, improperly

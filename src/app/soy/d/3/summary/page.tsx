@@ -41,7 +41,7 @@ export default function D03SummaryPage() {
           boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
         }}
       >
-        <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Week 03 Vocabulary Summary</h1>
+        <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Week 3 Vocabulary Summary</h1>
         <p style={{ marginTop: 0, marginBottom: 16, color: '#4b5563', fontSize: 14 }}>
           Part 4. Vocabulary Table
         </p>

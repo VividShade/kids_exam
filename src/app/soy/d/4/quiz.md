@@ -1,4 +1,4 @@
-## Week 04 Vocabulary Test Data
+## Week 4 Vocabulary Test Data
 
 ### Included Words
 inventive, suspiciously, scooch, truce, impressed, obstacle, consider, embrace, negotiate, engaged, referral, generation, affirmative, assertion, outcome, evidence, crumple, interjection, snarly, skirmish

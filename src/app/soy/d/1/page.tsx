@@ -30,141 +30,141 @@ const questions: Question[] = [
   {
     id: 1,
     type: 'mc',
-    text: 'When the singer appeared, there was a loud ______ in the crowd.',
-    options: ['directory', 'commotion', 'burden', 'access'],
+    text: 'She showed great __ when she kept practicing even after many failures.',
+    options: ['luck', 'determination', 'opposition', 'blab'],
     correctIndex: 1,
   },
   {
     id: 2,
     type: 'mc',
-    text: 'The hotel staff were very ______ and polite to the guests.',
-    options: ['revolting', 'courteous', 'exclusive', 'improper'],
+    text: 'The speech was so __ that everyone felt hopeful afterward.',
+    options: ['cruel', 'inspiring', 'immature', 'orderly'],
     correctIndex: 1,
   },
   {
     id: 3,
     type: 'mc',
-    text: 'The athlete was so ______ that she trained every day.',
-    options: ['disciplined', 'ignorant', 'logical', 'clueless'],
+    text: 'Many teenagers use __ to share photos and videos online.',
+    options: ['social media', 'proposition', 'tolerance', 'government'],
     correctIndex: 0,
   },
   {
     id: 4,
     type: 'mc',
-    text: 'The coach used a ______ to make his voice louder.',
-    options: ['directory', 'huddle', 'bullhorn', 'burden'],
-    correctIndex: 2,
+    text: 'The teacher tried to __ her students to study harder.',
+    options: ['discourage', 'motivate', 'surrender', 'blab'],
+    correctIndex: 1,
   },
   {
     id: 5,
     type: 'mc',
-    text: 'He was ______ of the rules and did not know what to do.',
-    options: ['knowledgeable', 'exclusive', 'ignorant', 'rational'],
+    text: 'It was __ of him to laugh at someone who was hurt.',
+    options: ['kind', 'independent', 'cruel', 'practical'],
     correctIndex: 2,
   },
   {
     id: 6,
     type: 'mc',
-    text: 'The smell was so ______ that everyone covered their noses.',
-    options: ['revolting', 'courteous', 'unlimited', 'logical'],
+    text: 'She worked hard to __ her dream of becoming a doctor.',
+    options: ['fulfill', 'ramble', 'debate', 'object'],
     correctIndex: 0,
   },
   {
     id: 7,
     type: 'mc',
-    text: 'The players stood in a small ______ before the game started.',
-    options: ['directory', 'huddle', 'commotion', 'access'],
+    text: 'He tried to __ his fear of public speaking.',
+    options: ['surrender', 'overcome', 'blab', 'recruit'],
     correctIndex: 1,
   },
   {
     id: 8,
     type: 'mc',
-    text: 'I found her phone number in the school ______.',
-    options: ['directory', 'burden', 'role', 'declaration'],
+    text: 'Winning the contest was partly skill and partly __.',
+    options: ['luck', 'opposition', 'discussion', 'intolerance'],
     correctIndex: 0,
   },
   {
     id: 9,
     type: 'mc',
-    text: 'She plans to ______ her own company next year.',
-    options: ['declare', 'found', 'access', 'huddle'],
-    correctIndex: 1,
+    text: 'After the war, the country became __.',
+    options: ['dependent', 'immature', 'independent', 'discouraging'],
+    correctIndex: 2,
   },
   {
     id: 10,
     type: 'mc',
-    text: 'He is a ______ businessman who built everything himself.',
-    options: ['revolting', 'self-made', 'improper', 'ignorant'],
+    text: 'I __ finished my homework before dinner.',
+    options: ['orderly', 'practically', 'cruelly', 'loudly'],
     correctIndex: 1,
   },
   {
     id: 11,
     type: 'mc',
-    text: 'The test was ______ difficult for most students.',
-    options: ['ordinarily', 'incredibly', 'improperly', 'politely'],
-    correctIndex: 1,
+    text: 'Her desk is always clean and __.',
+    options: ['orderly', 'loud', 'immature', 'brutal'],
+    correctIndex: 0,
   },
   {
     id: 12,
     type: 'mc',
-    text: 'This club is ______ and only members can enter.',
-    options: ['public', 'logical', 'exclusive', 'endless'],
-    correctIndex: 2,
+    text: 'He is such a __ that he always talks too much.',
+    options: ['recruit', 'loudmouth', 'newcomer', 'conqueror'],
+    correctIndex: 1,
   },
   {
     id: 13,
     type: 'mc',
-    text: 'She was given ______ access to the library.',
-    options: ['restricted', 'improper', 'unlimited', 'rational'],
+    text: 'Please stop __ and listen carefully.',
+    options: ['fulfilling', 'recruiting', 'blabbing', 'achieving'],
     correctIndex: 2,
   },
   {
     id: 14,
     type: 'mc',
-    text: 'Students do not have ______ to that website.',
-    options: ['burden', 'access', 'role', 'commotion'],
-    correctIndex: 1,
+    text: 'The company hired a new __ last week.',
+    options: ['recruit', 'opposition', 'debate', 'tolerance'],
+    correctIndex: 0,
   },
   {
     id: 15,
     type: 'mc',
-    text: 'Winning at age five is an ______ achievement.',
-    options: ['average', 'improper', 'extraordinary', 'logical'],
+    text: 'Throwing a tantrum is very __ behavior.',
+    options: ['mature', 'orderly', 'immature', 'inspiring'],
     correctIndex: 2,
   },
   {
     id: 16,
     type: 'mc',
-    text: 'Hard work can ______ in your success.',
-    options: ['found', 'declare', 'play a role', 'revolt'],
-    correctIndex: 2,
+    text: 'We should show __ toward people with different opinions.',
+    options: ['luck', 'tolerance', 'cruelty', 'surrender'],
+    correctIndex: 1,
   },
   {
     id: 17,
     type: 'mc',
-    text: 'His argument was clear and ______.',
-    options: ['logical', 'revolting', 'clueless', 'improper'],
+    text: 'The class had a long __ about the project.',
+    options: ['discussion', 'luck', 'conquest', 'blab'],
     correctIndex: 0,
   },
   {
     id: 18,
     type: 'mc',
-    text: 'In court, the ______ is on the prosecutor.',
-    options: ['huddle', 'burden of proof', 'directory', 'access'],
+    text: 'The __ announced a new education policy.',
+    options: ['social media', 'government', 'loudmouth', 'recruit'],
     correctIndex: 1,
   },
   {
     id: 19,
     type: 'mc',
-    text: 'The president will ______ the new policy tomorrow.',
-    options: ['declare', 'access', 'huddle', 'found'],
+    text: 'The new law was passed after voters approved the __.',
+    options: ['proposition', 'ramble', 'disorder', 'luck'],
     correctIndex: 0,
   },
   {
     id: 20,
     type: 'mc',
-    text: 'If you use the machine ______, it may break.',
-    options: ['logically', 'improperly', 'courteously', 'extraordinarily'],
+    text: 'The plan faced strong __ from angry parents.',
+    options: ['acceptance', 'opposition', 'inspiration', 'fulfillment'],
     correctIndex: 1,
   },
 
@@ -172,141 +172,141 @@ const questions: Question[] = [
   {
     id: 21,
     type: 'mc',
-    text: 'Synonym of commotion:',
-    options: ['uproar', 'silence', 'directory', 'logic'],
+    text: 'A synonym for determination is:',
+    options: ['persistence', 'surrender', 'luck', 'cruelty'],
     correctIndex: 0,
   },
   {
     id: 22,
     type: 'mc',
-    text: 'Antonym of courteous:',
-    options: ['polite', 'well-mannered', 'impolite', 'rational'],
-    correctIndex: 2,
+    text: 'A synonym for inspirational is:',
+    options: ['discouraging', 'uplifting', 'immature', 'cruel'],
+    correctIndex: 1,
   },
   {
     id: 23,
     type: 'mc',
-    text: 'Synonym of disciplined:',
-    options: ['restrained', 'wild', 'ignorant', 'revolting'],
+    text: 'A synonym for social media is:',
+    options: ['digital platforms', 'opposition', 'debate', 'ramble'],
     correctIndex: 0,
   },
   {
     id: 24,
     type: 'mc',
-    text: 'Synonym of bullhorn:',
-    options: ['microphone', 'megaphone', 'directory', 'access'],
+    text: 'A synonym for motivate is:',
+    options: ['discourage', 'encourage', 'oppose', 'surrender'],
     correctIndex: 1,
   },
   {
     id: 25,
     type: 'mc',
-    text: 'Synonym of ignorant:',
-    options: ['knowledgeable', 'clueless', 'logical', 'disciplined'],
-    correctIndex: 1,
+    text: 'A synonym for blab is:',
+    options: ['ramble', 'conquer', 'fulfill', 'debate'],
+    correctIndex: 0,
   },
   {
     id: 26,
     type: 'mc',
-    text: 'Antonym of ignorant:',
-    options: ['clueless', 'revolting', 'knowledgeable', 'improper'],
-    correctIndex: 2,
+    text: 'A synonym for recruit is:',
+    options: ['newcomer', 'loudmouth', 'leader', 'government'],
+    correctIndex: 0,
   },
   {
     id: 27,
     type: 'mc',
-    text: 'Synonym of revolting:',
-    options: ['sickening', 'pleasing', 'polite', 'ordinary'],
+    text: 'A synonym for immature is:',
+    options: ['childish', 'mature', 'orderly', 'independent'],
     correctIndex: 0,
   },
   {
     id: 28,
     type: 'mc',
-    text: 'Antonym of revolting:',
-    options: ['disgusting', 'sickening', 'pleasing', 'improper'],
-    correctIndex: 2,
+    text: 'A synonym for tolerance is:',
+    options: ['intolerance', 'open-mindedness', 'cruelty', 'opposition'],
+    correctIndex: 1,
   },
   {
     id: 29,
     type: 'mc',
-    text: 'Synonym of found:',
-    options: ['establish', 'destroy', 'declare', 'access'],
-    correctIndex: 0,
+    text: 'A synonym for discussion is:',
+    options: ['luck', 'debate', 'surrender', 'ramble'],
+    correctIndex: 1,
   },
   {
     id: 30,
     type: 'mc',
-    text: 'Antonym of self-made:',
-    options: ['independent', 'dependent', 'disciplined', 'rational'],
+    text: 'A synonym for cruel is:',
+    options: ['kind', 'brutal', 'orderly', 'uplifting'],
     correctIndex: 1,
   },
   {
     id: 31,
     type: 'mc',
-    text: 'Synonym of incredibly:',
-    options: ['ordinarily', 'extremely', 'improperly', 'politely'],
+    text: 'A synonym for fulfill is:',
+    options: ['fail', 'achieve', 'surrender', 'debate'],
     correctIndex: 1,
   },
   {
     id: 32,
     type: 'mc',
-    text: 'Synonym of exclusive:',
-    options: ['restricted', 'public', 'ordinary', 'unlimited'],
+    text: 'A synonym for overcome is:',
+    options: ['conquer', 'surrender', 'accept', 'ramble'],
     correctIndex: 0,
   },
   {
     id: 33,
     type: 'mc',
-    text: 'Antonym of exclusive:',
-    options: ['restricted', 'limited', 'public', 'extraordinary'],
-    correctIndex: 2,
+    text: 'A synonym for independent is:',
+    options: ['dependent', 'autonomous', 'immature', 'discouraging'],
+    correctIndex: 1,
   },
   {
     id: 34,
     type: 'mc',
-    text: 'Synonym of unlimited:',
-    options: ['endless', 'restricted', 'public', 'ordinary'],
+    text: 'A synonym for practically is:',
+    options: ['basically', 'cruelly', 'loudly', 'oppositely'],
     correctIndex: 0,
   },
   {
     id: 35,
     type: 'mc',
-    text: 'Synonym of access:',
-    options: ['entry', 'denial', 'burden', 'commotion'],
-    correctIndex: 0,
+    text: 'A synonym for orderly is:',
+    options: ['disorderly', 'neat', 'cruel', 'loud'],
+    correctIndex: 1,
   },
   {
     id: 36,
     type: 'mc',
-    text: 'Synonym of extraordinary:',
-    options: ['average', 'exceptional', 'ordinary', 'logical'],
-    correctIndex: 1,
+    text: 'A synonym for loudmouth is:',
+    options: ['blabberhead', 'recruit', 'leader', 'government'],
+    correctIndex: 0,
   },
   {
     id: 37,
     type: 'mc',
-    text: 'Synonym of logical:',
-    options: ['rational', 'illogical', 'clueless', 'revolting'],
-    correctIndex: 0,
+    text: 'An antonym for motivate is:',
+    options: ['encourage', 'inspire', 'discourage', 'achieve'],
+    correctIndex: 2,
   },
   {
     id: 38,
     type: 'mc',
-    text: 'Antonym of logical:',
-    options: ['rational', 'illogical', 'reasonable', 'disciplined'],
+    text: 'An antonym for immature is:',
+    options: ['childish', 'mature', 'cruel', 'loud'],
     correctIndex: 1,
   },
   {
     id: 39,
     type: 'mc',
-    text: 'Synonym of declare:',
-    options: ['proclaim', 'whisper', 'deny', 'restrict'],
-    correctIndex: 0,
+    text: 'An antonym for tolerance is:',
+    options: ['open-mindedness', 'acceptance', 'intolerance', 'kindness'],
+    correctIndex: 2,
   },
   {
     id: 40,
     type: 'mc',
-    text: 'Synonym of improperly:',
-    options: ['properly', 'incorrectly', 'logically', 'politely'],
+    text: 'An antonym for opposition is:',
+    options: ['debate', 'acceptance', 'cruelty', 'ramble'],
     correctIndex: 1,
   },
 
@@ -314,122 +314,122 @@ const questions: Question[] = [
   {
     id: 41,
     type: 'spelling',
-    text: 'comotion → ______',
-    answer: 'commotion',
+    text: 'determanation → ______',
+    answer: 'determination',
   },
   {
     id: 42,
     type: 'spelling',
-    text: 'couragous → ______',
-    answer: 'courteous',
+    text: 'inspiratonal → ______',
+    answer: 'inspirational',
   },
   {
     id: 43,
     type: 'spelling',
-    text: 'disipplined → ______',
-    answer: 'disciplined',
+    text: 'goverment → ______',
+    answer: 'government',
   },
   {
     id: 44,
     type: 'spelling',
-    text: 'ignorent → ______',
-    answer: 'ignorant',
+    text: 'oppisition → ______',
+    answer: 'opposition',
   },
   {
     id: 45,
     type: 'spelling',
-    text: 'revolting → ______',
-    answer: 'revolting',
+    text: 'propisition → ______',
+    answer: 'proposition',
   },
   {
     id: 46,
     type: 'spelling',
-    text: 'diractory → ______',
-    answer: 'directory',
+    text: 'indepedent → ______',
+    answer: 'independent',
   },
   {
     id: 47,
     type: 'spelling',
-    text: 'extrordinary → ______',
-    answer: 'extraordinary',
+    text: 'practacally → ______',
+    answer: 'practically',
   },
   {
     id: 48,
     type: 'spelling',
-    text: 'unlimitted → ______',
-    answer: 'unlimited',
+    text: 'orderley → ______',
+    answer: 'orderly',
   },
   {
     id: 49,
     type: 'spelling',
-    text: 'acces → ______',
-    answer: 'access',
+    text: 'tolerence → ______',
+    answer: 'tolerance',
   },
   {
     id: 50,
     type: 'spelling',
-    text: 'increadibly → ______',
-    answer: 'incredibly',
+    text: 'loudmoth → ______',
+    answer: 'loudmouth',
   },
   {
     id: 51,
     type: 'spelling',
-    text: 'exclussive → ______',
-    answer: 'exclusive',
+    text: 'fulfull → ______',
+    answer: 'fulfill',
   },
   {
     id: 52,
     type: 'spelling',
-    text: 'logicle → ______',
-    answer: 'logical',
+    text: 'overcume → ______',
+    answer: 'overcome',
   },
   {
     id: 53,
     type: 'spelling',
-    text: 'burdon of proof → ______',
-    answer: 'burden of proof',
+    text: 'recrute → ______',
+    answer: 'recruit',
   },
   {
     id: 54,
     type: 'spelling',
-    text: 'declaire → ______',
-    answer: 'declare',
+    text: 'immatuer → ______',
+    answer: 'immature',
   },
   {
     id: 55,
     type: 'spelling',
-    text: 'improperley → ______',
-    answer: 'improperly',
+    text: 'discusson → ______',
+    answer: 'discussion',
   },
   {
     id: 56,
     type: 'spelling',
-    text: 'huddle → ______',
-    answer: 'huddle',
+    text: 'socail media → ______',
+    answer: 'social media',
   },
   {
     id: 57,
     type: 'spelling',
-    text: 'selfmade → ______',
-    answer: 'self-made',
+    text: 'encourge → ______',
+    answer: 'encourage',
   },
   {
     id: 58,
     type: 'spelling',
-    text: 'megafone → ______',
-    answer: 'megaphone',
+    text: 'brutel → ______',
+    answer: 'brutal',
   },
   {
     id: 59,
     type: 'spelling',
-    text: 'knowledgable → ______',
-    answer: 'knowledgeable',
+    text: 'autonamous → ______',
+    answer: 'autonomous',
   },
   {
     id: 60,
     type: 'spelling',
-    text: 'extraordinery → ______',
-    answer: 'extraordinary',
+    text: 'surrendar → ______',
+    answer: 'surrender',
   },
 ];
 
@@ -533,7 +533,7 @@ export default function VocabQuizPage() {
             paddingBottom: 12,
           }}
         >
-          <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Week 02 Vocabulary Test</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Week 1 Vocabulary Test</h1>
           <p style={{ color: '#6b7280', fontSize: 14 }}>
             60문제 · 객관식 40 + 스펠링 20 · 한 문제씩 풀고 바로 정답 확인 · 끝나면 틀린 문제만 모아서 보기
           </p>
@@ -684,18 +684,18 @@ export default function VocabQuizPage() {
                   <>
                     {currentQuestion.type === 'mc' ? (
                       selectedOption === currentQuestion.correctIndex ? (
-                        <span style={{ color: '#16a34a', fontWeight: 600 }}>정답입니다!</span>
+                        <span style={{ color: '#16a34a', fontWeight: 600 }}>✅ 정답입니다!</span>
                       ) : (
                         <span style={{ color: '#ef4444', fontWeight: 600 }}>
-                          오답입니다. 정답은 {String.fromCharCode(65 + currentQuestion.correctIndex)}.{' '}
+                          ❌ 오답입니다. 정답은 {String.fromCharCode(65 + currentQuestion.correctIndex)}.{' '}
                           {currentQuestion.options[currentQuestion.correctIndex]}입니다.
                         </span>
                       )
                     ) : normalizeText(spellingInput) === normalizeText(currentQuestion.answer) ? (
-                      <span style={{ color: '#16a34a', fontWeight: 600 }}>정답입니다!</span>
+                      <span style={{ color: '#16a34a', fontWeight: 600 }}>✅ 정답입니다!</span>
                     ) : (
                       <span style={{ color: '#ef4444', fontWeight: 600 }}>
-                        오답입니다. 정답은 {currentQuestion.answer}입니다.
+                        ❌ 오답입니다. 정답은 {currentQuestion.answer}입니다.
                       </span>
                     )}
                   </>
@@ -775,7 +775,7 @@ export default function VocabQuizPage() {
 
             <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>내가 틀린 문제 모음</h3>
             {wrongQuestions.length === 0 ? (
-              <p style={{ fontSize: 14 }}>틀린 문제가 없습니다. 완벽해요!</p>
+              <p style={{ fontSize: 14 }}>틀린 문제가 없습니다. 완벽해요! 🎉</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {wrongQuestions.map((q) => {
@@ -812,10 +812,10 @@ export default function VocabQuizPage() {
                       </div>
                       <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{q.text}</div>
                       <div style={{ fontSize: 13, marginBottom: 2 }}>
-                        내가 입력/선택한 답: <strong>{selectedText}</strong>
+                        👉 내가 입력/선택한 답: <strong>{selectedText}</strong>
                       </div>
                       <div style={{ fontSize: 13 }}>
-                        정답: <strong>{correctText}</strong>
+                        ✅ 정답: <strong>{correctText}</strong>
                       </div>
                     </div>
                   );
