@@ -17,7 +17,9 @@ async function findQuizPages(dir: string, hrefPrefix: string): Promise<QuizLink[
     links.push({
       href: hrefPrefix,
       label: hrefPrefix.replace(/^\//, ''),
-      isHighlighted: hrefPrefix === '/jay/mcr/5-1' || hrefPrefix === '/jay/wonders/4.1/2-2',
+      isHighlighted:
+        hrefPrefix === '/jay/grammar/9' ||
+        hrefPrefix === '/jay/wordly/4',
     });
   }
 
@@ -144,10 +146,6 @@ export default async function JayQuizHome() {
             .map(({ category, links }) => (
               <LinkSection key={category} title={`jay/${category}`} links={links} />
             ))}
-          {Object.keys(grouped)
-            .filter((category) => !orderedSections.includes(category))
-            .filter((category) => grouped[category] && grouped[category].length > 0)
-            .map((category) => <LinkSection key={category} title={`jay/${category}`} links={grouped[category]} />)}
         </div>
       </div>
     </main>
