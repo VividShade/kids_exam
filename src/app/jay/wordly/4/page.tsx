@@ -281,7 +281,7 @@ export default function WordlyWordTest() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [answers, setAnswers] = useState<Array<{ choice: number | null; isCorrect: boolean }>>(() =>
-    questions.map(() => ({ choice: null, isCorrect: false })),
+    questions.map(() => ({ choice: null, isCorrect: false }))
   );
   const [showFeedback, setShowFeedback] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -335,10 +335,23 @@ export default function WordlyWordTest() {
     .map((q, idx) => ({ question: q, index: idx, answer: answers[idx] }))
     .filter(({ answer }) => answer.choice !== null && !answer.isCorrect);
 
-  const currentCorrectAnswerText = `${String.fromCharCode(65 + currentQuestion.correctIndex)}. ${currentQuestion.options[currentQuestion.correctIndex]}`;
+  const currentCorrectAnswerText = currentQuestion.options[currentQuestion.correctIndex];
+  const getCompletedSentence = (question: Question, answerText: string): string => {
+    if (question.type !== 'mc') return '';
+    if (question.text.includes('______')) {
+      return question.text.replace(/_{4,}/g, answerText);
+    }
+    return `${question.text} → ${answerText}`;
+  };
+  const getAnswerLabel = (question: Question, correctIndex: number): string =>
+    `${String.fromCharCode(65 + correctIndex)}. ${question.options[correctIndex]}`;
   const getSelectedLabel = (question: Question, answer: Answer): string => {
     if (answer.choice === null) return 'No answer';
     return `${String.fromCharCode(65 + answer.choice)}. ${question.options[answer.choice]}`;
+  };
+  const getCorrectSentenceByQuestionId = (question: Question): string => {
+    const answer = question.options[question.correctIndex];
+    return getCompletedSentence(question, answer);
   };
 
   return (
@@ -370,7 +383,9 @@ export default function WordlyWordTest() {
           }}
         >
           <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Wordly Vocabulary Test</h1>
-          <p style={{ color: '#6b7280', fontSize: 14 }}>Total 30 Questions · Part 1 15 + Part 2 15 · One by one review mode</p>
+          <p style={{ color: '#6b7280', fontSize: 14 }}>
+            Total 30 Questions · Part 1 15 + Part 2 15 · One by one review mode
+          </p>
         </header>
 
         <div style={{ marginBottom: 20 }}>
@@ -498,7 +513,7 @@ export default function WordlyWordTest() {
                     <span style={{ color: '#16a34a', fontWeight: 600 }}>Correct!</span>
                   ) : (
                     <span style={{ color: '#ef4444', fontWeight: 600 }}>
-                      Incorrect. The answer is {currentCorrectAnswerText}.
+                      {`Incorrect. The answer is ${getAnswerLabel(currentQuestion, currentQuestion.correctIndex)}.`}
                     </span>
                   )
                 ) : null}
@@ -582,7 +597,7 @@ export default function WordlyWordTest() {
                         Your answer: <strong>{selectedText}</strong>
                       </div>
                       <div style={{ fontSize: 13, marginBottom: 2 }}>
-                        Correct answer: <strong>{key?.answer}</strong>
+                        Correct answer: <strong>{getAnswerLabel(question, question.correctIndex)}</strong>
                       </div>
                       <div style={{ fontSize: 13, color: '#475569' }}>{key?.explanation}</div>
                     </div>

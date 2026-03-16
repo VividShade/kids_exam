@@ -71,24 +71,34 @@ const questions: Question[] = [
   },
   {
     id: 8,
-    text: 'How does Felipe react to Ranita\'s request at first?',
+    text: "How does Felipe react to Ranita's request at first?",
     options: ['He happily agrees', 'He thinks it is funny', 'He thinks it is disgusting', 'He ignores her'],
     correctIndex: 2,
   },
   {
     id: 9,
     text: 'What does Felipe secretly do when he promises Ranita?',
-    options: ['He crosses his fingers behind his back', 'He gives her a gift', 'He tells the truth', 'He asks Pepe for help'],
+    options: [
+      'He crosses his fingers behind his back',
+      'He gives her a gift',
+      'He tells the truth',
+      'He asks Pepe for help',
+    ],
     correctIndex: 0,
   },
   {
     id: 10,
     text: 'Why was Ranita turned into a frog?',
-    options: ['She broke a magic arrow', 'She refused to give the old woman a drink from the well', 'She stole something', 'She ran away from home'],
+    options: [
+      'She broke a magic arrow',
+      'She refused to give the old woman a drink from the well',
+      'She stole something',
+      'She ran away from home',
+    ],
     correctIndex: 1,
   },
-  { id: 11, text: 'Felipe is the Viceroy\'s son.', options: ['True', 'False'], correctIndex: 0 },
-  { id: 12, text: 'Pepe is Felipe\'s servant.', options: ['True', 'False'], correctIndex: 0 },
+  { id: 11, text: "Felipe is the Viceroy's son.", options: ['True', 'False'], correctIndex: 0 },
+  { id: 12, text: "Pepe is Felipe's servant.", options: ['True', 'False'], correctIndex: 0 },
   {
     id: 13,
     text: 'The men are happy because they found the golden arrow quickly.',
@@ -159,7 +169,7 @@ const answerKey: KeyItem[] = [
     explanation: 'The old woman says Ranita was selfish and refused to share water.',
   },
   { id: 11, answer: 'True', explanation: "Felipe is introduced as the Viceroy's son." },
-  { id: 12, answer: 'True', explanation: 'Pepe is described as Felipe\'s servant.' },
+  { id: 12, answer: 'True', explanation: "Pepe is described as Felipe's servant." },
   { id: 13, answer: 'False', explanation: 'The men are frustrated because they cannot find the arrow.' },
   { id: 14, answer: 'True', explanation: 'Ranita is a talking frog.' },
   { id: 15, answer: 'False', explanation: 'Felipe is rude and demanding, not polite.' },
@@ -174,7 +184,7 @@ export default function RanitaQuizPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [answers, setAnswers] = useState<Answer[]>(() =>
-    questions.map(() => ({ choice: null, text: '', isCorrect: false })),
+    questions.map(() => ({ choice: null, text: '', isCorrect: false }))
   );
   const [showFeedback, setShowFeedback] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -229,7 +239,9 @@ export default function RanitaQuizPage() {
     .map((question, index) => ({ question, answer: answers[index] }))
     .filter(({ question, answer }) => answer.choice !== null && answer.choice !== question.correctIndex);
 
-  const currentCorrectAnswerText = `${String.fromCharCode(65 + currentQuestion.correctIndex)}. ${currentQuestion.options[currentQuestion.correctIndex]}`;
+  const currentCorrectAnswerText = `${String.fromCharCode(65 + currentQuestion.correctIndex)}. ${
+    currentQuestion.options[currentQuestion.correctIndex]
+  }`;
 
   const getKeyLabel = (question: Question): string => {
     const key = answerKey.find((item) => item.id === question.id);
@@ -276,7 +288,9 @@ export default function RanitaQuizPage() {
           }}
         >
           <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Ranita: The Frog Princess</h1>
-          <p style={{ color: '#6b7280', fontSize: 14 }}>Reading Comprehension Quiz · 20 questions · One by one review mode</p>
+          <p style={{ color: '#6b7280', fontSize: 14 }}>
+            Reading Comprehension Quiz · 20 questions · One by one review mode
+          </p>
         </header>
 
         <div style={{ marginBottom: 20 }}>
@@ -404,7 +418,7 @@ export default function RanitaQuizPage() {
                     <span style={{ color: '#16a34a', fontWeight: 600 }}>Correct!</span>
                   ) : (
                     <span style={{ color: '#ef4444', fontWeight: 600 }}>
-                      Incorrect. The answer is {currentCorrectAnswerText}.
+                      Incorrect. The answer is <strong>'{currentCorrectAnswerText}'</strong>.
                     </span>
                   )
                 ) : null}
