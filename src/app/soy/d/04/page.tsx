@@ -521,25 +521,6 @@ export default function VocabQuizPage() {
 
   const handleCheckAnswer = () => {
     if (currentQuestion.type === 'mc') {
-      if (selectedOption === null) {
-        alert('Please select an option.');
-        return;
-      }
-
-      const isCorrect = selectedOption === currentQuestion.correctIndex;
-
-      setAnswers((prev) => {
-        const next = [...prev];
-        next[currentIndex] = { choice: selectedOption, text: '', isCorrect };
-        return next;
-      });
-
-      setShowFeedback(true);
-      return;
-    }
-
-    if (!spellingInput.trim()) {
-      alert('Please enter your answer.');
       return;
     }
 
@@ -715,7 +696,14 @@ export default function VocabQuizPage() {
                       type="button"
                       onClick={() => {
                         if (showFeedback) return;
+                        const isCorrect = index === currentQuestion.correctIndex;
                         setSelectedOption(index);
+                        setAnswers((prev) => {
+                          const next = [...prev];
+                          next[currentIndex] = { choice: index, text: '', isCorrect };
+                          return next;
+                        });
+                        setShowFeedback(true);
                       }}
                       style={{
                         textAlign: 'left',
@@ -787,7 +775,7 @@ export default function VocabQuizPage() {
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
-                {!showFeedback ? (
+                {!showFeedback && currentQuestion.type !== 'mc' ? (
                   <button
                     type="button"
                     onClick={handleCheckAnswer}
@@ -804,7 +792,8 @@ export default function VocabQuizPage() {
                   >
                     Check
                   </button>
-                ) : (
+                ) : null}
+                {showFeedback ? (
                   <button
                     type="button"
                     onClick={handleNext}
@@ -821,7 +810,7 @@ export default function VocabQuizPage() {
                   >
                     {currentIndex === questions.length - 1 ? 'See Results' : 'Next'}
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
           </>

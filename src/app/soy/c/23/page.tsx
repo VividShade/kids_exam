@@ -448,28 +448,7 @@ export default function VocabQuizPage() {
   const currentQuestion = questions[currentIndex];
 
   const handleCheckAnswer = () => {
-    if (currentQuestion.type === 'mc') {
-      if (selectedOption === null) {
-        alert('보기를 하나 선택해주세요.');
-        return;
-      }
-
-      const isCorrect = selectedOption === currentQuestion.correctIndex;
-
-      setAnswers((prev) => {
-        const next = [...prev];
-        next[currentIndex] = { choice: selectedOption, text: '', isCorrect };
-        return next;
-      });
-
-      setShowFeedback(true);
-      return;
-    }
-
-    if (!spellingInput.trim()) {
-      alert('정답을 입력해주세요.');
-      return;
-    }
+    if (currentQuestion.type === 'mc') return;
 
     const isCorrect = normalizeText(spellingInput) === normalizeText(currentQuestion.answer);
 
@@ -637,14 +616,21 @@ export default function VocabQuizPage() {
                     background = '#eff6ff';
                   }
 
-                  return (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => {
-                        if (showFeedback) return;
-                        setSelectedOption(index);
-                      }}
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => {
+                      if (showFeedback) return;
+                      const isCorrect = index === currentQuestion.correctIndex;
+                      setSelectedOption(index);
+                      setAnswers((prev) => {
+                        const next = [...prev];
+                        next[currentIndex] = { choice: index, text: '', isCorrect };
+                        return next;
+                      });
+                      setShowFeedback(true);
+                    }}
                       style={{
                         textAlign: 'left',
                         padding: '10px 12px',
@@ -715,24 +701,7 @@ export default function VocabQuizPage() {
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
-                {!showFeedback ? (
-                  <button
-                    type="button"
-                    onClick={handleCheckAnswer}
-                    style={{
-                      padding: '8px 14px',
-                      borderRadius: 999,
-                      border: 'none',
-                      background: '#3b82f6',
-                      color: '#ffffff',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      fontSize: 14,
-                    }}
-                  >
-                    정답 확인
-                  </button>
-                ) : (
+                {showFeedback ? (
                   <button
                     type="button"
                     onClick={handleNext}
@@ -749,7 +718,24 @@ export default function VocabQuizPage() {
                   >
                     {currentIndex === questions.length - 1 ? '결과 보기' : '다음 문제'}
                   </button>
-                )}
+                ) : currentQuestion.type !== 'mc' ? (
+                  <button
+                    type="button"
+                    onClick={handleCheckAnswer}
+                    style={{
+                      padding: '8px 14px',
+                      borderRadius: 999,
+                      border: 'none',
+                      background: '#3b82f6',
+                      color: '#ffffff',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontSize: 14,
+                    }}
+                  >
+                    정답 확인
+                  </button>
+                ) : null}
               </div>
             </div>
           </>
@@ -758,81 +744,8 @@ export default function VocabQuizPage() {
             <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>결과 요약</h2>
             <p style={{ fontSize: 14, marginBottom: 4 }}>
               총 {totalQuestions}문제 중 <strong>{correctCount}개 정답</strong>,{' '}
-              <strong>{totalQuestions - correctCount}개 오답</strong>
+              <strong>{wrongCount}개 오답</strong>
             </p>
-            <p style={{ fontSize: 14, marginBottom: 16 }}>
-              점수: <strong>{Math.round((correctCount / totalQuestions) * 100)}점</strong>
-            </p>
-
-            <button
-              type="button"
-              onClick={handleRestart}
-              style={{
-                padding: '8px 14px',
-                borderRadius: 999,
-                border: 'none',
-                background: '#3b82f6',
-                color: '#ffffff',
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontSize: 14,
-                marginBottom: 20,
-              }}
-            >
-              다시 풀기
-            </button>
-
-            <hr style={{ margin: '16px 0', borderColor: '#e5e7eb' }} />
-
-            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>내가 틀린 문제 모음</h3>
-            {wrongQuestions.length === 0 ? (
-              <p style={{ fontSize: 14 }}>틀린 문제가 없습니다. 완벽해요! 🎉</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {wrongQuestions.map((q) => {
-                  const idx = questions.findIndex((qq) => qq.id === q.id);
-                  const ans = answers[idx];
-
-                  const selectedText =
-                    q.type === 'mc'
-                      ? ans.choice !== null
-                        ? q.options[ans.choice]
-                        : '선택 안 함'
-                      : ans.text.trim() || '미입력';
-
-                  const correctText = q.type === 'mc' ? q.options[q.correctIndex] : q.answer;
-
-                  return (
-                    <div
-                      key={q.id}
-                      style={{
-                        padding: 12,
-                        borderRadius: 12,
-                        background: '#f9fafb',
-                        border: '1px solid #e5e7eb',
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 13,
-                          color: '#6b7280',
-                          marginBottom: 4,
-                        }}
-                      >
-                        문제 {q.id}
-                      </div>
-                      <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{q.text}</div>
-                      <div style={{ fontSize: 13, marginBottom: 2 }}>
-                        👉 내가 입력/선택한 답: <strong>{selectedText}</strong>
-                      </div>
-                      <div style={{ fontSize: 13 }}>
-                        ✅ 정답: <strong>{correctText}</strong>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </div>
         )}
       </div>

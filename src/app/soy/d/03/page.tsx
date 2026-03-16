@@ -496,25 +496,6 @@ export default function VocabQuizPage() {
 
   const handleCheckAnswer = () => {
     if (currentQuestion.type === 'mc') {
-      if (selectedOption === null) {
-        alert('보기를 하나 선택해주세요.');
-        return;
-      }
-
-      const isCorrect = selectedOption === currentQuestion.correctIndex;
-
-      setAnswers((prev) => {
-        const next = [...prev];
-        next[currentIndex] = { choice: selectedOption, text: '', isCorrect };
-        return next;
-      });
-
-      setShowFeedback(true);
-      return;
-    }
-
-    if (!spellingInput.trim()) {
-      alert('정답을 입력해주세요.');
       return;
     }
 
@@ -690,7 +671,14 @@ export default function VocabQuizPage() {
                       type="button"
                       onClick={() => {
                         if (showFeedback) return;
+                        const isCorrect = index === currentQuestion.correctIndex;
                         setSelectedOption(index);
+                        setAnswers((prev) => {
+                          const next = [...prev];
+                          next[currentIndex] = { choice: index, text: '', isCorrect };
+                          return next;
+                        });
+                        setShowFeedback(true);
                       }}
                       style={{
                         textAlign: 'left',
@@ -762,7 +750,7 @@ export default function VocabQuizPage() {
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
-                {!showFeedback ? (
+                {!showFeedback && currentQuestion.type !== 'mc' ? (
                   <button
                     type="button"
                     onClick={handleCheckAnswer}
@@ -779,7 +767,8 @@ export default function VocabQuizPage() {
                   >
                     정답 확인
                   </button>
-                ) : (
+                ) : null}
+                {showFeedback ? (
                   <button
                     type="button"
                     onClick={handleNext}
@@ -796,7 +785,7 @@ export default function VocabQuizPage() {
                   >
                     {currentIndex === questions.length - 1 ? '결과 보기' : '다음 문제'}
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
           </>

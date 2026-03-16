@@ -363,7 +363,14 @@ export default function RanitaQuizPage() {
                     type="button"
                     onClick={() => {
                       if (showFeedback) return;
+                      const isCorrectAnswer = index === currentQuestion.correctIndex;
                       setSelectedOption(index);
+                      setAnswers((prev) => {
+                        const next = [...prev];
+                        next[currentIndex] = { choice: index, text: '', isCorrect: isCorrectAnswer };
+                        return next;
+                      });
+                      setShowFeedback(true);
                     }}
                     style={{
                       textAlign: 'left',
@@ -404,24 +411,7 @@ export default function RanitaQuizPage() {
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
-                {!showFeedback ? (
-                  <button
-                    type="button"
-                    onClick={handleCheckAnswer}
-                    style={{
-                      padding: '8px 14px',
-                      borderRadius: 999,
-                      border: 'none',
-                      background: '#3b82f6',
-                      color: '#ffffff',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      fontSize: 14,
-                    }}
-                  >
-                    Check
-                  </button>
-                ) : (
+                {showFeedback && (
                   <button
                     type="button"
                     onClick={handleNext}

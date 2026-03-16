@@ -482,7 +482,7 @@ export default function VocabQuizPage() {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [spellingInput, setSpellingInput] = useState('');
   const [answers, setAnswers] = useState<Answer[]>(() =>
-    questions.map(() => ({ choice: null, text: '', isCorrect: false })),
+    questions.map(() => ({ choice: null, text: '', isCorrect: false }))
   );
   const [showFeedback, setShowFeedback] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -491,23 +491,6 @@ export default function VocabQuizPage() {
 
   const handleCheckAnswer = () => {
     if (currentQuestion.type === 'mc') {
-      if (selectedOption === null) {
-        alert('Please select an option.');
-        return;
-      }
-
-      const isCorrect = selectedOption === currentQuestion.correctIndex;
-      setAnswers((prev) => {
-        const next = [...prev];
-        next[currentIndex] = { choice: selectedOption, text: '', isCorrect };
-        return next;
-      });
-      setShowFeedback(true);
-      return;
-    }
-
-    if (!spellingInput.trim()) {
-      alert('Please enter your answer.');
       return;
     }
 
@@ -582,7 +565,7 @@ export default function VocabQuizPage() {
         }}
       >
         <header style={{ borderBottom: '1px solid #e5e7eb', marginBottom: 20, paddingBottom: 12 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Week 05 Vocabulary Test</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Week 06 Vocabulary Test</h1>
           <p style={{ color: '#6b7280', fontSize: 14 }}>
             60 questions · Part 1 20 + Part 2 20 + Part 3 20 · Instant feedback and review after completion
           </p>
@@ -666,7 +649,14 @@ export default function VocabQuizPage() {
                       type="button"
                       onClick={() => {
                         if (showFeedback) return;
+                        const isCorrect = index === currentQuestion.correctIndex;
                         setSelectedOption(index);
+                        setAnswers((prev) => {
+                          const next = [...prev];
+                          next[currentIndex] = { choice: index, text: '', isCorrect };
+                          return next;
+                        });
+                        setShowFeedback(true);
                       }}
                       style={{
                         textAlign: 'left',
@@ -738,7 +728,7 @@ export default function VocabQuizPage() {
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
-                {!showFeedback ? (
+                {!showFeedback && currentQuestion.type !== 'mc' ? (
                   <button
                     type="button"
                     onClick={handleCheckAnswer}
@@ -755,7 +745,8 @@ export default function VocabQuizPage() {
                   >
                     Check
                   </button>
-                ) : (
+                ) : null}
+                {showFeedback ? (
                   <button
                     type="button"
                     onClick={handleNext}
@@ -772,7 +763,7 @@ export default function VocabQuizPage() {
                   >
                     {currentIndex === questions.length - 1 ? 'See Results' : 'Next'}
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
           </>

@@ -231,23 +231,6 @@ export default function VocabularyTest() {
 
   const handleCheckAnswer = () => {
     if (currentQuestion.type === 'mc') {
-      if (selectedOption === null) {
-        alert('Please choose an option.');
-        return;
-      }
-
-      const isCorrectAnswer = selectedOption === currentQuestion.correctIndex;
-      setAnswers((prev) => {
-        const next = [...prev];
-        next[currentIndex] = { choice: selectedOption, text: '', isCorrect: isCorrectAnswer };
-        return next;
-      });
-      setShowFeedback(true);
-      return;
-    }
-
-    if (!shortAnswer.trim()) {
-      alert('Please type your answer.');
       return;
     }
 
@@ -428,14 +411,25 @@ export default function VocabularyTest() {
                     background = '#eff6ff';
                   }
 
-                  return (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => {
-                        if (showFeedback) return;
-                        setSelectedOption(index);
-                      }}
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => {
+                      if (showFeedback) return;
+                      const isCorrectAnswer = index === currentQuestion.correctIndex;
+                      setSelectedOption(index);
+                      setAnswers((prev) => {
+                        const next = [...prev];
+                        next[currentIndex] = {
+                          choice: index,
+                          text: '',
+                          isCorrect: isCorrectAnswer,
+                        };
+                        return next;
+                      });
+                      setShowFeedback(true);
+                    }}
                       style={{
                         textAlign: 'left',
                         padding: '10px 12px',
@@ -505,24 +499,7 @@ export default function VocabularyTest() {
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
-                {!showFeedback ? (
-                  <button
-                    type="button"
-                    onClick={handleCheckAnswer}
-                    style={{
-                      padding: '8px 14px',
-                      borderRadius: 999,
-                      border: 'none',
-                      background: '#3b82f6',
-                      color: '#ffffff',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      fontSize: 14,
-                    }}
-                  >
-                    Check
-                  </button>
-                ) : (
+                {showFeedback ? (
                   <button
                     type="button"
                     onClick={handleNext}
@@ -539,7 +516,24 @@ export default function VocabularyTest() {
                   >
                     {currentIndex === questions.length - 1 ? 'See Results' : 'Next'}
                   </button>
-                )}
+                ) : currentQuestion.type !== 'mc' ? (
+                  <button
+                    type="button"
+                    onClick={handleCheckAnswer}
+                    style={{
+                      padding: '8px 14px',
+                      borderRadius: 999,
+                      border: 'none',
+                      background: '#3b82f6',
+                      color: '#ffffff',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontSize: 14,
+                    }}
+                  >
+                    Check
+                  </button>
+                ) : null}
               </div>
             </div>
           </>

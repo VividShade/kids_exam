@@ -271,19 +271,8 @@ export default function VocabQuizPage() {
 
   const handleCheckAnswer = () => {
     if (selectedOption === null) {
-      alert('보기를 하나 선택해주세요.');
       return;
     }
-
-    const isCorrect = selectedOption === currentQuestion.correctIndex;
-
-    setAnswers((prev) => {
-      const next = [...prev];
-      next[currentIndex] = { selected: selectedOption, isCorrect };
-      return next;
-    });
-
-    setShowFeedback(true);
   };
 
   const handleNext = () => {
@@ -435,7 +424,14 @@ export default function VocabQuizPage() {
                     type="button"
                     onClick={() => {
                       if (showFeedback) return;
+                      const isCorrect = index === currentQuestion.correctIndex;
                       setSelectedOption(index);
+                      setAnswers((prev) => {
+                        const next = [...prev];
+                        next[currentIndex] = { selected: index, isCorrect };
+                        return next;
+                      });
+                      setShowFeedback(true);
                     }}
                     style={{
                       textAlign: 'left',
@@ -481,24 +477,7 @@ export default function VocabQuizPage() {
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
-                {!showFeedback ? (
-                  <button
-                    type="button"
-                    onClick={handleCheckAnswer}
-                    style={{
-                      padding: '8px 14px',
-                      borderRadius: 999,
-                      border: 'none',
-                      background: '#3b82f6',
-                      color: '#ffffff',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      fontSize: 14,
-                    }}
-                  >
-                    정답 확인
-                  </button>
-                ) : (
+                {showFeedback && (
                   <button
                     type="button"
                     onClick={handleNext}
