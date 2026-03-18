@@ -1,6 +1,6 @@
 import { readdir } from 'fs/promises';
-import path from 'path';
 import Link from 'next/link';
+import path from 'path';
 
 type QuizLink = {
   href: string;
@@ -17,9 +17,7 @@ async function findQuizPages(dir: string, hrefPrefix: string): Promise<QuizLink[
     links.push({
       href: hrefPrefix,
       label: hrefPrefix.replace(/^\//, ''),
-      isHighlighted:
-        hrefPrefix === '/jay/grammar/9' ||
-        hrefPrefix === '/jay/wordly/4',
+      isHighlighted: hrefPrefix === '/jay/wonders/5-2' || hrefPrefix === '/jay/mcr/5-2',
     });
   }
 
@@ -53,41 +51,41 @@ function LinkSection({ title, links }: { title: string; links: QuizLink[] }) {
           {links.map((link) => {
             const isHighlight = Boolean(link.isHighlighted);
             return (
-            <Link
-              key={link.href}
-              href={link.href}
-              title={isHighlight ? 'New quiz' : undefined}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '8px 12px',
-                borderRadius: 999,
-                border: '1px solid #cbd5e1',
-                color: '#0f172a',
-                background: '#f8fafc',
-                textDecoration: 'none',
-                fontSize: 14,
-                fontWeight: 600,
-              }}
-            >
-              <span>{link.label}</span>
-              {isHighlight && (
-                <span
-                  style={{
-                    background: '#ef4444',
-                    color: '#ffffff',
-                    fontSize: 10,
-                    padding: '2px 6px',
-                    borderRadius: 999,
-                    fontWeight: 700,
-                    lineHeight: 1.2,
-                  }}
-                >
-                  NEW
-                </span>
-              )}
-            </Link>
+              <Link
+                key={link.href}
+                href={link.href}
+                title={isHighlight ? 'New quiz' : undefined}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '8px 12px',
+                  borderRadius: 999,
+                  border: '1px solid #cbd5e1',
+                  color: '#0f172a',
+                  background: '#f8fafc',
+                  textDecoration: 'none',
+                  fontSize: 14,
+                  fontWeight: 600,
+                }}
+              >
+                <span>{link.label}</span>
+                {isHighlight && (
+                  <span
+                    style={{
+                      background: '#ef4444',
+                      color: '#ffffff',
+                      fontSize: 10,
+                      padding: '2px 6px',
+                      borderRadius: 999,
+                      fontWeight: 700,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    NEW
+                  </span>
+                )}
+              </Link>
             );
           })}
         </div>
