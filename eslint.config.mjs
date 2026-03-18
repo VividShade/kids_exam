@@ -8,19 +8,12 @@ const eslintConfig = defineConfig([
 
   // 커스텀 룰/세팅
   {
-    plugins: { tailwindcss },
     rules: {
-      'tailwindcss/classnames-order': 'warn',
-      'tailwindcss/enforces-shorthand': 'off',
-      'tailwindcss/no-contradicting-classname': 'error',
-      'tailwindcss/no-custom-classname': 'warn',
-      'tailwindcss/no-unnecessary-arbitrary-value': 'off', // w-[100px] 허용
       'react-hooks/exhaustive-deps': 'warn',
       // 필요하면 "no-console": "warn" 도 추가
     },
     settings: {
       react: { version: 'detect' },
-      tailwindcss: { callees: ['cn', 'clsx'] },
     },
   },
 
