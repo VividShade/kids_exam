@@ -1,0 +1,261 @@
+'use client';
+
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
+import type { AttemptRecord, ExamSetRecord } from '@/lib/types';
+
+type RunnerProps = {
+  examSet: ExamSetRecord;
+  initialAttempt: AttemptRecord | null;
+};
+
+export function ExamRunner({ examSet, initialAttempt }: RunnerProps) {
+  const router = useRouter();
+  const [attemptId, setAttemptId] = useState(initialAttempt?.id ?? '');
+  const [answers, setAnswers] = useState<Record<string, string>>(initialAttempt?.answers ?? {});
+  const [currentIndex, setCurrentIndex] = useState(initialAttempt?.currentIndex ?? 0);
+  const [statusMessage, setStatusMessage] = useState('Your progress will be saved while the attempt is in progress.');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [result, setResult] = useState<{ score: number; wrongQuestionIds: string[] } | null>(
+    initialAttempt?.status === 'completed' && initialAttempt.score !== null
+      ? { score: initialAttempt.score, wrongQuestionIds: initialAttempt.wrongQuestionIds }
+      : null,
+  );
+  const saveTimeoutRef = useRef<number | null>(null);
+
+  const currentQuestion = examSet.questions[currentIndex];
+  const answeredCount = useMemo(
+    () => examSet.questions.filter((question) => (answers[question.id] ?? '').trim().length > 0).length,
+    [answers, examSet.questions],
+  );
+
+  async function ensureAttempt() {
+    if (attemptId) {
+      return attemptId;
+    }
+
+    const response = await fetch('/api/attempts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ examSetId: examSet.id }),
+    });
+
+    const payload = (await response.json()) as AttemptRecord & { error?: string };
+    if (!response.ok || !payload.id) {
+      throw new Error(payload.error ?? 'Could not create an attempt.');
+    }
+
+    setAttemptId(payload.id);
+    return payload.id;
+  }
+
+  async function persist(action: 'save' | 'abandon' | 'complete') {
+    const id = await ensureAttempt();
+    const response = await fetch(`/api/attempts/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action,
+        answers,
+        currentIndex,
+      }),
+    });
+
+    const payload = (await response.json()) as { ok?: boolean; score?: number; wrongQuestionIds?: string[]; error?: string };
+    if (!response.ok) {
+      throw new Error(payload.error ?? 'Could not save attempt.');
+    }
+
+    if (action === 'complete' && typeof payload.score === 'number') {
+      setResult({ score: payload.score, wrongQuestionIds: payload.wrongQuestionIds ?? [] });
+    }
+  }
+
+  useEffect(() => {
+    if (result) {
+      return;
+    }
+
+    const handler = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [result]);
+
+  useEffect(() => {
+    if (result) {
+      return;
+    }
+
+    if (saveTimeoutRef.current) {
+      window.clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = window.setTimeout(() => {
+      void persist('save').catch((error) => {
+        setStatusMessage(error instanceof Error ? error.message : 'Autosave failed.');
+      });
+    }, 700);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        window.clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [answers, currentIndex, result]);
+
+  function updateAnswer(value: string) {
+    setAnswers((current) => ({
+      ...current,
+      [currentQuestion.id]: value,
+    }));
+  }
+
+  async function handleExit() {
+    if (!result) {
+      const confirmed = window.confirm('This attempt is not finished. Leave and save it as an unfinished trial?');
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        await persist('abandon');
+      } catch (error) {
+        setStatusMessage(error instanceof Error ? error.message : 'Could not store unfinished attempt.');
+        return;
+      }
+    }
+
+    router.push('/dashboard');
+    router.refresh();
+  }
+
+  async function handleSubmit() {
+    setIsSubmitting(true);
+    setStatusMessage('Submitting your answers...');
+
+    try {
+      await persist('complete');
+      setStatusMessage('Attempt completed. The dashboard history is now updated.');
+      router.refresh();
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Submit failed.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:px-8">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Published exam</p>
+          <h1 className="text-3xl font-black text-slate-950">{examSet.title}</h1>
+          <p className="mt-2 max-w-3xl text-sm text-slate-600">{examSet.summary}</p>
+        </div>
+        <div className="flex gap-3">
+          <button className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700" onClick={handleExit} type="button">
+            Leave exam
+          </button>
+          {result ? (
+            <Link className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white" href="/dashboard">
+              Back to dashboard
+            </Link>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[0.72fr_0.28fr]">
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+          <div className="mb-4 flex items-center justify-between">
+            <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800">
+              Question {currentIndex + 1} / {examSet.questions.length}
+            </span>
+            <span className="text-sm text-slate-500">Answered {answeredCount}</span>
+          </div>
+
+          <article className="rounded-3xl bg-slate-50 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{currentQuestion.kind.replace('_', ' ')}</p>
+            <h2 className="mt-2 text-2xl font-bold text-slate-950">{currentQuestion.prompt}</h2>
+
+            {currentQuestion.kind === 'short_answer' ? (
+              <textarea
+                className="mt-5 min-h-32 w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm"
+                onChange={(event) => updateAnswer(event.target.value)}
+                value={answers[currentQuestion.id] ?? ''}
+              />
+            ) : (
+              <div className="mt-5 space-y-3">
+                {currentQuestion.choices.map((choice) => (
+                  <label key={choice} className="flex cursor-pointer items-center gap-3 rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+                    <input checked={(answers[currentQuestion.id] ?? '') === choice} name={currentQuestion.id} onChange={() => updateAnswer(choice)} type="radio" />
+                    <span>{choice}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </article>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50" disabled={currentIndex === 0} onClick={() => setCurrentIndex((value) => value - 1)} type="button">
+              Previous
+            </button>
+            <button className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50" disabled={currentIndex >= examSet.questions.length - 1} onClick={() => setCurrentIndex((value) => value + 1)} type="button">
+              Next
+            </button>
+            <button className="rounded-full bg-slate-950 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50" disabled={isSubmitting} onClick={handleSubmit} type="button">
+              {isSubmitting ? 'Submitting...' : 'Submit exam'}
+            </button>
+          </div>
+
+          <p className="mt-4 rounded-3xl bg-amber-50 px-4 py-3 text-sm text-amber-900">{statusMessage}</p>
+        </section>
+
+        <aside className="space-y-4 rounded-[2rem] border border-slate-200 bg-[#fffef8] p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+          <h2 className="text-lg font-bold text-slate-950">Progress</h2>
+          <div className="grid grid-cols-5 gap-2">
+            {examSet.questions.map((question, index) => {
+              const isAnswered = (answers[question.id] ?? '').trim().length > 0;
+              const isWrong = result?.wrongQuestionIds.includes(question.id) ?? false;
+              return (
+                <button
+                  key={question.id}
+                  className={`aspect-square rounded-2xl text-xs font-bold ${
+                    isWrong
+                      ? 'bg-rose-200 text-rose-900'
+                      : index === currentIndex
+                        ? 'bg-slate-950 text-white'
+                        : isAnswered
+                          ? 'bg-emerald-200 text-emerald-900'
+                          : 'bg-slate-200 text-slate-700'
+                  }`}
+                  onClick={() => setCurrentIndex(index)}
+                  type="button"
+                >
+                  {index + 1}
+                </button>
+              );
+            })}
+          </div>
+
+          {result ? (
+            <div className="rounded-3xl bg-white p-4">
+              <p className="text-sm font-semibold text-slate-500">Final score</p>
+              <p className="mt-2 text-4xl font-black text-slate-950">{result.score}</p>
+              <p className="mt-2 text-sm text-slate-600">Wrong answers: {result.wrongQuestionIds.length}</p>
+            </div>
+          ) : null}
+        </aside>
+      </div>
+    </div>
+  );
+}

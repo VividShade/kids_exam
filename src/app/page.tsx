@@ -1,51 +1,61 @@
 import Link from 'next/link';
 
-type AreaLink = {
-  href: string;
-  label: string;
-};
+import { auth } from '@/auth';
+import { SignInButton, SignOutButton } from '@/components/auth-buttons';
+import { isGoogleAuthConfigured, isOpenAIConfigured, isTursoConfigured } from '@/lib/env';
 
-const areas: AreaLink[] = [
-  { href: '/soy', label: 'Go to SOY Quiz List' },
-  { href: '/jay', label: 'Go to JAY Quiz List' },
+const checks = [
+  { label: 'Google OAuth', ready: isGoogleAuthConfigured },
+  { label: 'OpenAI multi-modal', ready: isOpenAIConfigured },
+  { label: 'Turso deploy DB', ready: isTursoConfigured },
+  { label: 'SQLite local fallback', ready: true },
 ];
 
-export default function HomePage() {
-  return (
-    <main
-      style={{
-        minHeight: '100vh',
-        background: '#f1f5f9',
-        padding: '40px 16px',
-        display: 'flex',
-        alignItems: 'center',
-      }}
-    >
-      <div style={{ maxWidth: 640, margin: '0 auto', width: '100%' }}>
-        <header style={{ marginBottom: 20 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Quiz Lists</h1>
-          <p style={{ margin: 0, color: '#475569', fontSize: 14 }}>Select a section to continue.</p>
-        </header>
+export default async function HomePage() {
+  const session = await auth();
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-          {areas.map((area) => (
-            <Link
-              key={area.href}
-              href={area.href}
-              style={{
-                padding: '12px 16px',
-                borderRadius: 12,
-                border: '1px solid #cbd5e1',
-                color: '#0f172a',
-                background: '#ffffff',
-                textDecoration: 'none',
-                fontWeight: 700,
-              }}
-            >
-              {area.label}
-            </Link>
-          ))}
-        </div>
+  return (
+    <main className="min-h-screen bg-[linear-gradient(135deg,#fff1c2_0%,#f8fafc_45%,#dbeafe_100%)] px-4 py-8 text-slate-900 md:px-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
+        <section className="overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-6 shadow-[0_32px_120px_rgba(15,23,42,0.16)] backdrop-blur md:p-10">
+          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+            <div>
+              <p className="text-sm uppercase tracking-[0.35em] text-slate-500">Kids exam studio</p>
+              <h1 className="mt-4 max-w-4xl text-5xl font-black leading-tight text-slate-950 md:text-6xl">
+                Turn worksheet photos into publishable exam sets with history-aware review.
+              </h1>
+              <p className="mt-6 max-w-2xl text-base text-slate-600 md:text-lg">
+                Sign in with Google, upload a textbook page or practice sheet, generate questions with OpenAI multi-modal input, and keep every trial with scores and wrong answers.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                {session?.user ? (
+                  <>
+                    <Link className="rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white" href="/dashboard">
+                      Open dashboard
+                    </Link>
+                    <SignOutButton />
+                  </>
+                ) : (
+                  <SignInButton />
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] bg-slate-950 p-6 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+              <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Infra checklist</p>
+              <div className="mt-5 space-y-3">
+                {checks.map((item) => (
+                  <div key={item.label} className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3">
+                    <span className="text-sm font-semibold">{item.label}</span>
+                    <span className={`rounded-full px-3 py-1 text-xs font-bold ${item.ready ? 'bg-emerald-400/20 text-emerald-200' : 'bg-amber-400/20 text-amber-100'}`}>
+                      {item.ready ? 'Ready' : 'Needs env'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
   );
