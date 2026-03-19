@@ -2,12 +2,12 @@ import Link from 'next/link';
 
 import { auth } from '@/auth';
 import { SignInButton, SignOutButton } from '@/components/auth-buttons';
-import { isGoogleAuthConfigured, isOpenAIConfigured, isTursoConfigured } from '@/lib/env';
+import { isGoogleAuthConfigured, isOpenAIConfigured, isSupabaseConfigured } from '@/lib/env';
 
 const checks = [
   { label: 'Google OAuth', ready: isGoogleAuthConfigured },
   { label: 'OpenAI multi-modal', ready: isOpenAIConfigured },
-  { label: 'Turso deploy DB', ready: isTursoConfigured },
+  { label: 'Supabase deploy DB', ready: isSupabaseConfigured },
   { label: 'SQLite local fallback', ready: true },
 ];
 

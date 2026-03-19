@@ -3,10 +3,10 @@ import 'server-only';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { createClient, type Client as LibsqlClient, type InValue } from '@libsql/client';
 import Database from 'better-sqlite3';
+import postgres, { type Sql } from 'postgres';
 
-import { env, isTursoConfigured } from '@/lib/env';
+import { env, isSupabaseConfigured } from '@/lib/env';
 
 type SqlValue = string | number | null;
 type Row = Record<string, unknown>;
@@ -60,18 +60,19 @@ const schemaStatements = [
 ];
 
 let initPromise: Promise<void> | null = null;
-let tursoClient: LibsqlClient | null = null;
 let localDb: Database.Database | null = null;
+let supabaseSql: Sql | null = null;
 
-function getTursoClient() {
-  if (!tursoClient) {
-    tursoClient = createClient({
-      url: env.tursoUrl,
-      authToken: env.tursoAuthToken || undefined,
+function getSupabaseClient() {
+  if (!supabaseSql) {
+    supabaseSql = postgres(env.supabaseDbUrl, {
+      ssl: 'require',
+      max: 1,
+      prepare: false,
     });
   }
 
-  return tursoClient;
+  return supabaseSql;
 }
 
 function getLocalDb() {
@@ -88,6 +89,11 @@ function getLocalDb() {
   return localDb;
 }
 
+function toPostgresPlaceholders(statement: string) {
+  let index = 0;
+  return statement.replace(/\?/g, () => `$${++index}`);
+}
+
 async function initialize() {
   if (initPromise) {
     await initPromise;
@@ -95,10 +101,10 @@ async function initialize() {
   }
 
   initPromise = (async () => {
-    if (isTursoConfigured) {
-      const client = getTursoClient();
+    if (isSupabaseConfigured) {
+      const client = getSupabaseClient();
       for (const statement of schemaStatements) {
-        await client.execute(statement);
+        await client.unsafe(statement);
       }
       return;
     }
@@ -115,9 +121,9 @@ async function initialize() {
 export async function dbAll<T extends Row>(sql: string, args: SqlValue[] = []) {
   await initialize();
 
-  if (isTursoConfigured) {
-    const result = await getTursoClient().execute({ sql, args: args as InValue[] });
-    return result.rows as T[];
+  if (isSupabaseConfigured) {
+    const result = await getSupabaseClient().unsafe(toPostgresPlaceholders(sql), args);
+    return result as T[];
   }
 
   return getLocalDb().prepare(sql).all(...args) as T[];
@@ -131,8 +137,8 @@ export async function dbGet<T extends Row>(sql: string, args: SqlValue[] = []) {
 export async function dbRun(sql: string, args: SqlValue[] = []) {
   await initialize();
 
-  if (isTursoConfigured) {
-    await getTursoClient().execute({ sql, args: args as InValue[] });
+  if (isSupabaseConfigured) {
+    await getSupabaseClient().unsafe(toPostgresPlaceholders(sql), args);
     return;
   }
 
