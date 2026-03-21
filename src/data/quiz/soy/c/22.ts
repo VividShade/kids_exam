@@ -1,8 +1,10 @@
-// Extracted from src/app/soy/c/22/page.tsx
+import type { QuizQuestion } from '@/components/quiz/QuizTemplate';
 
 // Extracted from src/app/soy/c/22/page.tsx
 
-export const questions = [
+// Extracted from src/app/soy/c/22/page.tsx
+
+export const questions: QuizQuestion[] = [
   // Part 1
   {
     id: 1,

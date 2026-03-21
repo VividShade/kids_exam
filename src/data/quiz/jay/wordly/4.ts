@@ -1,8 +1,10 @@
-// Extracted from src/app/jay/wordly/4/page.tsx
+import type { QuizQuestion } from '@/components/quiz/QuizTemplate';
 
 // Extracted from src/app/jay/wordly/4/page.tsx
 
-export const questions = [
+// Extracted from src/app/jay/wordly/4/page.tsx
+
+export const questions: QuizQuestion[] = [
   // Part 1 - Word Definition Matching
   {
     id: 1,

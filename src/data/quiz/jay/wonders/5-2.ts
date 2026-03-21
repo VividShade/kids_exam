@@ -1,8 +1,10 @@
-// Extracted from src/app/jay/wonders/5-2/page.tsx
+import type { QuizQuestion } from '@/components/quiz/QuizTemplate';
 
 // Extracted from src/app/jay/wonders/5-2/page.tsx
 
-export const questions = [
+// Extracted from src/app/jay/wonders/5-2/page.tsx
+
+export const questions: QuizQuestion[] = [
   {
     id: 1,
     text: 'Where does Scene 2 take place?',

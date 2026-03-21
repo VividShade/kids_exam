@@ -1,6 +1,8 @@
+import type { QuizQuestion } from '@/components/quiz/QuizTemplate';
+
 // Extracted from src/app/jay/grammar/10/page.tsx
 
-export const questions = [
+export const questions: QuizQuestion[] = [
   { id: 1, type: 'mc', text: 'Is she reading a book?', options: ['Yes, she does.', 'Yes, she is.', 'She reads.', 'Yes, she do.'], correctIndex: 1 },
   { id: 2, type: 'mc', text: 'What are you doing now?', options: ['Yes, I am.', 'I do my homework.', 'I am doing my homework.', 'Yes, I do.'], correctIndex: 2 },
   { id: 3, type: 'mc', text: 'Are they playing soccer?', options: ['Yes, they are.', 'Yes, they do.', 'They are play.', 'Yes, they is.'], correctIndex: 0 },

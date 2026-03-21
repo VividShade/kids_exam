@@ -1,8 +1,10 @@
-// Extracted from src/app/jay/grammar/9/page.tsx
+import type { QuizQuestion } from '@/components/quiz/QuizTemplate';
 
 // Extracted from src/app/jay/grammar/9/page.tsx
 
-export const questions = [
+// Extracted from src/app/jay/grammar/9/page.tsx
+
+export const questions: QuizQuestion[] = [
   // Part A - Multiple Choice
   {
     id: 1,

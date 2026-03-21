@@ -1,6 +1,8 @@
+import type { QuizQuestion } from '@/components/quiz/QuizTemplate';
+
 // Extracted from src/app/jay/wordly/5/page.tsx
 
-export const questions = [
+export const questions: QuizQuestion[] = [
   // Part 1 - Match the Word to Its Meaning
   { id: 1, type: 'mc', text: 'Which word means "happening suddenly without warning"?', options: ['very old', 'happening suddenly without warning', 'slow and careful', 'easy to understand'], correctIndex: 1 },
   { id: 2, type: 'mc', text: 'Which word means "to do what one sets out to do"?', options: ['to give up', 'to do what one sets out to do', 'to forget', 'to hide'], correctIndex: 1 },

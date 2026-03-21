@@ -1,8 +1,10 @@
-// Extracted from src/app/jay/mcr/5-2/page.tsx
+import type { QuizQuestion } from '@/components/quiz/QuizTemplate';
 
 // Extracted from src/app/jay/mcr/5-2/page.tsx
 
-export const questions = [
+// Extracted from src/app/jay/mcr/5-2/page.tsx
+
+export const questions: QuizQuestion[] = [
   // Part 1 · Choose the correct meaning
   {
     id: 1,
