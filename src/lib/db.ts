@@ -123,7 +123,7 @@ export async function dbAll<T extends Row>(sql: string, args: SqlValue[] = []) {
 
   if (isSupabaseConfigured) {
     const result = await getSupabaseClient().unsafe(toPostgresPlaceholders(sql), args);
-    return result as T[];
+    return (result as unknown) as T[];
   }
 
   return getLocalDb().prepare(sql).all(...args) as T[];

@@ -2,7 +2,9 @@
 
 // Extracted from src/app/jay/mcr/5-1/page.tsx
 
-export const questions = [
+import type { QuizQuestion } from '@/components/quiz/QuizTemplate';
+
+export const questions: QuizQuestion[] = [
   // Part A - Multiple Choice
   {
     id: 1,

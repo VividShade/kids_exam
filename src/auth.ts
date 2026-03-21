@@ -1,20 +1,19 @@
-import NextAuth from 'next-auth';
+import NextAuth, { getServerSession, type AuthOptions } from 'next-auth';
 import Google from 'next-auth/providers/google';
 
-import { isGoogleAuthConfigured } from '@/lib/env';
+import { env, isGoogleAuthConfigured } from '@/lib/env';
 import { upsertUser } from '@/lib/repository';
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const authOptions: AuthOptions = {
   secret: process.env.AUTH_SECRET,
-  trustHost: true,
   session: {
     strategy: 'jwt',
   },
   providers: isGoogleAuthConfigured
     ? [
         Google({
-          clientId: process.env.AUTH_GOOGLE_ID,
-          clientSecret: process.env.AUTH_GOOGLE_SECRET,
+          clientId: env.googleClientId,
+          clientSecret: env.googleClientSecret,
         }),
       ]
     : [],
@@ -56,4 +55,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: '/',
   },
-});
+};
+
+const handler = NextAuth(authOptions);
+
+export const handlers = {
+  GET: handler,
+  POST: handler,
+};
+
+export const auth = () => getServerSession(authOptions);
+

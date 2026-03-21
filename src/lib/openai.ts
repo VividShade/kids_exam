@@ -58,6 +58,7 @@ export async function generateExamSetFromImage(input: {
           {
             type: 'input_image',
             image_url: input.imageDataUrl,
+            detail: 'auto',
           },
         ],
       },

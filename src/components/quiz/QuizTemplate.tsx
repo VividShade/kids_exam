@@ -3,11 +3,11 @@
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 
-type QuestionType = 'mc' | 'short' | 'spelling';
+export type QuestionType = string;
 
 export type QuizQuestion = {
   id: number;
-  type: QuestionType;
+  type?: QuestionType;
   text: string;
   options?: string[];
   correctIndex?: number;
@@ -205,9 +205,11 @@ export default function QuizTemplate({
   }, [answerKey]);
 
   const currentQuestion = questions[currentIndex];
+  const isMultipleChoice = (question: QuizQuestion) =>
+    question.type === 'mc' || question.type === 'spelling' || question.type === undefined;
 
   const handleCheckAnswer = () => {
-    if (!currentQuestion || currentQuestion.type === 'mc' || !currentQuestion.answer) {
+    if (!currentQuestion || !currentQuestion.answer || isMultipleChoice(currentQuestion)) {
       return;
     }
 
@@ -229,7 +231,7 @@ export default function QuizTemplate({
       return;
     }
 
-    const isCorrect = currentQuestion.type === 'mc' && optionIndex === currentQuestion.correctIndex;
+    const isCorrect = isMultipleChoice(currentQuestion) && optionIndex === currentQuestion.correctIndex;
     setSelectedOption(optionIndex);
     setAnswers((prev) => {
       const next = [...prev];
@@ -267,7 +269,7 @@ export default function QuizTemplate({
   const totalQuestions = questions.length;
 
   const isCorrectAnswer = (question: QuizQuestion, answer: QuizAnswer) => {
-    if (question.type === 'mc') {
+    if (isMultipleChoice(question)) {
       return answer.choice !== null && answer.choice === question.correctIndex;
     }
 
@@ -275,7 +277,7 @@ export default function QuizTemplate({
   };
 
   const isAnswered = (question: QuizQuestion, answer: QuizAnswer) => {
-    if (question.type === 'mc') {
+    if (isMultipleChoice(question)) {
       return answer.choice !== null;
     }
     return answer.text.trim().length > 0;
@@ -291,14 +293,14 @@ export default function QuizTemplate({
   });
 
   const getCorrectLabel = (question: QuizQuestion) =>
-    question.type === 'mc'
+    isMultipleChoice(question)
       ? question.correctIndex === undefined || !question.options
         ? ''
         : `${String.fromCharCode(65 + question.correctIndex)}. ${question.options[question.correctIndex]}`
       : question.answer ?? '';
 
   const getSelectedText = (question: QuizQuestion, answer: QuizAnswer) => {
-    if (question.type === 'mc') {
+    if (isMultipleChoice(question)) {
       if (answer.choice === null) return text.noAnswerText;
       return question.options?.[answer.choice] ?? text.noAnswerText;
     }
@@ -307,7 +309,7 @@ export default function QuizTemplate({
   };
 
   const getAnswerKeyDisplay = (question: QuizQuestion, answerKeyItem: KeyItem | undefined) => {
-    if (question.type === 'mc') {
+    if (isMultipleChoice(question)) {
       return answerKeyItem?.answer ?? getCorrectLabel(question);
     }
 
@@ -410,7 +412,7 @@ export default function QuizTemplate({
               </h2>
             </div>
 
-            {currentQuestion.type === 'mc' ? (
+            {isMultipleChoice(currentQuestion) ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {currentQuestion.options?.map((option, index) => {
                   const isSelected = selectedOption === index;
@@ -485,7 +487,7 @@ export default function QuizTemplate({
               <div style={{ minHeight: 24, fontSize: 14 }}>
                 {showFeedback ? (
                   <>
-                    {currentQuestion.type === 'mc' ? (
+                    {isMultipleChoice(currentQuestion) ? (
                       selectedOption === currentQuestion.correctIndex ? (
                         <span style={{ color: '#16a34a', fontWeight: 600 }}>{text.correctFeedbackLabel}</span>
                       ) : (
@@ -524,7 +526,7 @@ export default function QuizTemplate({
                   </button>
                 ) : null}
 
-                {!showFeedback && currentQuestion.type !== 'mc' ? (
+                {!showFeedback && !isMultipleChoice(currentQuestion) ? (
                   <button
                     type="button"
                     onClick={handleCheckAnswer}

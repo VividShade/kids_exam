@@ -1,4 +1,3 @@
-import { signIn, signOut } from '@/auth';
 import { isGoogleAuthConfigured } from '@/lib/env';
 
 const buttonClassName =
@@ -13,13 +12,8 @@ export function SignInButton() {
     );
   }
 
-  return (
-    <form
-      action={async () => {
-        'use server';
-        await signIn('google', { redirectTo: '/dashboard' });
-      }}
-    >
+    return (
+    <form action="/api/auth/signin/google?callbackUrl=%2Fdashboard" method="post">
       <button className={buttonClassName} type="submit">
         Sign in with Google
       </button>
@@ -29,12 +23,7 @@ export function SignInButton() {
 
 export function SignOutButton() {
   return (
-    <form
-      action={async () => {
-        'use server';
-        await signOut({ redirectTo: '/' });
-      }}
-    >
+    <form action="/api/auth/signout?callbackUrl=%2F" method="post">
       <button className={buttonClassName} type="submit">
         Sign out
       </button>
