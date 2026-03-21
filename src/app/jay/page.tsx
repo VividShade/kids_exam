@@ -17,7 +17,7 @@ async function findQuizPages(dir: string, hrefPrefix: string): Promise<QuizLink[
     links.push({
       href: hrefPrefix,
       label: hrefPrefix.replace(/^\//, ''),
-      isHighlighted: hrefPrefix === '/jay/wonders/5-2' || hrefPrefix === '/jay/mcr/5-2',
+      isHighlighted: hrefPrefix === '/jay/grammar/10' || hrefPrefix === '/jay/wordly/5',
     });
   }
 
