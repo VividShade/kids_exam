@@ -1,11 +1,13 @@
 import type { QuizPageProps } from '@/components/quiz/QuizPage';
 
 import { answerKey as jayGrammarAnswerKey, questions as jayGrammarQuestions } from './jay/grammar/9';
+import { answerKey as jayGrammar10AnswerKey, questions as jayGrammar10Questions } from './jay/grammar/10';
 import { answerKey as jayMcr51AnswerKey, questions as jayMcr51Questions } from './jay/mcr/5-1';
 import { answerKey as jayMcr52AnswerKey, questions as jayMcr52Questions } from './jay/mcr/5-2';
 import { answerKey as jayWonder51AnswerKey, questions as jayWonder51Questions } from './jay/wonders/5-1';
 import { answerKey as jayWonder52AnswerKey, questions as jayWonder52Questions } from './jay/wonders/5-2';
 import { questions as jayWordlyQuestions, answerKey as jayWordlyAnswerKey } from './jay/wordly/4';
+import { answerKey as jayWordly5AnswerKey, questions as jayWordly5Questions } from './jay/wordly/5';
 
 import { questions as soyC22Questions } from './soy/c/22';
 import { questions as soyC23Questions } from './soy/c/23';
@@ -54,9 +56,11 @@ type QuizCatalog = {
     };
     grammar: {
       '9': QuizConfig;
+      '10': QuizConfig;
     };
     wordly: {
       '4': QuizConfig;
+      '5': QuizConfig;
     };
   };
   soy: {
@@ -157,6 +161,17 @@ export const quizCatalog: QuizCatalog = {
             .replace(/\s+/g, ' ')
             .trim(),
       },
+      '10': {
+        text: 'en',
+        title: 'Present Continuous Quiz',
+        subtitle: 'Total 20 Questions · Part A 10 + Part B 10 · One by one review mode',
+        questions: jayGrammar10Questions,
+        answerKey: jayGrammar10AnswerKey,
+        partLabel: (currentIndex) => {
+          if (currentIndex < 10) return 'Part A · Multiple Choice';
+          return 'Part B · Multiple Choice';
+        },
+      },
     },
     wordly: {
       '4': {
@@ -168,6 +183,17 @@ export const quizCatalog: QuizCatalog = {
         partLabel: (currentIndex) => {
           if (currentIndex < 15) return 'Part 1 · Word Definition Matching';
           return 'Part 2 · Sentence Completion';
+        },
+      },
+      '5': {
+        text: 'en',
+        title: 'Wordly Vocabulary Test',
+        subtitle: 'Total 30 Questions · Part 1 15 + Part 2 15 · One by one review mode',
+        questions: jayWordly5Questions,
+        answerKey: jayWordly5AnswerKey,
+        partLabel: (currentIndex) => {
+          if (currentIndex < 15) return 'Part 1 · Word Meaning Matching';
+          return 'Part 2 · Best Word in Sentence';
         },
       },
     },
