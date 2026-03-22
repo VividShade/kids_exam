@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 
 type QuestionType = 'mc' | 'short' | 'spelling';
@@ -288,6 +288,20 @@ export default function QuizTemplate({
   const correctCount = answers.filter((answer, index) => isCorrectAnswer(questions[index], answer)).length;
   const completedCount = answers.filter((answer, index) => isAnswered(questions[index], answer)).length;
   const wrongCount = answers.filter((answer, index) => isAnswered(questions[index], answer) && !isCorrectAnswer(questions[index], answer)).length;
+  const shouldWarnOnExit = completedCount > 0 && !isFinished;
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!shouldWarnOnExit) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [shouldWarnOnExit]);
 
   const wrongQuestions = questions.filter((q) => {
     const answer = answers[q.id - 1];
@@ -584,6 +598,15 @@ export default function QuizTemplate({
                   const ans = answers[idx];
                   const selectedText = getSelectedText(q, ans);
                   const answerText = getAnswerKeyDisplay(q, answerMap.get(q.id));
+                  const isMc = getQuestionType(q) === 'mc';
+                  const selectedChoiceLabel =
+                    isMc && ans.choice !== null ? String.fromCharCode(65 + ans.choice) : null;
+                  const correctChoiceLabel =
+                    isMc && q.correctIndex !== undefined ? String.fromCharCode(65 + q.correctIndex) : null;
+                  const correctChoiceText =
+                    isMc && q.correctIndex !== undefined ? (q.options?.[q.correctIndex] ?? answerText) : answerText;
+                  const selectedWithAnswer = selectedChoiceLabel ? `${selectedChoiceLabel}. ${selectedText}` : selectedText;
+                  const answerWithAnswer = correctChoiceLabel ? `${correctChoiceLabel}. ${correctChoiceText}` : correctChoiceText;
                   return (
                     <div
                       key={q.id}
@@ -597,10 +620,10 @@ export default function QuizTemplate({
                       <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 4 }}>{text.questionLabel} {q.id}</div>
                       <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{q.text}</div>
                       <div style={{ fontSize: 13, marginBottom: 2 }}>
-                        {text.yourAnswerLabel}: <strong>{selectedText}</strong>
+                        {text.yourAnswerLabel}: {selectedWithAnswer}
                       </div>
                       <div style={{ fontSize: 13 }}>
-                        {text.correctAnswerLabel}: <strong>{answerText}</strong>
+                        {text.correctAnswerLabel}: <strong style={{ fontSize: 14 }}>{answerWithAnswer}</strong>
                       </div>
                       {q.type === 'mc' ? (
                         <div style={{ fontSize: 13, color: '#475569', marginTop: 2 }}>
