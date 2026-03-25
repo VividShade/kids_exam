@@ -4,8 +4,10 @@ import { answerKey as jayGrammarAnswerKey, questions as jayGrammarQuestions } fr
 import { answerKey as jayGrammar10AnswerKey, questions as jayGrammar10Questions } from './jay/grammar/10';
 import { answerKey as jayMcr51AnswerKey, questions as jayMcr51Questions } from './jay/mcr/5-1';
 import { answerKey as jayMcr52AnswerKey, questions as jayMcr52Questions } from './jay/mcr/5-2';
+import { answerKey as jayMcr6AnswerKey, questions as jayMcr6Questions } from './jay/mcr/6';
 import { answerKey as jayWonder51AnswerKey, questions as jayWonder51Questions } from './jay/wonders/5-1';
 import { answerKey as jayWonder52AnswerKey, questions as jayWonder52Questions } from './jay/wonders/5-2';
+import { answerKey as jayWonder6AnswerKey, questions as jayWonder6Questions } from './jay/wonders/6';
 import { questions as jayWordlyQuestions, answerKey as jayWordlyAnswerKey } from './jay/wordly/4';
 import { questions as jayWordly5Questions, answerKey as jayWordly5AnswerKey } from './jay/wordly/5';
 
@@ -41,6 +43,10 @@ import {
   speedReviewPrompts as soyD6SpeedReviewPrompts,
   vocabTable as soyD6VocabTable,
 } from './soy/d/6';
+import { questions as soyD7Questions } from './soy/d/7';
+import { questions as soyD8Questions } from './soy/d/8';
+import { questions as soyD9Questions } from './soy/d/9';
+import { questions as soyD10Questions } from './soy/d/10';
 
 type QuizConfig = Omit<QuizPageProps, 'text'> & { text: 'en' | 'ko' };
 
@@ -49,10 +55,12 @@ type QuizCatalog = {
     mcr: {
       '5-1': QuizConfig;
       '5-2': QuizConfig;
+      '6': QuizConfig;
     };
     wonders: {
       '5-1': QuizConfig;
       '5-2': QuizConfig;
+      '6': QuizConfig;
     };
     grammar: {
       '9': QuizConfig;
@@ -75,6 +83,10 @@ type QuizCatalog = {
       '4': QuizConfig;
       '5': QuizConfig;
       '6': QuizConfig;
+      '7': QuizConfig;
+      '8': QuizConfig;
+      '9': QuizConfig;
+      '10': QuizConfig;
     };
   };
 };
@@ -118,6 +130,24 @@ export const quizCatalog: QuizCatalog = {
             .replace(/\s+/g, ' ')
             .trim(),
       },
+      '6': {
+        text: 'en',
+        title: 'Vocabulary Test',
+        subtitle: 'Total 30 Questions · Part 1 10 + Part 2 10 + Part 3 10 · One by one review mode',
+        questions: jayMcr6Questions,
+        answerKey: jayMcr6AnswerKey,
+        partLabel: (currentIndex) => {
+          if (currentIndex < 10) return 'Part 1 · Choose the correct word';
+          if (currentIndex < 20) return 'Part 2 · Fill in the blank (Multiple Choice)';
+          return 'Part 3 · Fill in the blank (Short Answer)';
+        },
+        normalizeAnswer: (value) =>
+          value
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim(),
+      },
     },
     wonders: {
       '5-1': {
@@ -137,6 +167,17 @@ export const quizCatalog: QuizCatalog = {
         subtitle: 'Reading Comprehension Quiz · 20 questions · One by one review mode',
         questions: jayWonder52Questions,
         answerKey: jayWonder52AnswerKey,
+        partLabel: (currentIndex) => {
+          if (currentIndex < 10) return 'Part 1 · Multiple Choice';
+          return 'Part 2 · True or False';
+        },
+      },
+      '6': {
+        text: 'en',
+        title: 'Pecos Bill',
+        subtitle: 'Reading Comprehension Quiz · 20 questions · One by one review mode',
+        questions: jayWonder6Questions,
+        answerKey: jayWonder6AnswerKey,
         partLabel: (currentIndex) => {
           if (currentIndex < 10) return 'Part 1 · Multiple Choice';
           return 'Part 2 · True or False';
@@ -319,6 +360,54 @@ export const quizCatalog: QuizCatalog = {
         miniSpellingChallenge: soyD6MiniSpellingChallenge,
         reviewAnswers: soyD6ReviewAnswers,
         speedReviewPrompts: soyD6SpeedReviewPrompts,
+      },
+      '7': {
+        text: 'ko',
+        title: 'Week 7 Vocabulary Test',
+        subtitle: '60 questions · Part 1 20 + Part 2 20 + Part 3 20 · Instant feedback and review after completion',
+        questions: soyD7Questions,
+        partLabel: (currentIndex) => {
+          if (currentIndex < 20) return 'Part 1 · Word Meaning';
+          if (currentIndex < 40) return 'Part 2 · Synonym / Antonym';
+          return 'Part 3 · Spelling';
+        },
+        normalizeAnswer: (value) => value.trim().toLowerCase().replace(/\s+/g, ' '),
+      },
+      '8': {
+        text: 'ko',
+        title: 'Week 8 Vocabulary Test',
+        subtitle: '60 questions · Part 1 20 + Part 2 20 + Part 3 20 · Instant feedback and review after completion',
+        questions: soyD8Questions,
+        partLabel: (currentIndex) => {
+          if (currentIndex < 20) return 'Part 1 · Word Meaning';
+          if (currentIndex < 40) return 'Part 2 · Synonym / Antonym';
+          return 'Part 3 · Spelling';
+        },
+        normalizeAnswer: (value) => value.trim().toLowerCase().replace(/\s+/g, ' '),
+      },
+      '9': {
+        text: 'ko',
+        title: 'Week 9 Vocabulary Test',
+        subtitle: '60 questions · Part 1 20 + Part 2 20 + Part 3 20 · Instant feedback and review after completion',
+        questions: soyD9Questions,
+        partLabel: (currentIndex) => {
+          if (currentIndex < 20) return 'Part 1 · Word Meaning';
+          if (currentIndex < 40) return 'Part 2 · Synonym / Antonym';
+          return 'Part 3 · Spelling';
+        },
+        normalizeAnswer: (value) => value.trim().toLowerCase().replace(/\s+/g, ' '),
+      },
+      '10': {
+        text: 'ko',
+        title: 'Week 10 Vocabulary Test',
+        subtitle: '60 questions · Part 1 20 + Part 2 20 + Part 3 20 · Instant feedback and review after completion',
+        questions: soyD10Questions,
+        partLabel: (currentIndex) => {
+          if (currentIndex < 20) return 'Part 1 · Word Meaning';
+          if (currentIndex < 40) return 'Part 2 · Synonym / Antonym';
+          return 'Part 3 · Spelling';
+        },
+        normalizeAnswer: (value) => value.trim().toLowerCase().replace(/\s+/g, ' '),
       },
     },
   },

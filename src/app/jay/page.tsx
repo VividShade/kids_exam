@@ -11,13 +11,14 @@ type QuizLink = {
 async function findQuizPages(dir: string, hrefPrefix: string): Promise<QuizLink[]> {
   const links: QuizLink[] = [];
   const entries = await readdir(dir, { withFileTypes: true });
+  const newQuizHrefs = new Set(['/jay/mcr/6', '/jay/wonders/6']);
 
   const hasPage = entries.some((entry) => entry.isFile() && entry.name === 'page.tsx');
   if (hasPage) {
     links.push({
       href: hrefPrefix,
       label: hrefPrefix.replace(/^\//, ''),
-      isHighlighted: hrefPrefix === '/jay/grammar/10' || hrefPrefix === '/jay/wordly/5',
+      isHighlighted: newQuizHrefs.has(hrefPrefix),
     });
   }
 

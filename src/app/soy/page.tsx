@@ -10,6 +10,7 @@ type QuizLink = {
 
 async function getNumericQuizLinks(track: 'c' | 'd'): Promise<QuizLink[]> {
   const baseDir = path.join(process.cwd(), 'src/app/soy', track);
+  const newQuizHrefs = new Set(['/soy/d/7', '/soy/d/8', '/soy/d/9', '/soy/d/10']);
 
   try {
     const entries = await readdir(baseDir, { withFileTypes: true });
@@ -21,9 +22,10 @@ async function getNumericQuizLinks(track: 'c' | 'd'): Promise<QuizLink[]> {
       const pagePath = path.join(baseDir, entry.name, 'page.tsx');
       try {
         await access(pagePath);
-        const isHighlighted = track === 'd' && entry.name === '6';
+        const href = `/soy/${track}/${entry.name}`;
+        const isHighlighted = newQuizHrefs.has(href);
         links.push({
-          href: `/soy/${track}/${entry.name}`,
+          href,
           label: `${track}/${entry.name}`,
           isHighlighted,
         });
