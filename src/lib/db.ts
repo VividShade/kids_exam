@@ -48,6 +48,9 @@ const schemaStatements = [
     exam_set_id TEXT NOT NULL,
     user_id TEXT NOT NULL,
     status TEXT NOT NULL,
+    exam_title_snapshot TEXT NOT NULL DEFAULT '',
+    questions_snapshot_json TEXT NOT NULL DEFAULT '[]',
+    published_at_snapshot TEXT,
     answers_json TEXT NOT NULL,
     current_index INTEGER NOT NULL DEFAULT 0,
     score INTEGER,
@@ -147,6 +150,9 @@ async function initialize() {
       await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS generate_count INTEGER NOT NULL DEFAULT 0');
       await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS last_generated_at TEXT');
       await client.unsafe("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS shuffle_seed TEXT NOT NULL DEFAULT ''");
+      await client.unsafe("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS exam_title_snapshot TEXT NOT NULL DEFAULT ''");
+      await client.unsafe("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS questions_snapshot_json TEXT NOT NULL DEFAULT '[]'");
+      await client.unsafe('ALTER TABLE attempts ADD COLUMN IF NOT EXISTS published_at_snapshot TEXT');
       return;
     }
 
@@ -175,6 +181,18 @@ async function initialize() {
     const hasShuffleSeed = attemptColumns.some((column) => column.name === 'shuffle_seed');
     if (!hasShuffleSeed) {
       db.exec("ALTER TABLE attempts ADD COLUMN shuffle_seed TEXT NOT NULL DEFAULT ''");
+    }
+    const hasExamTitleSnapshot = attemptColumns.some((column) => column.name === 'exam_title_snapshot');
+    if (!hasExamTitleSnapshot) {
+      db.exec("ALTER TABLE attempts ADD COLUMN exam_title_snapshot TEXT NOT NULL DEFAULT ''");
+    }
+    const hasQuestionsSnapshotJson = attemptColumns.some((column) => column.name === 'questions_snapshot_json');
+    if (!hasQuestionsSnapshotJson) {
+      db.exec("ALTER TABLE attempts ADD COLUMN questions_snapshot_json TEXT NOT NULL DEFAULT '[]'");
+    }
+    const hasPublishedAtSnapshot = attemptColumns.some((column) => column.name === 'published_at_snapshot');
+    if (!hasPublishedAtSnapshot) {
+      db.exec('ALTER TABLE attempts ADD COLUMN published_at_snapshot TEXT');
     }
   })();
 

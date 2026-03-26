@@ -22,7 +22,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Published exam set not found.' }, { status: 404 });
     }
 
-    const attempt = await createOrResumeAttempt(examSetId, session.user.id);
+    const attempt = await createOrResumeAttempt({
+      examSetId,
+      userId: session.user.id,
+      examTitle: examSet.title,
+      questions: examSet.questions,
+      publishedAt: examSet.publishedAt,
+    });
     return NextResponse.json(attempt);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create attempt.';

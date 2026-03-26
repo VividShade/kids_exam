@@ -25,6 +25,14 @@ export default async function ExamSolvePage({
   }
 
   const attempt = attemptId ? await getAttemptById(attemptId, session.user.id) : null;
+  const examSetForAttempt =
+    attempt && attempt.questionsSnapshot.length > 0
+      ? {
+          ...examSet,
+          title: attempt.examTitleSnapshot || examSet.title,
+          questions: attempt.questionsSnapshot,
+        }
+      : examSet;
 
-  return <ExamRunner examSet={examSet} initialAttempt={attempt} />;
+  return <ExamRunner examSet={examSetForAttempt} initialAttempt={attempt} />;
 }

@@ -7,6 +7,15 @@ import { SignOutButton } from '@/components/auth-buttons';
 import { adminEmailList } from '@/lib/env';
 import { listDashboardData } from '@/lib/repository';
 
+function formatPercent(correctCount: number, totalCount: number) {
+  if (totalCount <= 0) {
+    return '0%';
+  }
+  const raw = (correctCount / totalCount) * 100;
+  const rounded = Math.round(raw * 10) / 10;
+  return Number.isInteger(rounded) ? `${rounded}%` : `${rounded.toFixed(1)}%`;
+}
+
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -32,6 +41,9 @@ export default async function DashboardPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
+              <Link className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700" href="/dashboard/settings">
+                Settings
+              </Link>
               <Link className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white" href="/dashboard/exams/new">
                 New exam set
               </Link>
@@ -107,8 +119,11 @@ export default async function DashboardPage() {
                     const examSet = examSetById.get(attempt.examSetId);
                     return (
                       <article key={attempt.id} className="rounded-[1.5rem] bg-slate-50 p-4">
-                        <p className="text-sm font-bold text-slate-950">{examSet?.title ?? 'Published set'}</p>
+                        <p className="text-sm font-bold text-slate-950">{attempt.examTitleSnapshot || examSet?.title || 'Published set'}</p>
                         <p className="mt-1 text-xs text-slate-500">Saved at question {attempt.currentIndex + 1}</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Edition: {attempt.publishedAtSnapshot ? new Date(attempt.publishedAtSnapshot).toLocaleString() : 'legacy snapshot'}
+                        </p>
                         <div className="mt-3 flex gap-2">
                           <Link className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700" href={`/exams/${attempt.examSetId}?attempt=${attempt.id}`}>
                             Resume
@@ -138,35 +153,35 @@ export default async function DashboardPage() {
                 {completedAttempts.length > 0 ? (
                   completedAttempts.map((attempt) => {
                     const examSet = examSetById.get(attempt.examSetId);
-                    const wrongPrompts = examSet?.questions
-                      .filter((question) => attempt.wrongQuestionIds.includes(question.id))
-                      .map((question) => question.prompt) ?? [];
+                    const totalCount = attempt.questionsSnapshot.length > 0 ? attempt.questionsSnapshot.length : (examSet?.questions.length ?? 0);
+                    const correctCount = Math.max(0, totalCount - attempt.wrongQuestionIds.length);
+                    const percent = formatPercent(correctCount, totalCount);
 
                     return (
                       <article key={attempt.id} className="rounded-[1.5rem] bg-slate-50 p-4">
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="text-sm font-bold text-slate-950">{examSet?.title ?? 'Published set'}</p>
+                            <p className="text-sm font-bold text-slate-950">{attempt.examTitleSnapshot || examSet?.title || 'Published set'}</p>
                             <p className="mt-1 text-xs text-slate-500">Completed {attempt.completedAt ? new Date(attempt.completedAt).toLocaleString() : '-'}</p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              Edition: {attempt.publishedAtSnapshot ? new Date(attempt.publishedAtSnapshot).toLocaleString() : 'legacy snapshot'}
+                            </p>
                           </div>
-                          <span className="rounded-full bg-slate-950 px-3 py-1 text-xs font-semibold text-white">Score {attempt.score ?? 0}</span>
+                          <span className="text-right">
+                            <span className="text-xs font-semibold text-slate-700">{correctCount} / {totalCount}</span>
+                            <span className="ml-2 text-[11px] font-normal text-slate-500">({percent})</span>
+                          </span>
                         </div>
-                        <div className="mt-3 space-y-2 text-sm text-slate-600">
-                          {wrongPrompts.length > 0 ? (
-                            wrongPrompts.map((prompt) => (
-                              <p key={prompt} className="rounded-2xl bg-white px-3 py-2">
-                                Wrong: {prompt}
-                              </p>
-                            ))
-                          ) : (
-                            <p className="rounded-2xl bg-white px-3 py-2 text-emerald-700">Perfect attempt. No wrong questions recorded.</p>
-                          )}
+                        <div className="mt-3">
+                          <Link className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700" href={`/dashboard/reviews/${attempt.id}`}>
+                            Review details
+                          </Link>
                         </div>
                       </article>
                     );
                   })
                 ) : (
-                  <p className="rounded-[1.5rem] bg-slate-50 p-4 text-sm text-slate-500">Completed attempts will appear here with scores and wrong-question review.</p>
+                  <p className="rounded-[1.5rem] bg-slate-50 p-4 text-sm text-slate-500">Completed attempts will appear here with summary and a review link.</p>
                 )}
               </div>
             </section>

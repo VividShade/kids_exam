@@ -23,6 +23,7 @@ export type ExamBuilderConfig = {
   notes: string;
   uiLanguage: UILanguage;
   promptLanguage: UILanguage;
+  sourceLanguage: string;
   examLanguage: string;
   blueprints: QuestionBlueprint[];
 };
@@ -46,6 +47,9 @@ export type GeneratedExamSet = {
   summary: string;
   gradeBand: string;
   sourceSummary: string;
+  outputSummary: string;
+  sourceKeywords: string[];
+  outputKeywords: string[];
   recommendedPrompts: string[];
   questions: ExamQuestion[];
 };
@@ -73,6 +77,9 @@ export type AttemptRecord = {
   examSetId: string;
   userId: string;
   status: 'in_progress' | 'completed' | 'abandoned';
+  examTitleSnapshot: string;
+  questionsSnapshot: ExamQuestion[];
+  publishedAtSnapshot: string | null;
   answers: Record<string, string>;
   currentIndex: number;
   score: number | null;

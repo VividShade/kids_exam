@@ -49,6 +49,9 @@ type AttemptRow = {
   exam_set_id: string;
   user_id: string;
   status: 'in_progress' | 'completed' | 'abandoned';
+  exam_title_snapshot: string;
+  questions_snapshot_json: string;
+  published_at_snapshot: string | null;
   answers_json: string;
   current_index: number;
   score: number | null;
@@ -101,6 +104,7 @@ function normalizeConfig(config: ExamBuilderConfig) {
     ...config,
     uiLanguage: config.uiLanguage ?? 'en',
     promptLanguage: config.promptLanguage ?? 'en',
+    sourceLanguage: config.sourceLanguage ?? 'auto',
     examLanguage: config.examLanguage ?? 'English',
   };
 }
@@ -161,6 +165,9 @@ function parseAttempt(row: AttemptRow): AttemptRecord {
     examSetId: row.exam_set_id,
     userId: row.user_id,
     status: row.status,
+    examTitleSnapshot: row.exam_title_snapshot ?? '',
+    questionsSnapshot: row.questions_snapshot_json ? (JSON.parse(row.questions_snapshot_json) as ExamQuestion[]) : [],
+    publishedAtSnapshot: row.published_at_snapshot,
     answers: JSON.parse(row.answers_json) as Record<string, string>,
     currentIndex: row.current_index,
     score: row.score,
@@ -262,7 +269,7 @@ export async function saveExamSet(input: {
   sourceNotes?: string | null;
 }) {
   const now = new Date().toISOString();
-  const sourceImages = (input.sourceImages ?? []).slice(0, 5);
+  const sourceImages = (input.sourceImages ?? []).slice(0, 6);
   const firstImage = sourceImages[0]?.originalPath ?? null;
 
   if (input.id) {
@@ -376,8 +383,14 @@ export async function getActiveAttemptForUser(examSetId: string, userId: string)
   return row ? parseAttempt(row) : null;
 }
 
-export async function createOrResumeAttempt(examSetId: string, userId: string) {
-  const existing = await getActiveAttemptForUser(examSetId, userId);
+export async function createOrResumeAttempt(input: {
+  examSetId: string;
+  userId: string;
+  examTitle: string;
+  questions: ExamQuestion[];
+  publishedAt: string | null;
+}) {
+  const existing = await getActiveAttemptForUser(input.examSetId, input.userId);
   if (existing) {
     return existing;
   }
@@ -388,13 +401,13 @@ export async function createOrResumeAttempt(examSetId: string, userId: string) {
 
   await dbRun(
     `INSERT INTO attempts (
-      id, exam_set_id, user_id, status, answers_json, current_index, score,
-      wrong_question_ids_json, shuffle_seed, started_at, updated_at, completed_at, abandoned_at
-     ) VALUES (?, ?, ?, 'in_progress', '{}', 0, NULL, '[]', ?, ?, ?, NULL, NULL)`,
-    [id, examSetId, userId, shuffleSeed, now, now],
+      id, exam_set_id, user_id, status, exam_title_snapshot, questions_snapshot_json, published_at_snapshot,
+      answers_json, current_index, score, wrong_question_ids_json, shuffle_seed, started_at, updated_at, completed_at, abandoned_at
+     ) VALUES (?, ?, ?, 'in_progress', ?, ?, ?, '{}', 0, NULL, '[]', ?, ?, ?, NULL, NULL)`,
+    [id, input.examSetId, input.userId, input.examTitle, JSON.stringify(input.questions), input.publishedAt, shuffleSeed, now, now],
   );
 
-  const created = await getAttemptById(id, userId);
+  const created = await getAttemptById(id, input.userId);
   if (!created) {
     throw new Error('Failed to create attempt.');
   }
@@ -502,8 +515,8 @@ export async function attachOpenAiLogToExamSet(logId: string, examSetId: string,
   await dbRun('UPDATE openai_logs SET exam_set_id = ? WHERE id = ? AND user_id = ?', [examSetId, logId, userId]);
 }
 
-export async function listOpenAiLogs(limit = 200) {
-  const rows = await dbAll<OpenAiLogRow>('SELECT * FROM openai_logs ORDER BY created_at DESC LIMIT ?', [limit]);
+export async function listOpenAiLogs(limit = 200, offset = 0) {
+  const rows = await dbAll<OpenAiLogRow>('SELECT * FROM openai_logs ORDER BY created_at DESC LIMIT ? OFFSET ?', [limit, offset]);
   return rows.map(parseOpenAiLog);
 }
 

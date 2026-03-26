@@ -40,17 +40,19 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       return NextResponse.json({ ok: true });
     }
 
-    const examSet = await getPublishedExamSetById(attempt.examSetId);
-    if (!examSet) {
+    const snapshotQuestions = attempt.questionsSnapshot ?? [];
+    const examSet = snapshotQuestions.length > 0 ? null : await getPublishedExamSetById(attempt.examSetId);
+    const targetQuestions = snapshotQuestions.length > 0 ? snapshotQuestions : examSet?.questions ?? [];
+    if (targetQuestions.length === 0) {
       return NextResponse.json({ error: 'Exam set not found.' }, { status: 404 });
     }
 
-    const wrongQuestionIds = examSet.questions
+    const wrongQuestionIds = targetQuestions
       .filter((question) => normalizeAnswer(payload.answers[question.id] ?? '') !== normalizeAnswer(question.answer))
       .map((question) => question.id);
 
-    const correctCount = examSet.questions.length - wrongQuestionIds.length;
-    const score = Math.round((correctCount / examSet.questions.length) * 100);
+    const correctCount = targetQuestions.length - wrongQuestionIds.length;
+    const score = Math.round((correctCount / targetQuestions.length) * 100);
 
     await completeAttempt({
       attemptId: id,
