@@ -3,6 +3,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { DndContext, PointerSensor, closestCenter, type DragEndEvent, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 import type { ExamBuilderConfig, ExamSetRecord, ExamSourceImage, GeneratedExamSet, OpenAiLogRecord, QuestionBlueprint, QuestionKind, UILanguage } from '@/lib/types';
 
@@ -96,6 +99,14 @@ type GeneratedPayload = GeneratedExamSet & {
   error?: string;
 };
 
+type SortableBlueprintRowProps = {
+  id: string;
+  blueprint: QuestionBlueprint;
+  index: number;
+  onUpdate: (index: number, patch: Partial<QuestionBlueprint>) => void;
+  onRemove: (index: number) => void;
+};
+
 const uiLabel = {
   en: {
     assistant: 'Assistant',
@@ -149,6 +160,45 @@ function moveItem<T>(array: T[], fromIndex: number, toIndex: number) {
   const [removed] = next.splice(fromIndex, 1);
   next.splice(toIndex, 0, removed);
   return next;
+}
+
+function SortableBlueprintRow({ id, blueprint, index, onUpdate, onRemove }: SortableBlueprintRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: transition ?? 'transform 150ms ease-out',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`grid gap-3 rounded-3xl bg-white p-4 md:grid-cols-[auto_1.15fr_0.9fr_0.6fr_1.4fr_auto] ${
+        isDragging ? 'z-10 ring-1 ring-slate-300/70 ring-offset-1 shadow-[0_10px_24px_rgba(15,23,42,0.12)]' : ''
+      }`}
+      style={style}
+    >
+      <button
+        className="cursor-grab rounded-xl px-2 text-sm text-slate-500 transition-colors hover:text-slate-800 active:cursor-grabbing"
+        title="Drag handle"
+        type="button"
+        {...attributes}
+        {...listeners}
+      >
+        ::
+      </button>
+      <input className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" onChange={(event) => onUpdate(index, { label: event.target.value })} placeholder="Section title" title="Section title" value={blueprint.label} />
+      <select className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" onChange={(event) => onUpdate(index, { format: event.target.value as QuestionKind })} title="Question type" value={blueprint.format}>
+        <option value="multiple_choice">Multiple choice</option>
+        <option value="true_false">True / False</option>
+        <option value="short_answer">Short answer</option>
+      </select>
+      <input className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" min={1} onChange={(event) => onUpdate(index, { count: Number(event.target.value) || 1 })} placeholder="Count" title="Question count" type="number" value={blueprint.count} />
+      <input className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" onChange={(event) => onUpdate(index, { focus: event.target.value })} placeholder="Focus / pattern" title="Question intent or pattern" value={blueprint.focus} />
+      <button className="rounded-2xl border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700" onClick={() => onRemove(index)} type="button">
+        Delete
+      </button>
+    </div>
+  );
 }
 
 function getScaledDimensions(width: number, height: number, longEdgeLimit: number, pixelLimit: number) {
@@ -352,6 +402,7 @@ function editionSignature(payload: GeneratedExamSet) {
 export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], generateLimit = 5 }: BuilderProps) {
   const router = useRouter();
   const initialConfig = initialExamSet?.config;
+  const initialBlueprintValues = initialConfig?.blueprints ?? starterBlueprints;
   const [currentExamSetId, setCurrentExamSetId] = useState<string | null>(initialExamSet?.id ?? null);
   const [uiLanguage, setUiLanguage] = useState<UILanguage>(initialConfig?.uiLanguage ?? 'en');
   const [sourceLanguage, setSourceLanguage] = useState(initialConfig?.sourceLanguage ?? 'auto');
@@ -368,9 +419,8 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
   const [gradeBand, setGradeBand] = useState(initialConfig?.gradeBand ?? gradeBandOptions[1]);
   const [notes, setNotes] = useState(initialExamSet?.sourceNotes ?? '');
   const [selectedShortcutId, setSelectedShortcutId] = useState(quickOptionsByLanguage[uiLanguage][0].id);
-  const [blueprints, setBlueprints] = useState<QuestionBlueprint[]>(initialConfig?.blueprints ?? starterBlueprints);
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  const [dropIndicatorIndex, setDropIndicatorIndex] = useState<number | null>(null);
+  const [blueprints, setBlueprints] = useState<QuestionBlueprint[]>(initialBlueprintValues);
+  const [blueprintIds, setBlueprintIds] = useState<string[]>(() => initialBlueprintValues.map(() => crypto.randomUUID()));
   const [generationLogId, setGenerationLogId] = useState<string | null>(null);
   const [generateCount, setGenerateCount] = useState(initialExamSet?.generateCount ?? 0);
   const [generatedHistory, setGeneratedHistory] = useState<OpenAiLogRecord[]>(initialGenerateHistory);
@@ -410,6 +460,7 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedSignature, setLastSavedSignature] = useState('');
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   const quickOptions = quickOptionsByLanguage[uiLanguage];
   const selectedShortcut = quickOptions.find((option) => option.id === selectedShortcutId) ?? quickOptions[0];
@@ -494,26 +545,32 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
       ...current,
       { label: `Section ${current.length + 1}`, format: 'multiple_choice', count: 5, focus: 'Check understanding of the main ideas.' },
     ]);
+    setBlueprintIds((current) => [...current, crypto.randomUUID()]);
   }
 
   function addPresetBlueprints() {
     const presets = blueprintPresetsByCategory[selectedShortcut.id] ?? [];
     setBlueprints((current) => [...current, ...presets.map((preset) => ({ ...preset }))]);
+    setBlueprintIds((current) => [...current, ...presets.map(() => crypto.randomUUID())]);
   }
 
   function removeBlueprint(index: number) {
     setBlueprints((current) => current.filter((_, itemIndex) => itemIndex !== index));
+    setBlueprintIds((current) => current.filter((_, itemIndex) => itemIndex !== index));
   }
 
-  function handleDrop(toIndex: number) {
-    if (draggingIndex === null || draggingIndex === toIndex) {
-      setDraggingIndex(null);
-      setDropIndicatorIndex(null);
+  function handleBlueprintDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
       return;
     }
-    setBlueprints((current) => moveItem(current, draggingIndex, toIndex));
-    setDraggingIndex(null);
-    setDropIndicatorIndex(null);
+    const oldIndex = blueprintIds.indexOf(String(active.id));
+    const newIndex = blueprintIds.indexOf(String(over.id));
+    if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) {
+      return;
+    }
+    setBlueprints((current) => moveItem(current, oldIndex, newIndex));
+    setBlueprintIds((current) => moveItem(current, oldIndex, newIndex));
   }
 
   function getUntitledTitle() {
@@ -889,48 +946,19 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
                 </div>
               </div>
               <p className="mb-3 text-xs text-slate-500">{labels.dragHint}</p>
-              <div className="space-y-3">
-                {blueprints.map((blueprint, index) => (
-                  <div
-                    key={`${blueprint.label}-${index}`}
-                    className={`grid gap-3 rounded-3xl bg-white p-4 md:grid-cols-[auto_1.15fr_0.9fr_0.6fr_1.4fr_auto] ${
-                      dropIndicatorIndex === index ? 'ring-2 ring-sky-400 ring-offset-2' : ''
-                    }`}
-                    onDragOver={(event) => {
-                      event.preventDefault();
-                      if (draggingIndex !== null) {
-                        setDropIndicatorIndex(index);
+              <DndContext collisionDetection={closestCenter} onDragEnd={handleBlueprintDragEnd} sensors={sensors}>
+                <SortableContext items={blueprintIds} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-3">
+                    {blueprintIds.map((id, index) => {
+                      const blueprint = blueprints[index];
+                      if (!blueprint) {
+                        return null;
                       }
-                    }}
-                    onDrop={() => handleDrop(index)}
-                  >
-                    <button
-                      className="cursor-grab rounded-xl border border-slate-300 px-2 text-sm text-slate-500"
-                      draggable
-                      onDragEnd={() => {
-                        setDraggingIndex(null);
-                        setDropIndicatorIndex(null);
-                      }}
-                      onDragStart={() => setDraggingIndex(index)}
-                      title="Drag handle"
-                      type="button"
-                    >
-                      ::
-                    </button>
-                    <input className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" onChange={(event) => updateBlueprint(index, { label: event.target.value })} placeholder="Section title" title="Section title" value={blueprint.label} />
-                    <select className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" onChange={(event) => updateBlueprint(index, { format: event.target.value as QuestionKind })} title="Question type" value={blueprint.format}>
-                      <option value="multiple_choice">Multiple choice</option>
-                      <option value="true_false">True / False</option>
-                      <option value="short_answer">Short answer</option>
-                    </select>
-                    <input className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" min={1} onChange={(event) => updateBlueprint(index, { count: Number(event.target.value) || 1 })} placeholder="Count" title="Question count" type="number" value={blueprint.count} />
-                    <input className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" onChange={(event) => updateBlueprint(index, { focus: event.target.value })} placeholder="Focus / pattern" title="Question intent or pattern" value={blueprint.focus} />
-                    <button className="rounded-2xl border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700" onClick={() => removeBlueprint(index)} type="button">
-                      Delete
-                    </button>
+                      return <SortableBlueprintRow blueprint={blueprint} id={id} index={index} key={id} onRemove={removeBlueprint} onUpdate={updateBlueprint} />;
+                    })}
                   </div>
-                ))}
-              </div>
+                </SortableContext>
+              </DndContext>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
