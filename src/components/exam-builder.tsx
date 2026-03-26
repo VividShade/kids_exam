@@ -298,10 +298,16 @@ function parseGeneratedFromLog(log: OpenAiLogRecord): GeneratedExamSet | null {
     return null;
   }
   try {
-    const parsed = JSON.parse(log.responseJson) as Partial<GeneratedExamSet> | { generated?: Partial<GeneratedExamSet> };
-    const candidate = 'generated' in parsed ? parsed.generated : parsed;
+    const parsed = JSON.parse(log.responseJson) as unknown;
+    const extracted =
+      parsed && typeof parsed === 'object' && 'generated' in parsed
+        ? (parsed as { generated?: unknown }).generated
+        : parsed;
+    if (!extracted || typeof extracted !== 'object') {
+      return null;
+    }
+    const candidate = extracted as Partial<GeneratedExamSet>;
     if (
-      candidate &&
       typeof candidate.title === 'string' &&
       (typeof candidate.summary === 'string' || typeof candidate.outputSummary === 'string') &&
       typeof candidate.gradeBand === 'string' &&
@@ -704,24 +710,24 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
     }
   }
 
-  async function publishEdition(payload: GeneratedExamSet, logId: string) {
+  async function publishEdition(edition: GeneratedExamSet, logId: string) {
     setIsSaving(true);
     setStatusMessage('Publishing this edition...');
     try {
       setGenerationLogId(logId);
-      setGenerated(payload);
+      setGenerated(edition);
       setSelectedHistoryLogId(logId);
-      const examSetId = await saveDraft(payload, { auto: true });
+      const examSetId = await saveDraft(edition, { auto: true });
       const response = await fetch('/api/exam-sets/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ examSetId }),
       });
-      const payload = (await response.json()) as { ok?: boolean; error?: string };
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload.error ?? 'Publish failed.');
+      const publishResult = (await response.json()) as { ok?: boolean; error?: string };
+      if (!response.ok || !publishResult.ok) {
+        throw new Error(publishResult.error ?? 'Publish failed.');
       }
-      setPublishedSignature(editionSignature(payload));
+      setPublishedSignature(editionSignature(edition));
       setStatusMessage('Published selected edition.');
       router.push('/dashboard');
       router.refresh();
