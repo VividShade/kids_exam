@@ -262,7 +262,7 @@ export function DashboardExamSetsSection({
                         ) : (
                           <form action={publishExamSetAction}>
                             <input name="examSetId" type="hidden" value={examSet.id} />
-                            <button className={`${examActionButtonClass} bg-slate-950 text-white`} type="submit">
+                            <button className={`${examActionButtonClass} cursor-pointer bg-slate-950 text-white`} type="submit">
                               Publish
                             </button>
                           </form>
