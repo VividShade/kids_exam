@@ -27,6 +27,20 @@ export type ExamBuilderConfig = {
   blueprints: QuestionBlueprint[];
 };
 
+export type ExamSourceImage = {
+  id: string;
+  originalPath: string;
+  thumbnailPath: string;
+  width: number;
+  height: number;
+  thumbWidth: number;
+  thumbHeight: number;
+  sizeBytes: number;
+  uploadedAt: string;
+  originalSignedUrl?: string;
+  thumbnailSignedUrl?: string;
+};
+
 export type GeneratedExamSet = {
   title: string;
   summary: string;
@@ -45,7 +59,7 @@ export type ExamSetRecord = {
   promptText: string;
   config: ExamBuilderConfig;
   questions: ExamQuestion[];
-  sourceImageDataUrls: string[];
+  sourceImages: ExamSourceImage[];
   sourceNotes: string | null;
   publishedAt: string | null;
   createdAt: string;

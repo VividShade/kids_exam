@@ -10,7 +10,22 @@ const payloadSchema = z.object({
   title: z.string().min(1),
   summary: z.string().min(1),
   promptText: z.string().min(1),
-  sourceImageDataUrls: z.array(z.string()).max(5).optional(),
+  sourceImages: z
+    .array(
+      z.object({
+        id: z.string(),
+        originalPath: z.string(),
+        thumbnailPath: z.string(),
+        width: z.number(),
+        height: z.number(),
+        thumbWidth: z.number(),
+        thumbHeight: z.number(),
+        sizeBytes: z.number(),
+        uploadedAt: z.string(),
+      }),
+    )
+    .max(5)
+    .optional(),
   sourceNotes: z.string().nullable().optional(),
   config: z.object({
     title: z.string().min(1),

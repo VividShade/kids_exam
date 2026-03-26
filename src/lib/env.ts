@@ -5,6 +5,9 @@ export const env = {
   openAiApiKey: process.env.OPENAI_API_KEY ?? '',
   openAiModel: process.env.OPENAI_MODEL ?? 'gpt-4.1',
   supabaseDbUrl: process.env.SUPABASE_DB_URL ?? '',
+  supabaseUrl: process.env.SUPABASE_URL ?? '',
+  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
+  supabaseStorageBucket: process.env.SUPABASE_STORAGE_BUCKET ?? 'exam-source-images',
   adminEmails: process.env.ADMIN_EMAILS ?? '',
   localDbPath: process.env.LOCAL_DB_PATH ?? 'data/app.db',
 };
@@ -14,6 +17,8 @@ export const isGoogleAuthConfigured =
 
 export const isOpenAIConfigured = env.openAiApiKey.length > 0;
 export const isSupabaseConfigured = env.supabaseDbUrl.length > 0;
+export const isSupabaseStorageConfigured =
+  env.supabaseUrl.length > 0 && env.supabaseServiceRoleKey.length > 0 && env.supabaseStorageBucket.length > 0;
 export const adminEmailList = env.adminEmails
   .split(',')
   .map((value) => value.trim().toLowerCase())

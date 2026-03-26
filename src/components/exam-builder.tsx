@@ -4,49 +4,82 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
-import type { ExamBuilderConfig, ExamSetRecord, GeneratedExamSet, QuestionBlueprint, QuestionKind, UILanguage } from '@/lib/types';
+import type { ExamBuilderConfig, ExamSetRecord, ExamSourceImage, GeneratedExamSet, QuestionBlueprint, QuestionKind, UILanguage } from '@/lib/types';
 
-const quickOptionsByLanguage: Record<UILanguage, Array<{ label: string; prompt: string }>> = {
+const MAX_IMAGE_COUNT = 5;
+const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+const MAX_TOTAL_BYTES_HARD = 18 * 1024 * 1024;
+const MAX_LONG_EDGE = 2560;
+const MAX_MEGAPIXELS = 8_000_000;
+const THUMB_LONG_EDGE = 480;
+const QUALITY_STEPS = [0.86, 0.8, 0.74, 0.68];
+
+type BuilderImage = {
+  id: string;
+  originalInput: string;
+  thumbnailPreview: string;
+  uploadPayload?: {
+    originalBase64: string;
+    thumbnailBase64: string;
+    width: number;
+    height: number;
+    thumbWidth: number;
+    thumbHeight: number;
+    sizeBytes: number;
+  };
+  sourceImage?: ExamSourceImage;
+};
+
+const quickOptionsByLanguage: Record<UILanguage, Array<{ id: string; label: string; prompt: string }>> = {
   en: [
     {
+      id: 'vocabulary_mix',
       label: 'Vocabulary mix',
       prompt: 'Create a vocabulary test with meaning matching, fill-in-the-blank multiple choice, and short answer spelling checks.',
     },
     {
+      id: 'reading_check',
       label: 'Reading check',
       prompt: 'Create a comprehension quiz with grade-appropriate multiple choice and true/false questions.',
     },
     {
+      id: 'grammar_practice',
       label: 'Grammar practice',
       prompt: 'Create a grammar-focused quiz with short context sentences and error-resistant explanations.',
     },
   ],
   ko: [
     {
+      id: 'vocabulary_mix',
       label: '어휘 혼합',
-      prompt: '어휘 뜻 맞추기, 문장 빈칸 객관식, 철자 주관식을 섞어서 어휘 테스트를 만들어줘.',
+      prompt: '어휘 뜻 맞추기, 빈칸 객관식, 철자 주관식을 섞어서 어휘 테스트를 만들어줘.',
     },
     {
+      id: 'reading_check',
       label: '독해 확인',
       prompt: '학년 수준에 맞는 객관식과 true/false로 독해 확인 퀴즈를 만들어줘.',
     },
     {
+      id: 'grammar_practice',
       label: '문법 연습',
-      prompt: '문법 중심의 퀴즈를 만들고 해설은 짧고 정확하게 만들어줘.',
+      prompt: '문법 중심의 퀴즈를 만들고 해설은 짧고 명확하게 만들어줘.',
     },
   ],
   es: [
     {
-      label: 'Mezcla de vocabulario',
-      prompt: 'Crea una prueba de vocabulario con emparejar significados, opción múltiple de espacios en blanco y respuestas cortas.',
+      id: 'vocabulary_mix',
+      label: 'Vocabulario mixto',
+      prompt: 'Crea una prueba de vocabulario con emparejar significados, opción múltiple con espacios y respuestas cortas.',
     },
     {
+      id: 'reading_check',
       label: 'Comprensión lectora',
-      prompt: 'Crea un quiz de comprensión con opción múltiple y verdadero/falso acorde al grado.',
+      prompt: 'Crea un quiz de comprensión con opción múltiple y verdadero/falso acorde al nivel.',
     },
     {
-      label: 'Práctica de gramática',
-      prompt: 'Crea un quiz centrado en gramática con explicaciones breves y claras.',
+      id: 'grammar_practice',
+      label: 'Práctica gramatical',
+      prompt: 'Crea un quiz de gramática con explicaciones breves y claras.',
     },
   ],
 };
@@ -57,21 +90,13 @@ const starterBlueprints: QuestionBlueprint[] = [
   { label: 'Short answer recall', format: 'short_answer', count: 5, focus: 'Write the missing word directly.' },
 ];
 
-function readFileAsDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error('Failed to read image file.'));
-    reader.readAsDataURL(file);
-  });
-}
-
-function moveItem<T>(array: T[], fromIndex: number, toIndex: number) {
-  const next = [...array];
-  const [removed] = next.splice(fromIndex, 1);
-  next.splice(toIndex, 0, removed);
-  return next;
-}
+const outputLanguageOptions = [
+  'English',
+  'Korean',
+  'Spanish',
+  'Japanese',
+  'Chinese',
+] as const;
 
 type BuilderProps = {
   initialExamSet?: ExamSetRecord | null;
@@ -85,53 +110,210 @@ type GeneratedPayload = GeneratedExamSet & {
 const uiLabel = {
   en: {
     assistant: 'Assistant',
-    uploadHelp: 'Upload up to 5 textbook photos or worksheets, then pick a shortcut or customize the blueprint.',
+    uploadHelp: 'Upload up to 5 images. Images are compressed in your browser before upload.',
     sourceImage: 'Source images (max 5)',
-    shortcuts: 'Suggested shortcuts',
-    uiLanguage: 'UI language',
-    promptLanguage: 'Prompt language',
+    shortcuts: 'Question style',
+    uiLanguage: 'Builder language',
+    promptLanguage: 'Prompt language (advanced)',
     examLanguage: 'Exam output language',
     questionBlueprint: 'Question blueprint',
     addSection: 'Add section',
-    dragHint: 'Drag to reorder',
+    dragHint: 'Drag rows to reorder sections.',
+    teacherNotes: 'Teacher custom instructions (optional)',
+    advanced: 'Advanced language settings',
+    syncPromptLanguage: 'Keep prompt language synced with builder language',
   },
   ko: {
     assistant: '도우미',
-    uploadHelp: '교재/워크시트 사진을 최대 5장까지 올리고, 추천 옵션 또는 blueprint를 조정해줘.',
+    uploadHelp: '이미지를 최대 5장까지 올릴 수 있고, 브라우저에서 먼저 압축됩니다.',
     sourceImage: '기초 이미지 (최대 5장)',
-    shortcuts: '추천 바로가기',
-    uiLanguage: 'UI 언어',
-    promptLanguage: '프롬프트 언어',
-    examLanguage: '문제 출제 언어',
+    shortcuts: '문항 스타일',
+    uiLanguage: '빌더 언어',
+    promptLanguage: '프롬프트 언어 (고급)',
+    examLanguage: '문제 출력 언어',
     questionBlueprint: '문항 blueprint',
     addSection: '섹션 추가',
-    dragHint: '드래그로 순서 변경',
+    dragHint: '행을 드래그해서 순서를 변경해요.',
+    teacherNotes: '교사 맞춤 지침 (선택)',
+    advanced: '고급 언어 설정',
+    syncPromptLanguage: '프롬프트 언어를 빌더 언어와 자동 동기화',
   },
   es: {
     assistant: 'Asistente',
-    uploadHelp: 'Sube hasta 5 fotos del material y luego elige un atajo o ajusta el blueprint.',
+    uploadHelp: 'Puedes subir hasta 5 imágenes. Se comprimen en el navegador antes de subir.',
     sourceImage: 'Imágenes fuente (máx. 5)',
-    shortcuts: 'Atajos sugeridos',
-    uiLanguage: 'Idioma de UI',
-    promptLanguage: 'Idioma del prompt',
-    examLanguage: 'Idioma del examen',
+    shortcuts: 'Estilo de preguntas',
+    uiLanguage: 'Idioma del constructor',
+    promptLanguage: 'Idioma del prompt (avanzado)',
+    examLanguage: 'Idioma de salida del examen',
     questionBlueprint: 'Blueprint de preguntas',
     addSection: 'Agregar sección',
-    dragHint: 'Arrastra para reordenar',
+    dragHint: 'Arrastra filas para reordenar secciones.',
+    teacherNotes: 'Instrucciones personalizadas del docente (opcional)',
+    advanced: 'Ajustes avanzados de idioma',
+    syncPromptLanguage: 'Mantener sincronizado el idioma del prompt con el constructor',
   },
 } as const;
+
+function moveItem<T>(array: T[], fromIndex: number, toIndex: number) {
+  const next = [...array];
+  const [removed] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, removed);
+  return next;
+}
+
+function getScaledDimensions(width: number, height: number, longEdgeLimit: number, pixelLimit: number) {
+  let targetWidth = width;
+  let targetHeight = height;
+  const longEdge = Math.max(width, height);
+  if (longEdge > longEdgeLimit) {
+    const ratio = longEdgeLimit / longEdge;
+    targetWidth = Math.round(width * ratio);
+    targetHeight = Math.round(height * ratio);
+  }
+
+  const pixels = targetWidth * targetHeight;
+  if (pixels > pixelLimit) {
+    const ratio = Math.sqrt(pixelLimit / pixels);
+    targetWidth = Math.round(targetWidth * ratio);
+    targetHeight = Math.round(targetHeight * ratio);
+  }
+
+  return {
+    width: Math.max(1, targetWidth),
+    height: Math.max(1, targetHeight),
+  };
+}
+
+function loadImage(file: File) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to decode image.'));
+    };
+    image.src = url;
+  });
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, quality: number) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('Failed to encode image.'));
+        return;
+      }
+      resolve(blob);
+    }, 'image/jpeg', quality);
+  });
+}
+
+function blobToDataUrl(blob: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error('Failed to convert blob.'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+function dataUrlToBase64(dataUrl: string) {
+  const [, base64] = dataUrl.split(',');
+  return base64 ?? '';
+}
+
+function drawResized(image: HTMLImageElement, width: number, height: number) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('Canvas context unavailable.');
+  }
+  context.drawImage(image, 0, 0, width, height);
+  return canvas;
+}
+
+async function compressImage(file: File) {
+  const image = await loadImage(file);
+  const scaled = getScaledDimensions(image.naturalWidth, image.naturalHeight, MAX_LONG_EDGE, MAX_MEGAPIXELS);
+  let canvas = drawResized(image, scaled.width, scaled.height);
+  let chosenBlob: Blob | null = null;
+
+  for (const quality of QUALITY_STEPS) {
+    const blob = await canvasToBlob(canvas, quality);
+    if (blob.size <= MAX_IMAGE_BYTES) {
+      chosenBlob = blob;
+      break;
+    }
+    chosenBlob = blob;
+  }
+
+  if (!chosenBlob) {
+    throw new Error('Failed to compress image.');
+  }
+
+  let currentBlob = chosenBlob;
+  let currentWidth = scaled.width;
+  let currentHeight = scaled.height;
+  while (currentBlob.size > MAX_IMAGE_BYTES && currentWidth > 640 && currentHeight > 640) {
+    currentWidth = Math.round(currentWidth * 0.9);
+    currentHeight = Math.round(currentHeight * 0.9);
+    canvas = drawResized(image, currentWidth, currentHeight);
+    currentBlob = await canvasToBlob(canvas, QUALITY_STEPS[QUALITY_STEPS.length - 1]);
+  }
+
+  if (currentBlob.size > MAX_IMAGE_BYTES) {
+    throw new Error('Image is too large after compression. Try a smaller image.');
+  }
+
+  const thumbScaled = getScaledDimensions(currentWidth, currentHeight, THUMB_LONG_EDGE, THUMB_LONG_EDGE * THUMB_LONG_EDGE);
+  const thumbCanvas = drawResized(image, thumbScaled.width, thumbScaled.height);
+  const thumbBlob = await canvasToBlob(thumbCanvas, 0.72);
+
+  const originalDataUrl = await blobToDataUrl(currentBlob);
+  const thumbnailDataUrl = await blobToDataUrl(thumbBlob);
+
+  return {
+    originalInput: originalDataUrl,
+    thumbnailPreview: thumbnailDataUrl,
+    uploadPayload: {
+      originalBase64: dataUrlToBase64(originalDataUrl),
+      thumbnailBase64: dataUrlToBase64(thumbnailDataUrl),
+      width: currentWidth,
+      height: currentHeight,
+      thumbWidth: thumbScaled.width,
+      thumbHeight: thumbScaled.height,
+      sizeBytes: currentBlob.size,
+    },
+  };
+}
 
 export function ExamBuilder({ initialExamSet }: BuilderProps) {
   const router = useRouter();
   const initialConfig = initialExamSet?.config;
   const [uiLanguage, setUiLanguage] = useState<UILanguage>(initialConfig?.uiLanguage ?? 'en');
-  const [promptLanguage, setPromptLanguage] = useState<UILanguage>(initialConfig?.promptLanguage ?? 'en');
+  const [promptLanguage, setPromptLanguage] = useState<UILanguage>(initialConfig?.promptLanguage ?? (initialConfig?.uiLanguage ?? 'en'));
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+  const [isPromptSynced, setIsPromptSynced] = useState((initialConfig?.promptLanguage ?? initialConfig?.uiLanguage ?? 'en') === (initialConfig?.uiLanguage ?? 'en'));
   const [examLanguage, setExamLanguage] = useState(initialConfig?.examLanguage ?? 'English');
-  const [imageDataUrls, setImageDataUrls] = useState<string[]>(initialExamSet?.sourceImageDataUrls ?? []);
+  const [images, setImages] = useState<BuilderImage[]>(
+    (initialExamSet?.sourceImages ?? []).map((image) => ({
+      id: image.id,
+      originalInput: image.originalSignedUrl ?? '',
+      thumbnailPreview: image.thumbnailSignedUrl ?? image.originalSignedUrl ?? '',
+      sourceImage: image,
+    })),
+  );
   const [title, setTitle] = useState(initialExamSet?.title ?? '');
   const [gradeBand, setGradeBand] = useState(initialConfig?.gradeBand ?? 'US Grade 4-5');
   const [notes, setNotes] = useState(initialExamSet?.sourceNotes ?? '');
-  const [promptText, setPromptText] = useState(initialExamSet?.promptText ?? quickOptionsByLanguage[uiLanguage][0].prompt);
+  const [selectedShortcutId, setSelectedShortcutId] = useState(quickOptionsByLanguage[uiLanguage][0].id);
   const [blueprints, setBlueprints] = useState<QuestionBlueprint[]>(initialConfig?.blueprints ?? starterBlueprints);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [generationLogId, setGenerationLogId] = useState<string | null>(null);
@@ -147,11 +329,12 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
         }
       : null,
   );
-  const [statusMessage, setStatusMessage] = useState('Upload images and start generation.');
+  const [statusMessage, setStatusMessage] = useState('Upload source images and generate your exam set.');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const quickOptions = quickOptionsByLanguage[uiLanguage];
+  const selectedShortcut = quickOptions.find((option) => option.id === selectedShortcutId) ?? quickOptions[0];
   const labels = uiLabel[uiLanguage];
 
   const config: ExamBuilderConfig = useMemo(
@@ -195,31 +378,82 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
   }
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
     const files = Array.from(event.target.files ?? []);
     if (files.length === 0) {
       return;
     }
 
-    const remainingSlots = 5 - imageDataUrls.length;
+    const remainingSlots = MAX_IMAGE_COUNT - images.length;
     if (remainingSlots <= 0) {
-      setStatusMessage('You can upload up to 5 images.');
+      setStatusMessage(`You can upload up to ${MAX_IMAGE_COUNT} images.`);
+      input.value = '';
       return;
     }
 
     const selected = files.slice(0, remainingSlots);
-    const dataUrls = await Promise.all(selected.map((file) => readFileAsDataUrl(file)));
-    setImageDataUrls((current) => [...current, ...dataUrls]);
-    setStatusMessage(`Loaded ${selected.length} image(s). ${imageDataUrls.length + selected.length}/5 ready.`);
-    event.currentTarget.value = '';
+    try {
+      const compressed = await Promise.all(selected.map((file) => compressImage(file)));
+      const nextImages = compressed.map((item) => ({
+        id: crypto.randomUUID(),
+        originalInput: item.originalInput,
+        thumbnailPreview: item.thumbnailPreview,
+        uploadPayload: item.uploadPayload,
+      }));
+
+      const totalBytes = [...images, ...nextImages].reduce((sum, item) => sum + (item.uploadPayload?.sizeBytes ?? item.sourceImage?.sizeBytes ?? 0), 0);
+      if (totalBytes > MAX_TOTAL_BYTES_HARD) {
+        setStatusMessage(`Total payload is too large. Keep total under ${Math.round(MAX_TOTAL_BYTES_HARD / 1024 / 1024)}MB.`);
+        input.value = '';
+        return;
+      }
+
+      setImages((current) => [...current, ...nextImages]);
+      setStatusMessage(`Loaded ${nextImages.length} image(s). ${Math.min(images.length + nextImages.length, MAX_IMAGE_COUNT)}/${MAX_IMAGE_COUNT} ready.`);
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Failed to process images.');
+    }
+
+    input.value = '';
   }
 
   function removeImage(index: number) {
-    setImageDataUrls((current) => current.filter((_, itemIndex) => itemIndex !== index));
+    setImages((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  }
+
+  async function ensureUploadedImages() {
+    const existingImages = images.filter((item) => item.sourceImage).map((item) => item.sourceImage!) as ExamSourceImage[];
+    const newUploads = images.filter((item) => item.uploadPayload).map((item) => item.uploadPayload!);
+
+    if (newUploads.length === 0) {
+      return existingImages;
+    }
+
+    const response = await fetch('/api/storage/images', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ images: newUploads }),
+    });
+
+    const payload = (await response.json()) as { images?: ExamSourceImage[]; error?: string };
+    if (!response.ok || !payload.images) {
+      throw new Error(payload.error ?? 'Failed to upload source images.');
+    }
+
+    return [...existingImages, ...payload.images];
   }
 
   async function handleGenerate() {
-    if (imageDataUrls.length === 0) {
+    if (images.length === 0) {
       setStatusMessage('At least one image is required before generation.');
+      return;
+    }
+
+    const imageInputs = images.map((image) => image.originalInput).filter(Boolean);
+    if (imageInputs.length === 0) {
+      setStatusMessage('Image input is unavailable. Re-upload image files before generating.');
       return;
     }
 
@@ -233,8 +467,8 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          imageDataUrls,
-          notes: [promptText, notes].filter(Boolean).join('\n\n'),
+          imageDataUrls: imageInputs,
+          notes: [selectedShortcut.prompt, notes].filter(Boolean).join('\n\n'),
           config,
         }),
       });
@@ -265,6 +499,7 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
     setStatusMessage('Saving exam set draft...');
 
     try {
+      const uploadedImages = await ensureUploadedImages();
       const response = await fetch('/api/exam-sets', {
         method: 'POST',
         headers: {
@@ -275,8 +510,8 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
           generationLogId,
           title: title || generated.title,
           summary: generated.summary,
-          promptText,
-          sourceImageDataUrls: imageDataUrls,
+          promptText: selectedShortcut.prompt,
+          sourceImages: uploadedImages,
           sourceNotes: notes,
           config,
           questions: generated.questions,
@@ -322,18 +557,21 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
               <p className="mt-2 text-slate-200">{labels.uploadHelp}</p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
               <label className="text-sm font-semibold text-slate-800">
                 {labels.uiLanguage}
-                <select className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm" onChange={(event) => setUiLanguage(event.target.value as UILanguage)} value={uiLanguage}>
-                  <option value="en">English</option>
-                  <option value="ko">Korean</option>
-                  <option value="es">Spanish</option>
-                </select>
-              </label>
-              <label className="text-sm font-semibold text-slate-800">
-                {labels.promptLanguage}
-                <select className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm" onChange={(event) => setPromptLanguage(event.target.value as UILanguage)} value={promptLanguage}>
+                <select
+                  className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm"
+                  onChange={(event) => {
+                    const next = event.target.value as UILanguage;
+                    setUiLanguage(next);
+                    if (isPromptSynced) {
+                      setPromptLanguage(next);
+                    }
+                    setSelectedShortcutId(quickOptionsByLanguage[next][0].id);
+                  }}
+                  value={uiLanguage}
+                >
                   <option value="en">English</option>
                   <option value="ko">Korean</option>
                   <option value="es">Spanish</option>
@@ -341,18 +579,54 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
               </label>
               <label className="text-sm font-semibold text-slate-800">
                 {labels.examLanguage}
-                <input className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm" onChange={(event) => setExamLanguage(event.target.value)} value={examLanguage} />
+                <select className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm" onChange={(event) => setExamLanguage(event.target.value)} value={examLanguage}>
+                  {outputLanguageOptions.map((language) => (
+                    <option key={language} value={language}>
+                      {language}
+                    </option>
+                  ))}
+                </select>
               </label>
             </div>
+
+            <button className="rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700" onClick={() => setIsAdvancedOpen((value) => !value)} type="button">
+              {labels.advanced}
+            </button>
+            {isAdvancedOpen ? (
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <input
+                    checked={isPromptSynced}
+                    onChange={(event) => {
+                      const checked = event.target.checked;
+                      setIsPromptSynced(checked);
+                      if (checked) {
+                        setPromptLanguage(uiLanguage);
+                      }
+                    }}
+                    type="checkbox"
+                  />
+                  {labels.syncPromptLanguage}
+                </label>
+                <label className="text-sm font-semibold text-slate-800">
+                  {labels.promptLanguage}
+                  <select className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm" disabled={isPromptSynced} onChange={(event) => setPromptLanguage(event.target.value as UILanguage)} value={promptLanguage}>
+                    <option value="en">English</option>
+                    <option value="ko">Korean</option>
+                    <option value="es">Spanish</option>
+                  </select>
+                </label>
+              </div>
+            ) : null}
 
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
               <p className="font-semibold text-slate-950">{labels.shortcuts}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {quickOptions.map((option) => (
                   <button
-                    key={option.label}
-                    className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700"
-                    onClick={() => setPromptText(option.prompt)}
+                    key={option.id}
+                    className={`rounded-full border px-3 py-2 text-xs font-semibold ${selectedShortcutId === option.id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700'}`}
+                    onClick={() => setSelectedShortcutId(option.id)}
                     type="button"
                   >
                     {option.label}
@@ -366,11 +640,11 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
               <input accept="image/*" className="block w-full text-sm" multiple onChange={handleFileChange} type="file" />
             </label>
 
-            {imageDataUrls.length > 0 ? (
+            {images.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                {imageDataUrls.map((imageDataUrl, index) => (
-                  <div key={imageDataUrl} className="relative overflow-hidden rounded-2xl border border-slate-200">
-                    <img alt={`Uploaded source ${index + 1}`} className="h-32 w-full object-cover" src={imageDataUrl} />
+                {images.map((image, index) => (
+                  <div key={image.id} className="relative overflow-hidden rounded-2xl border border-slate-200">
+                    <img alt={`Uploaded source ${index + 1}`} className="h-32 w-full object-cover" src={image.thumbnailPreview} />
                     <button className="absolute right-2 top-2 rounded-full bg-slate-950 px-2 py-1 text-xs font-semibold text-white" onClick={() => removeImage(index)} type="button">
                       Remove
                     </button>
@@ -391,12 +665,7 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
             </div>
 
             <label className="block text-sm font-semibold text-slate-800">
-              Prompt for ChatGPT / OpenAI
-              <textarea className="mt-2 min-h-32 w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm" onChange={(event) => setPromptText(event.target.value)} value={promptText} />
-            </label>
-
-            <label className="block text-sm font-semibold text-slate-800">
-              Teacher notes
+              {labels.teacherNotes}
               <textarea className="mt-2 min-h-28 w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm" onChange={(event) => setNotes(event.target.value)} value={notes} />
             </label>
 
@@ -464,9 +733,9 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
                   <p className="text-sm font-bold text-slate-950">Recommended next prompts</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {generated.recommendedPrompts.map((prompt) => (
-                      <button key={prompt} className="rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700" onClick={() => setPromptText(prompt)} type="button">
+                      <p key={prompt} className="rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700">
                         {prompt}
-                      </button>
+                      </p>
                     ))}
                   </div>
                 </div>
@@ -500,3 +769,4 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
     </div>
   );
 }
+

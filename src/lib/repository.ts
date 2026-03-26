@@ -2,7 +2,7 @@ import 'server-only';
 
 import { createId } from '@/lib/id';
 import { dbAll, dbGet, dbRun } from '@/lib/db';
-import type { AttemptRecord, DashboardData, ExamBuilderConfig, ExamQuestion, ExamSetRecord, OpenAiLogRecord } from '@/lib/types';
+import type { AttemptRecord, DashboardData, ExamBuilderConfig, ExamQuestion, ExamSetRecord, ExamSourceImage, OpenAiLogRecord } from '@/lib/types';
 
 type UserRow = {
   id: string;
@@ -26,6 +26,7 @@ type ExamSetRow = {
   questions_json: string;
   source_image_data_url: string | null;
   source_image_data_urls_json: string | null;
+  source_images_json: string | null;
   source_notes: string | null;
   published_at: string | null;
   created_at: string;
@@ -81,11 +82,35 @@ function normalizeConfig(config: ExamBuilderConfig) {
 }
 
 function parseExamSet(row: ExamSetRow): ExamSetRecord {
-  const sourceImageDataUrls = row.source_image_data_urls_json
-    ? (JSON.parse(row.source_image_data_urls_json) as string[])
-    : row.source_image_data_url
-      ? [row.source_image_data_url]
-      : [];
+  const sourceImages = row.source_images_json
+    ? (JSON.parse(row.source_images_json) as ExamSourceImage[])
+    : row.source_image_data_urls_json
+      ? (JSON.parse(row.source_image_data_urls_json) as string[]).map((path) => ({
+          id: createId('img_legacy'),
+          originalPath: path,
+          thumbnailPath: path,
+          width: 0,
+          height: 0,
+          thumbWidth: 0,
+          thumbHeight: 0,
+          sizeBytes: 0,
+          uploadedAt: row.created_at,
+        }))
+      : row.source_image_data_url
+        ? [
+            {
+              id: createId('img_legacy'),
+              originalPath: row.source_image_data_url,
+              thumbnailPath: row.source_image_data_url,
+              width: 0,
+              height: 0,
+              thumbWidth: 0,
+              thumbHeight: 0,
+              sizeBytes: 0,
+              uploadedAt: row.created_at,
+            },
+          ]
+        : [];
 
   return {
     id: row.id,
@@ -96,7 +121,7 @@ function parseExamSet(row: ExamSetRow): ExamSetRecord {
     promptText: row.prompt_text,
     config: normalizeConfig(JSON.parse(row.config_json) as ExamBuilderConfig),
     questions: JSON.parse(row.questions_json) as ExamQuestion[],
-    sourceImageDataUrls,
+    sourceImages,
     sourceNotes: row.source_notes,
     publishedAt: row.published_at,
     createdAt: row.created_at,
@@ -192,17 +217,17 @@ export async function saveExamSet(input: {
   promptText: string;
   config: ExamBuilderConfig;
   questions: ExamQuestion[];
-  sourceImageDataUrls?: string[];
+  sourceImages?: ExamSourceImage[];
   sourceNotes?: string | null;
 }) {
   const now = new Date().toISOString();
-  const sourceImageDataUrls = (input.sourceImageDataUrls ?? []).slice(0, 5);
-  const firstImage = sourceImageDataUrls[0] ?? null;
+  const sourceImages = (input.sourceImages ?? []).slice(0, 5);
+  const firstImage = sourceImages[0]?.originalPath ?? null;
 
   if (input.id) {
     await dbRun(
       `UPDATE exam_sets
-       SET title = ?, summary = ?, prompt_text = ?, config_json = ?, questions_json = ?, source_image_data_url = ?, source_image_data_urls_json = ?, source_notes = ?, updated_at = ?
+       SET title = ?, summary = ?, prompt_text = ?, config_json = ?, questions_json = ?, source_image_data_url = ?, source_image_data_urls_json = ?, source_images_json = ?, source_notes = ?, updated_at = ?
        WHERE id = ? AND owner_id = ?`,
       [
         input.title,
@@ -211,7 +236,8 @@ export async function saveExamSet(input: {
         JSON.stringify(normalizeConfig(input.config)),
         JSON.stringify(input.questions),
         firstImage,
-        JSON.stringify(sourceImageDataUrls),
+        JSON.stringify(sourceImages.map((item) => item.originalPath)),
+        JSON.stringify(sourceImages),
         input.sourceNotes ?? null,
         now,
         input.id,
@@ -226,8 +252,8 @@ export async function saveExamSet(input: {
   await dbRun(
     `INSERT INTO exam_sets (
       id, owner_id, title, summary, status, prompt_text, config_json, questions_json,
-      source_image_data_url, source_image_data_urls_json, source_notes, published_at, created_at, updated_at
-     ) VALUES (?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, NULL, ?, ?)`,
+      source_image_data_url, source_image_data_urls_json, source_images_json, source_notes, published_at, created_at, updated_at
+     ) VALUES (?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)`,
     [
       examSetId,
       input.ownerId,
@@ -237,7 +263,8 @@ export async function saveExamSet(input: {
       JSON.stringify(normalizeConfig(input.config)),
       JSON.stringify(input.questions),
       firstImage,
-      JSON.stringify(sourceImageDataUrls),
+      JSON.stringify(sourceImages.map((item) => item.originalPath)),
+      JSON.stringify(sourceImages),
       input.sourceNotes ?? null,
       now,
       now,

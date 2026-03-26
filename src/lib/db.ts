@@ -33,6 +33,7 @@ const schemaStatements = [
     questions_json TEXT NOT NULL,
     source_image_data_url TEXT,
     source_image_data_urls_json TEXT,
+    source_images_json TEXT,
     source_notes TEXT,
     published_at TEXT,
     created_at TEXT NOT NULL,
@@ -127,6 +128,7 @@ async function initialize() {
         await client.unsafe(statement);
       }
       await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS source_image_data_urls_json TEXT');
+      await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS source_images_json TEXT');
       return;
     }
 
@@ -138,6 +140,10 @@ async function initialize() {
     const hasSourceImageDataUrlsJson = columns.some((column) => column.name === 'source_image_data_urls_json');
     if (!hasSourceImageDataUrlsJson) {
       db.exec('ALTER TABLE exam_sets ADD COLUMN source_image_data_urls_json TEXT');
+    }
+    const hasSourceImagesJson = columns.some((column) => column.name === 'source_images_json');
+    if (!hasSourceImagesJson) {
+      db.exec('ALTER TABLE exam_sets ADD COLUMN source_images_json TEXT');
     }
   })();
 

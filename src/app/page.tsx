@@ -2,12 +2,13 @@ import Link from 'next/link';
 
 import { auth } from '@/auth';
 import { SignInButton, SignOutButton } from '@/components/auth-buttons';
-import { isGoogleAuthConfigured, isOpenAIConfigured, isSupabaseConfigured } from '@/lib/env';
+import { isGoogleAuthConfigured, isOpenAIConfigured, isSupabaseConfigured, isSupabaseStorageConfigured } from '@/lib/env';
 
 const checks = [
   { label: 'Google OAuth', ready: isGoogleAuthConfigured },
   { label: 'OpenAI multi-modal', ready: isOpenAIConfigured },
   { label: 'Supabase deploy DB', ready: isSupabaseConfigured },
+  { label: 'Supabase private storage', ready: isSupabaseStorageConfigured },
   { label: 'SQLite local fallback', ready: true },
 ];
 
