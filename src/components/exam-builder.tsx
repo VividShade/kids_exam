@@ -391,18 +391,43 @@ function inferOutputLanguageFromLog(log: OpenAiLogRecord, fallbackLanguage: stri
 function editionSignature(payload: GeneratedExamSet) {
   return JSON.stringify({
     gradeBand: payload.gradeBand,
-    outputSummary: payload.outputSummary || payload.summary,
-    sourceSummary: payload.sourceSummary,
-    outputKeywords: payload.outputKeywords ?? [],
-    sourceKeywords: payload.sourceKeywords ?? [],
     questions: payload.questions,
   });
+}
+
+function generatedFromExamSet(examSet: ExamSetRecord): GeneratedExamSet {
+  return {
+    title: examSet.title,
+    summary: examSet.summary,
+    gradeBand: examSet.config.gradeBand,
+    sourceSummary: examSet.summary,
+    outputSummary: examSet.summary,
+    sourceKeywords: [],
+    outputKeywords: [],
+    recommendedPrompts: [],
+    questions: examSet.questions,
+  };
+}
+
+function findPublishedEditionFromHistory(examSet: ExamSetRecord | null | undefined, logs: OpenAiLogRecord[]) {
+  if (!examSet || examSet.status !== 'published') {
+    return null;
+  }
+  const publishedSignature = editionSignature(generatedFromExamSet(examSet));
+  for (const log of logs) {
+    const parsed = parseGeneratedFromLog(log);
+    if (parsed && editionSignature(parsed) === publishedSignature) {
+      return { logId: log.id, generated: parsed };
+    }
+  }
+  return null;
 }
 
 export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], generateLimit = 5 }: BuilderProps) {
   const router = useRouter();
   const initialConfig = initialExamSet?.config;
   const initialBlueprintValues = initialConfig?.blueprints ?? starterBlueprints;
+  const initialPublishedEdition = findPublishedEditionFromHistory(initialExamSet, initialGenerateHistory);
   const [currentExamSetId, setCurrentExamSetId] = useState<string | null>(initialExamSet?.id ?? null);
   const [uiLanguage, setUiLanguage] = useState<UILanguage>(initialConfig?.uiLanguage ?? 'en');
   const [sourceLanguage, setSourceLanguage] = useState(initialConfig?.sourceLanguage ?? 'auto');
@@ -421,40 +446,18 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
   const [selectedShortcutId, setSelectedShortcutId] = useState(quickOptionsByLanguage[uiLanguage][0].id);
   const [blueprints, setBlueprints] = useState<QuestionBlueprint[]>(initialBlueprintValues);
   const [blueprintIds, setBlueprintIds] = useState<string[]>(() => initialBlueprintValues.map(() => crypto.randomUUID()));
-  const [generationLogId, setGenerationLogId] = useState<string | null>(null);
+  const [generationLogId, setGenerationLogId] = useState<string | null>(initialPublishedEdition?.logId ?? null);
   const [generateCount, setGenerateCount] = useState(initialExamSet?.generateCount ?? 0);
   const [generatedHistory, setGeneratedHistory] = useState<OpenAiLogRecord[]>(initialGenerateHistory);
-  const [selectedHistoryLogId, setSelectedHistoryLogId] = useState<string | null>(null);
+  const [selectedHistoryLogId, setSelectedHistoryLogId] = useState<string | null>(initialPublishedEdition?.logId ?? null);
   const [generated, setGenerated] = useState<GeneratedExamSet | null>(
-    initialExamSet
-      ? {
-          title: initialExamSet.title,
-          summary: initialExamSet.summary,
-          gradeBand: initialExamSet.config.gradeBand,
-          sourceSummary: initialExamSet.summary,
-          outputSummary: initialExamSet.summary,
-          sourceKeywords: [],
-          outputKeywords: [],
-          recommendedPrompts: [],
-          questions: initialExamSet.questions,
-        }
-      : null,
+    initialPublishedEdition?.generated ?? (initialExamSet ? generatedFromExamSet(initialExamSet) : null),
   );
   const [publishedSignature, setPublishedSignature] = useState<string>(() => {
     if (!initialExamSet || initialExamSet.status !== 'published') {
       return '';
     }
-    return editionSignature({
-      title: initialExamSet.title,
-      summary: initialExamSet.summary,
-      gradeBand: initialExamSet.config.gradeBand,
-      sourceSummary: initialExamSet.summary,
-      outputSummary: initialExamSet.summary,
-      sourceKeywords: [],
-      outputKeywords: [],
-      recommendedPrompts: [],
-      questions: initialExamSet.questions,
-    });
+    return editionSignature(generatedFromExamSet(initialExamSet));
   });
   const [statusMessage, setStatusMessage] = useState('Upload source images and generate your exam set.');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -998,9 +1001,9 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
                       const editionNumber = generatedHistory.length - index;
                       const isPublished = preview ? editionSignature(preview) === publishedSignature : false;
                       return (
-                        <button
+                        <div
                           key={history.id}
-                          className={`w-full rounded-2xl border px-3 py-2 text-left text-xs ${
+                          className={`w-full cursor-pointer rounded-2xl border px-3 py-2 text-left text-xs ${
                             isSelected ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-slate-50 text-slate-700'
                           }`}
                           onClick={() => {
@@ -1010,7 +1013,18 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
                               setGenerated(preview);
                             }
                           }}
-                          type="button"
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              setSelectedHistoryLogId(history.id);
+                              setGenerationLogId(history.id);
+                              if (preview) {
+                                setGenerated(preview);
+                              }
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div>
@@ -1045,7 +1059,7 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
                               </button>
                             </div>
                           </div>
-                        </button>
+                        </div>
                       );
                     })
                   ) : (
