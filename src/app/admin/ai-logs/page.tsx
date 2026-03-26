@@ -2,11 +2,23 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { auth } from '@/auth';
+import { JsonTreeViewer } from '@/components/json-tree-viewer';
 import { adminEmailList } from '@/lib/env';
 import { listOpenAiLogs } from '@/lib/repository';
 
 function formatCost(value: number) {
   return `$${value.toFixed(4)}`;
+}
+
+function parseResponseJson(input: string | null) {
+  if (!input) {
+    return null;
+  }
+  try {
+    return JSON.parse(input) as unknown as null | boolean | number | string | unknown[] | Record<string, unknown>;
+  } catch {
+    return null;
+  }
 }
 
 export default async function AdminAiLogsPage() {
@@ -77,6 +89,10 @@ export default async function AdminAiLogsPage() {
             {logs.length > 0 ? (
               logs.map((log) => (
                 <article key={log.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                  {(() => {
+                    const parsedResponse = parseResponseJson(log.responseJson);
+                    return (
+                      <>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-bold text-slate-950">{log.model}</p>
                     <p className="text-xs text-slate-500">{new Date(log.createdAt).toLocaleString()}</p>
@@ -95,9 +111,18 @@ export default async function AdminAiLogsPage() {
                     </div>
                     <div className="rounded-2xl bg-white p-3">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Response</p>
-                      <pre className="mt-2 overflow-x-auto whitespace-pre-wrap text-xs text-slate-700">{log.responseText ?? log.responseJson ?? '-'}</pre>
+                      <div className="mt-2">
+                        {parsedResponse ? (
+                          <JsonTreeViewer value={parsedResponse as never} />
+                        ) : (
+                          <pre className="overflow-x-auto whitespace-pre-wrap text-xs text-slate-700">{log.responseText ?? log.responseJson ?? '-'}</pre>
+                        )}
+                      </div>
                     </div>
                   </div>
+                      </>
+                    );
+                  })()}
                 </article>
               ))
             ) : (
