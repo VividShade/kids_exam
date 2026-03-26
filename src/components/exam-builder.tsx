@@ -9,6 +9,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { createBuilderSignature, type BuilderSignatureInput } from '@/lib/exam-builder-signature';
 import { extractGeneratedExamSetFromResponseJson } from '@/lib/generated-exam-parser';
+import { compressImageForUpload, IMAGE_UPLOAD_LIMITS, type UploadImagePayload } from '@/lib/image-processing';
 import type {
   ExamBuilderConfig,
   ExamSetRecord,
@@ -20,13 +21,6 @@ import type {
   UILanguage,
 } from '@/lib/types';
 
-const MAX_IMAGE_COUNT = 6;
-const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
-const MAX_TOTAL_BYTES_HARD = 18 * 1024 * 1024;
-const MAX_LONG_EDGE = 2560;
-const MAX_MEGAPIXELS = 8_000_000;
-const THUMB_LONG_EDGE = 480;
-const QUALITY_STEPS = [0.86, 0.8, 0.74, 0.68];
 const LAST_GRADE_BAND_KEY = 'exam_builder_last_grade_band';
 const LAST_SHORTCUT_ID_KEY = 'exam_builder_last_shortcut_id';
 const APP_UI_LANGUAGE_KEY = 'app_ui_language';
@@ -40,15 +34,7 @@ type BuilderImage = {
   id: string;
   originalInput: string;
   thumbnailPreview: string;
-  uploadPayload?: {
-    originalBase64: string;
-    thumbnailBase64: string;
-    width: number;
-    height: number;
-    thumbWidth: number;
-    thumbHeight: number;
-    sizeBytes: number;
-  };
+  uploadPayload?: UploadImagePayload;
   sourceImage?: ExamSourceImage;
 };
 
@@ -302,141 +288,6 @@ function SortableBlueprintRow({ id, blueprint, index, onUpdate, onRemove }: Sort
       </button>
     </div>
   );
-}
-
-function getScaledDimensions(width: number, height: number, longEdgeLimit: number, pixelLimit: number) {
-  let targetWidth = width;
-  let targetHeight = height;
-  const longEdge = Math.max(width, height);
-  if (longEdge > longEdgeLimit) {
-    const ratio = longEdgeLimit / longEdge;
-    targetWidth = Math.round(width * ratio);
-    targetHeight = Math.round(height * ratio);
-  }
-  const pixels = targetWidth * targetHeight;
-  if (pixels > pixelLimit) {
-    const ratio = Math.sqrt(pixelLimit / pixels);
-    targetWidth = Math.round(targetWidth * ratio);
-    targetHeight = Math.round(targetHeight * ratio);
-  }
-  return { width: Math.max(1, targetWidth), height: Math.max(1, targetHeight) };
-}
-
-function loadImage(file: File) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(image);
-    };
-    image.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('Failed to decode image.'));
-    };
-    image.src = url;
-  });
-}
-
-function canvasToBlob(canvas: HTMLCanvasElement, quality: number) {
-  return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          reject(new Error('Failed to encode image.'));
-          return;
-        }
-        resolve(blob);
-      },
-      'image/jpeg',
-      quality
-    );
-  });
-}
-
-function blobToDataUrl(blob: Blob) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error('Failed to convert blob.'));
-    reader.readAsDataURL(blob);
-  });
-}
-
-function dataUrlToBase64(dataUrl: string) {
-  const [, base64] = dataUrl.split(',');
-  return base64 ?? '';
-}
-
-function drawResized(image: HTMLImageElement, width: number, height: number) {
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext('2d');
-  if (!context) {
-    throw new Error('Canvas context unavailable.');
-  }
-  context.drawImage(image, 0, 0, width, height);
-  return canvas;
-}
-
-async function compressImage(file: File) {
-  const image = await loadImage(file);
-  const scaled = getScaledDimensions(image.naturalWidth, image.naturalHeight, MAX_LONG_EDGE, MAX_MEGAPIXELS);
-  let canvas = drawResized(image, scaled.width, scaled.height);
-  let chosenBlob: Blob | null = null;
-
-  for (const quality of QUALITY_STEPS) {
-    const blob = await canvasToBlob(canvas, quality);
-    if (blob.size <= MAX_IMAGE_BYTES) {
-      chosenBlob = blob;
-      break;
-    }
-    chosenBlob = blob;
-  }
-
-  if (!chosenBlob) {
-    throw new Error('Failed to compress image.');
-  }
-
-  let currentBlob = chosenBlob;
-  let currentWidth = scaled.width;
-  let currentHeight = scaled.height;
-  while (currentBlob.size > MAX_IMAGE_BYTES && currentWidth > 640 && currentHeight > 640) {
-    currentWidth = Math.round(currentWidth * 0.9);
-    currentHeight = Math.round(currentHeight * 0.9);
-    canvas = drawResized(image, currentWidth, currentHeight);
-    currentBlob = await canvasToBlob(canvas, QUALITY_STEPS[QUALITY_STEPS.length - 1]);
-  }
-
-  if (currentBlob.size > MAX_IMAGE_BYTES) {
-    throw new Error('Image is too large after compression. Try a smaller image.');
-  }
-
-  const thumbScaled = getScaledDimensions(
-    currentWidth,
-    currentHeight,
-    THUMB_LONG_EDGE,
-    THUMB_LONG_EDGE * THUMB_LONG_EDGE
-  );
-  const thumbCanvas = drawResized(image, thumbScaled.width, thumbScaled.height);
-  const thumbBlob = await canvasToBlob(thumbCanvas, 0.72);
-  const originalDataUrl = await blobToDataUrl(currentBlob);
-  const thumbnailDataUrl = await blobToDataUrl(thumbBlob);
-
-  return {
-    originalInput: originalDataUrl,
-    thumbnailPreview: thumbnailDataUrl,
-    uploadPayload: {
-      originalBase64: dataUrlToBase64(originalDataUrl),
-      thumbnailBase64: dataUrlToBase64(thumbnailDataUrl),
-      width: currentWidth,
-      height: currentHeight,
-      thumbWidth: thumbScaled.width,
-      thumbHeight: thumbScaled.height,
-      sizeBytes: currentBlob.size,
-    },
-  };
 }
 
 function parseGeneratedFromLog(log: OpenAiLogRecord): GeneratedExamSet | null {
@@ -868,16 +719,16 @@ export function ExamBuilder({
     if (files.length === 0) {
       return;
     }
-    const remainingSlots = MAX_IMAGE_COUNT - images.length;
+    const remainingSlots = IMAGE_UPLOAD_LIMITS.maxCount - images.length;
     if (remainingSlots <= 0) {
-      setStatusMessage(`You can upload up to ${MAX_IMAGE_COUNT} images.`);
+      setStatusMessage(`You can upload up to ${IMAGE_UPLOAD_LIMITS.maxCount} images.`);
       input.value = '';
       return;
     }
 
     const selected = files.slice(0, remainingSlots);
     try {
-      const compressed = await Promise.all(selected.map((file) => compressImage(file)));
+      const compressed = await Promise.all(selected.map((file) => compressImageForUpload(file)));
       const nextImages: BuilderImage[] = compressed.map((item) => ({
         id: crypto.randomUUID(),
         originalInput: item.originalInput,
@@ -888,9 +739,9 @@ export function ExamBuilder({
         (sum, item) => sum + (item.uploadPayload?.sizeBytes ?? item.sourceImage?.sizeBytes ?? 0),
         0
       );
-      if (totalBytes > MAX_TOTAL_BYTES_HARD) {
+      if (totalBytes > IMAGE_UPLOAD_LIMITS.maxTotalBytesHard) {
         setStatusMessage(
-          `Total payload is too large. Keep total under ${Math.round(MAX_TOTAL_BYTES_HARD / 1024 / 1024)}MB.`
+          `Total payload is too large. Keep total under ${Math.round(IMAGE_UPLOAD_LIMITS.maxTotalBytesHard / 1024 / 1024)}MB.`
         );
         input.value = '';
         return;
@@ -898,9 +749,8 @@ export function ExamBuilder({
       setImages((current) => [...current, ...nextImages]);
       setStatusMessage(
         `Loaded ${nextImages.length} image(s). ${Math.min(
-          images.length + nextImages.length,
-          MAX_IMAGE_COUNT
-        )}/${MAX_IMAGE_COUNT} ready.`
+          images.length + nextImages.length, IMAGE_UPLOAD_LIMITS.maxCount
+        )}/${IMAGE_UPLOAD_LIMITS.maxCount} ready.`
       );
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Failed to process images.');
