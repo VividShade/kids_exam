@@ -34,6 +34,7 @@ type ExamSetRow = {
   prompt_text: string;
   selected_shortcut_id: string | null;
   custom_prompt: string | null;
+  output_keywords_json: string | null;
   config_json: string;
   questions_json: string;
   source_image_data_url: string | null;
@@ -170,6 +171,7 @@ function parseExamSet(row: ExamSetRow): ExamSetRecord {
     promptText: row.prompt_text,
     selectedShortcutId: row.selected_shortcut_id ?? 'vocabulary_mix',
     customPrompt: row.custom_prompt ?? row.source_notes ?? row.prompt_text ?? null,
+    outputKeywords: row.output_keywords_json ? (JSON.parse(row.output_keywords_json) as string[]) : [],
     config: normalizeConfig(JSON.parse(row.config_json) as ExamBuilderConfig),
     questions: JSON.parse(row.questions_json) as ExamQuestion[],
     sourceImages,
@@ -231,6 +233,53 @@ function parseOpenAiLog(row: OpenAiLogRow): OpenAiLogRecord {
     estimatedCostUsd: toNumber(row.estimated_cost_usd),
     createdAt: row.created_at,
   };
+}
+
+function extractOutputKeywordsFromResponseJson(responseJson: string | null) {
+  if (!responseJson) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(responseJson) as unknown;
+    const extracted =
+      parsed && typeof parsed === 'object' && 'generated' in parsed
+        ? (parsed as { generated?: unknown }).generated
+        : parsed;
+    if (!extracted || typeof extracted !== 'object') {
+      return null;
+    }
+    const candidate = extracted as { outputKeywords?: unknown };
+    if (!Array.isArray(candidate.outputKeywords)) {
+      return null;
+    }
+    const values = candidate.outputKeywords.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+    return values.length > 0 ? values : null;
+  } catch {
+    return null;
+  }
+}
+
+function extractQuestionsSignatureFromResponseJson(responseJson: string | null) {
+  if (!responseJson) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(responseJson) as unknown;
+    const extracted =
+      parsed && typeof parsed === 'object' && 'generated' in parsed
+        ? (parsed as { generated?: unknown }).generated
+        : parsed;
+    if (!extracted || typeof extracted !== 'object') {
+      return null;
+    }
+    const candidate = extracted as { questions?: unknown };
+    if (!Array.isArray(candidate.questions)) {
+      return null;
+    }
+    return JSON.stringify(candidate.questions);
+  } catch {
+    return null;
+  }
 }
 
 function parseExamGenerationJob(row: ExamGenerationJobRow): ExamGenerationJobRecord {
@@ -303,6 +352,7 @@ export async function saveExamSet(input: {
   summary: string;
   selectedShortcutId: string;
   customPrompt?: string | null;
+  outputKeywords?: string[];
   config: ExamBuilderConfig;
   questions: ExamQuestion[];
   sourceImages?: ExamSourceImage[];
@@ -334,9 +384,9 @@ export async function saveExamSet(input: {
     );
     await dbRun(
       `UPDATE exam_sets
-       SET selected_shortcut_id = ?, custom_prompt = ?
+       SET selected_shortcut_id = ?, custom_prompt = ?, output_keywords_json = ?
        WHERE id = ? AND owner_id = ?`,
-      [input.selectedShortcutId, input.customPrompt ?? null, input.id, input.ownerId],
+      [input.selectedShortcutId, input.customPrompt ?? null, JSON.stringify(input.outputKeywords ?? []), input.id, input.ownerId],
     );
 
     return input.id;
@@ -345,9 +395,9 @@ export async function saveExamSet(input: {
   const examSetId = createId('set');
   await dbRun(
     `INSERT INTO exam_sets (
-      id, owner_id, title, summary, status, prompt_text, selected_shortcut_id, custom_prompt, config_json, questions_json,
+      id, owner_id, title, summary, status, prompt_text, selected_shortcut_id, custom_prompt, output_keywords_json, config_json, questions_json,
       source_image_data_url, source_image_data_urls_json, source_images_json, source_notes, published_at, created_at, updated_at
-     ) VALUES (?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)`,
+     ) VALUES (?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)`,
     [
       examSetId,
       input.ownerId,
@@ -356,6 +406,7 @@ export async function saveExamSet(input: {
       input.customPrompt ?? '',
       input.selectedShortcutId,
       input.customPrompt ?? null,
+      JSON.stringify(input.outputKeywords ?? []),
       JSON.stringify(normalizeConfig(input.config)),
       JSON.stringify(input.questions),
       firstImage,
@@ -409,8 +460,56 @@ export async function listDashboardData(userId: string): Promise<DashboardData> 
     dbAll<AttemptRow>('SELECT * FROM attempts WHERE user_id = ? ORDER BY updated_at DESC', [userId]),
   ]);
 
+  const examSets = examSetRows.map(parseExamSet);
+  const examSetIds = examSets.map((item) => item.id);
+  if (examSetIds.length > 0) {
+    const placeholders = examSetIds.map(() => '?').join(', ');
+    const logRows = await dbAll<OpenAiLogRow>(
+      `SELECT * FROM openai_logs
+       WHERE user_id = ? AND exam_set_id IN (${placeholders})
+       ORDER BY created_at DESC`,
+      [userId, ...examSetIds],
+    );
+    const logsByExamSetId = new Map<string, OpenAiLogRecord[]>();
+    for (const row of logRows) {
+      if (!row.exam_set_id) {
+        continue;
+      }
+      const parsed = parseOpenAiLog(row);
+      const current = logsByExamSetId.get(row.exam_set_id) ?? [];
+      current.push(parsed);
+      logsByExamSetId.set(row.exam_set_id, current);
+    }
+
+    for (const examSet of examSets) {
+      if (examSet.outputKeywords.length > 0) {
+        continue;
+      }
+      const logs = logsByExamSetId.get(examSet.id) ?? [];
+      if (logs.length === 0) {
+        continue;
+      }
+      const examSetQuestionsSignature = JSON.stringify(examSet.questions);
+      let selectedLog: OpenAiLogRecord | null = null;
+      if (examSet.status === 'published') {
+        selectedLog =
+          logs.find((log) => extractQuestionsSignatureFromResponseJson(log.responseJson) === examSetQuestionsSignature) ?? null;
+      }
+      if (!selectedLog) {
+        selectedLog = logs[0] ?? null;
+      }
+      if (!selectedLog) {
+        continue;
+      }
+      const fallbackKeywords = extractOutputKeywordsFromResponseJson(selectedLog.responseJson);
+      if (fallbackKeywords && fallbackKeywords.length > 0) {
+        examSet.outputKeywords = fallbackKeywords;
+      }
+    }
+  }
+
   return {
-    examSets: examSetRows.map(parseExamSet),
+    examSets,
     attempts: attemptRows.map(parseAttempt),
   };
 }

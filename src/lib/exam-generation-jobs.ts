@@ -123,6 +123,7 @@ async function processClaimedExamGenerationJob(job: ExamGenerationJobRecord) {
       summary: result.generated.summary,
       selectedShortcutId: payload.selectedShortcutId,
       customPrompt: payload.customPrompt,
+      outputKeywords: result.generated.outputKeywords ?? [],
       sourceImages: payload.sourceImages,
       sourceNotes: payload.customPrompt,
       config: payload.config,

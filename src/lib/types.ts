@@ -65,6 +65,7 @@ export type ExamSetRecord = {
   promptText: string;
   selectedShortcutId: string;
   customPrompt: string | null;
+  outputKeywords: string[];
   config: ExamBuilderConfig;
   questions: ExamQuestion[];
   sourceImages: ExamSourceImage[];

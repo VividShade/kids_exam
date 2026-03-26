@@ -11,6 +11,7 @@ const payloadSchema = z.object({
   summary: z.string().min(1),
   selectedShortcutId: z.string().min(1),
   customPrompt: z.string().nullable().optional(),
+  outputKeywords: z.array(z.string()).optional(),
   sourceImages: z
     .array(
       z.object({

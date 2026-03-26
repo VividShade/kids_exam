@@ -31,6 +31,7 @@ const schemaStatements = [
     prompt_text TEXT NOT NULL,
     selected_shortcut_id TEXT NOT NULL DEFAULT 'vocabulary_mix',
     custom_prompt TEXT,
+    output_keywords_json TEXT,
     config_json TEXT NOT NULL,
     questions_json TEXT NOT NULL,
     source_image_data_url TEXT,
@@ -172,6 +173,7 @@ async function initialize() {
       await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS last_generated_at TEXT');
       await client.unsafe("ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS selected_shortcut_id TEXT NOT NULL DEFAULT 'vocabulary_mix'");
       await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS custom_prompt TEXT');
+      await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS output_keywords_json TEXT');
       await client.unsafe("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS shuffle_seed TEXT NOT NULL DEFAULT ''");
       await client.unsafe("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS exam_title_snapshot TEXT NOT NULL DEFAULT ''");
       await client.unsafe("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS questions_snapshot_json TEXT NOT NULL DEFAULT '[]'");
@@ -207,6 +209,10 @@ async function initialize() {
     const hasCustomPrompt = columns.some((column) => column.name === 'custom_prompt');
     if (!hasCustomPrompt) {
       db.exec('ALTER TABLE exam_sets ADD COLUMN custom_prompt TEXT');
+    }
+    const hasOutputKeywordsJson = columns.some((column) => column.name === 'output_keywords_json');
+    if (!hasOutputKeywordsJson) {
+      db.exec('ALTER TABLE exam_sets ADD COLUMN output_keywords_json TEXT');
     }
     const attemptColumns = db.prepare('PRAGMA table_info(attempts)').all() as Array<{ name: string }>;
     const hasShuffleSeed = attemptColumns.some((column) => column.name === 'shuffle_seed');

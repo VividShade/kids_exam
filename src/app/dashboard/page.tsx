@@ -18,6 +18,12 @@ function formatPercent(correctCount: number, totalCount: number) {
 }
 
 const trialActionButtonClass = 'rounded-full border px-3 py-2 text-xs font-semibold leading-none';
+const examActionButtonClass = 'inline-flex h-10 items-center justify-center rounded-full px-4 !text-sm !font-semibold leading-none';
+const categoryLabelByShortcutId: Record<string, string> = {
+  vocabulary_mix: 'Vocabulary',
+  reading_check: 'Reading',
+  grammar_practice: 'Grammar',
+};
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -86,6 +92,12 @@ export default async function DashboardPage() {
                       ? 'bg-emerald-100 text-emerald-800'
                       : 'bg-amber-100 text-amber-800';
                   const attemptsByExamSet = attemptsByExamSetId[examSet.id] ?? [];
+                  const categoryLabel = categoryLabelByShortcutId[examSet.selectedShortcutId] ?? examSet.selectedShortcutId;
+                  const editionCount = Math.max(examSet.generateCount, examSet.questions.length > 0 ? 1 : 0);
+                  const keywordsText =
+                    Array.isArray(examSet.outputKeywords) && examSet.outputKeywords.length > 0
+                      ? examSet.outputKeywords.join(', ')
+                      : '-';
                   const editionSnapshots = Array.from(
                     new Set(attemptsByExamSet.map((attempt) => attempt.publishedAtSnapshot).filter((snapshot): snapshot is string => !!snapshot)),
                   ).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
@@ -94,8 +106,8 @@ export default async function DashboardPage() {
                     <article key={examSet.id} className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
                       <div className="grid gap-5 md:grid-cols-2">
                         <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-xl font-bold text-slate-950">{examSet.title}</h3>
+                          <div className="flex flex-wrap items-start gap-2">
+                            <h3 className="text-xl font-bold leading-tight text-slate-950 break-words">{examSet.title}</h3>
                             <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${visualStatusClass}`}>
                               {activeGenerationJob ? (
                                 <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -104,20 +116,26 @@ export default async function DashboardPage() {
                             </span>
                           </div>
                           <p className="mt-2 max-w-2xl text-sm text-slate-600">{examSet.summary}</p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            Keywords: {keywordsText}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            Category {categoryLabel} · Editions {editionCount}
+                          </p>
                           <p className="mt-1 text-xs text-slate-500">Generated {examSet.generateCount} time(s)</p>
                           <p className="mt-2 text-xs text-slate-500">Updated {new Date(examSet.updatedAt).toLocaleString()}</p>
                           <div className="mt-4 flex flex-wrap gap-2">
-                            <Link className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700" href={`/dashboard/exams/${examSet.id}/edit`}>
+                            <Link className={`${examActionButtonClass} border border-slate-300 bg-white text-slate-700`} href={`/dashboard/exams/${examSet.id}/edit`}>
                               Edit draft
                             </Link>
                             {examSet.status === 'published' ? (
-                              <Link className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white" href={`/exams/${examSet.id}`}>
+                              <Link className={`${examActionButtonClass} bg-slate-950 text-white`} href={`/exams/${examSet.id}`}>
                                 Solve published set
                               </Link>
                             ) : (
                               <form action={publishExamSetAction}>
                                 <input name="examSetId" type="hidden" value={examSet.id} />
-                                <button className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white" type="submit">
+                                <button className={`${examActionButtonClass} bg-slate-950 text-white`} type="submit">
                                   Publish
                                 </button>
                               </form>
