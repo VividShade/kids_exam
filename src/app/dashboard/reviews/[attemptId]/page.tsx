@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 
 import { auth } from '@/auth';
 import { ReviewDetailClient } from '@/components/review-detail-client';
-import { getAttemptById, getOwnedExamSetById } from '@/lib/repository';
+import { getAttemptById, getOwnedExamSetById, listDashboardData } from '@/lib/repository';
 
 function formatPercent(correctCount: number, totalCount: number) {
   if (totalCount <= 0) {
@@ -41,6 +41,18 @@ export default async function AttemptReviewPage({
   const totalCount = questionSource.length;
   const correctCount = Math.max(0, totalCount - attempt.wrongQuestionIds.length);
   const percent = formatPercent(correctCount, totalCount);
+  const { attempts } = await listDashboardData(session.user.id);
+  const editionSnapshots = Array.from(
+    new Set(
+      attempts
+        .filter((item) => item.examSetId === attempt.examSetId)
+        .map((item) => item.publishedAtSnapshot)
+        .filter((snapshot): snapshot is string => !!snapshot),
+    ),
+  ).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+  const editionBySnapshot = new Map(editionSnapshots.map((snapshot, index) => [snapshot, index + 1]));
+  const editionNumber = attempt.publishedAtSnapshot ? editionBySnapshot.get(attempt.publishedAtSnapshot) : null;
+  const editionLabel = editionNumber ? `Edition ${editionNumber}` : 'Legacy edition';
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fff7d6,0,#f8fafc_45%,#e2e8f0_100%)] px-4 py-8 md:px-8">
@@ -53,6 +65,7 @@ export default async function AttemptReviewPage({
               <p className="mt-2 text-sm text-slate-600">
                 Completed {attempt.completedAt ? new Date(attempt.completedAt).toLocaleString() : '-'}
               </p>
+              <p className="mt-1 text-sm text-slate-600">{editionLabel}</p>
             </div>
             <Link className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700" href="/dashboard">
               Back to dashboard

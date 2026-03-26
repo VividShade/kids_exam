@@ -20,6 +20,10 @@ function renderInlineBold(text: string) {
   });
 }
 
+function normalizeChoiceText(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
 export function ReviewDetailClient({ questions, answers, wrongQuestionIds }: ReviewDetailClientProps) {
   const [showWrongOnly, setShowWrongOnly] = useState(true);
   const wrongIdSet = useMemo(() => new Set(wrongQuestionIds), [wrongQuestionIds]);
@@ -52,31 +56,46 @@ export function ReviewDetailClient({ questions, answers, wrongQuestionIds }: Rev
         <div className="space-y-4">
           {visibleQuestions.map((question, index) => {
             const userAnswer = answers[question.id] ?? '';
-            const isCorrect = userAnswer.trim().toLowerCase() === question.answer.trim().toLowerCase();
+            const normalizedUserAnswer = normalizeChoiceText(userAnswer);
+            const normalizedCorrectAnswer = normalizeChoiceText(question.answer);
+            const isCorrect = !wrongIdSet.has(question.id);
             const isMultipleChoice = question.kind === 'multiple_choice';
             const hasUserAnswer = userAnswer.trim().length > 0;
+            const hasMatchedChoice = isMultipleChoice
+              ? question.choices.some((choice) => normalizeChoiceText(choice) === normalizedUserAnswer)
+              : false;
             return (
               <article key={question.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Question {index + 1}</p>
                 <p className="mt-2 font-semibold text-slate-950">{renderInlineBold(question.prompt)}</p>
                 {isMultipleChoice && question.choices.length > 0 ? (
                   <ul className="mt-2 space-y-1 text-sm text-slate-600">
-                    {question.choices.map((choice) => (
+                    {question.choices.map((choice) => {
+                      // Normalize text before comparing so wrong-choice highlight still works
+                      // when answer text differs by case/spacing.
+                      const normalizedChoice = normalizeChoiceText(choice);
+                      const isAnswerChoice = normalizedChoice === normalizedCorrectAnswer;
+                      const isWrongSelectedChoice = !isCorrect && normalizedChoice === normalizedUserAnswer;
+                      return (
                       <li
                         key={choice}
                         className={[
-                          choice === question.answer ? 'font-semibold text-emerald-700' : '',
-                          !isCorrect && choice === userAnswer ? 'font-semibold text-rose-700' : '',
+                          isAnswerChoice ? 'font-semibold text-emerald-700' : '',
+                          isWrongSelectedChoice ? 'font-semibold text-rose-700' : '',
                         ]
                           .filter(Boolean)
                           .join(' ')}
                       >
-                        {choice === question.answer ? '✅ ' : !isCorrect && choice === userAnswer ? '🚫 ' : '⚪️ '}
+                        {isAnswerChoice ? '✅ ' : isWrongSelectedChoice ? '🚫 ' : '⚪️ '}
                         {choice}
                       </li>
-                    ))}
+                      );
+                    })}
                     {!isCorrect && !hasUserAnswer ? (
                       <li className="font-semibold text-rose-700">🚫 (not answered)</li>
+                    ) : null}
+                    {!isCorrect && hasUserAnswer && !hasMatchedChoice ? (
+                      <li className="font-semibold text-rose-700">🚫 사용자 답: {userAnswer}</li>
                     ) : null}
                   </ul>
                 ) : null}

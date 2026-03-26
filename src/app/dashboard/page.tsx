@@ -16,6 +16,8 @@ function formatPercent(correctCount: number, totalCount: number) {
   return Number.isInteger(rounded) ? `${rounded}%` : `${rounded.toFixed(1)}%`;
 }
 
+const trialActionButtonClass = 'rounded-full border px-3 py-2 text-xs font-semibold leading-none';
+
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -71,6 +73,10 @@ export default async function DashboardPage() {
               {examSets.length > 0 ? (
                 examSets.map((examSet) => {
                   const attemptsByExamSet = attemptsByExamSetId[examSet.id] ?? [];
+                  const editionSnapshots = Array.from(
+                    new Set(attemptsByExamSet.map((attempt) => attempt.publishedAtSnapshot).filter((snapshot): snapshot is string => !!snapshot)),
+                  ).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+                  const editionBySnapshot = new Map(editionSnapshots.map((snapshot, index) => [snapshot, index + 1]));
                   return (
                     <article key={examSet.id} className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
                       <div className="grid gap-5 md:grid-cols-2">
@@ -113,6 +119,9 @@ export default async function DashboardPage() {
                                 const totalCount = attempt.questionsSnapshot.length > 0 ? attempt.questionsSnapshot.length : examSet.questions.length;
                                 const correctCount = Math.max(0, totalCount - attempt.wrongQuestionIds.length);
                                 const percent = formatPercent(correctCount, totalCount);
+                                const progressCount = Math.min(Math.max(attempt.currentIndex + 1, 0), totalCount);
+                                const progressPercent = formatPercent(progressCount, totalCount);
+                                const editionNumber = attempt.publishedAtSnapshot ? editionBySnapshot.get(attempt.publishedAtSnapshot) : null;
                                 return (
                                   <article key={attempt.id} className="rounded-2xl border border-slate-200 bg-white p-3">
                                     <div className="flex items-start justify-between gap-2">
@@ -124,13 +133,11 @@ export default async function DashboardPage() {
                                         >
                                           {attempt.status === 'completed' ? 'Finished' : 'Unfinished'}
                                         </span>
-                                        <p className="mt-2 text-xs text-slate-500">
-                                          Edition: {attempt.publishedAtSnapshot ? new Date(attempt.publishedAtSnapshot).toLocaleString() : 'legacy snapshot'}
-                                        </p>
+                                        <p className="mt-2 text-xs text-slate-500">{editionNumber ? `Edition ${editionNumber}` : 'Legacy edition'}</p>
                                         {attempt.status === 'completed' ? (
                                           <p className="mt-1 text-xs text-slate-500">Completed {attempt.completedAt ? new Date(attempt.completedAt).toLocaleString() : '-'}</p>
                                         ) : (
-                                          <p className="mt-1 text-xs text-slate-500">Saved at question {attempt.currentIndex + 1}</p>
+                                          <p className="mt-1 text-xs text-slate-500">Saved at question {attempt.currentIndex + 1} — {progressPercent} done</p>
                                         )}
                                       </div>
                                       {attempt.status === 'completed' ? (
@@ -141,17 +148,17 @@ export default async function DashboardPage() {
                                     </div>
                                     <div className="mt-3 flex flex-wrap gap-2">
                                       {attempt.status === 'completed' ? (
-                                        <Link className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700" href={`/dashboard/reviews/${attempt.id}`}>
+                                        <Link className={`${trialActionButtonClass} border-slate-300 bg-white text-slate-700`} href={`/dashboard/reviews/${attempt.id}`}>
                                           Review details
                                         </Link>
                                       ) : (
                                         <>
-                                          <Link className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700" href={`/exams/${attempt.examSetId}?attempt=${attempt.id}`}>
+                                          <Link className={`${trialActionButtonClass} border-slate-300 bg-white text-slate-700`} href={`/exams/${attempt.examSetId}?attempt=${attempt.id}`}>
                                             Resume
                                           </Link>
                                           <form action={deleteAttemptAction}>
                                             <input name="attemptId" type="hidden" value={attempt.id} />
-                                            <button className="rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700" type="submit">
+                                            <button className={`${trialActionButtonClass} border-rose-200 bg-rose-50 !text-xs text-rose-700`} type="submit">
                                               Delete trial
                                             </button>
                                           </form>
