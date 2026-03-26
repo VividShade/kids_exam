@@ -2,7 +2,7 @@ import 'server-only';
 
 import { createId } from '@/lib/id';
 import { dbAll, dbGet, dbRun } from '@/lib/db';
-import type { AttemptRecord, DashboardData, ExamBuilderConfig, ExamQuestion, ExamSetRecord } from '@/lib/types';
+import type { AttemptRecord, DashboardData, ExamBuilderConfig, ExamQuestion, ExamSetRecord, OpenAiLogRecord } from '@/lib/types';
 
 type UserRow = {
   id: string;
@@ -25,6 +25,7 @@ type ExamSetRow = {
   config_json: string;
   questions_json: string;
   source_image_data_url: string | null;
+  source_image_data_urls_json: string | null;
   source_notes: string | null;
   published_at: string | null;
   created_at: string;
@@ -46,7 +47,46 @@ type AttemptRow = {
   abandoned_at: string | null;
 };
 
+type OpenAiLogRow = {
+  id: string;
+  user_id: string;
+  exam_set_id: string | null;
+  model: string;
+  prompt_text: string;
+  response_text: string | null;
+  response_json: string | null;
+  latency_ms: number | string | null;
+  input_tokens: number | string | null;
+  output_tokens: number | string | null;
+  total_tokens: number | string | null;
+  estimated_cost_usd: number | string | null;
+  created_at: string;
+};
+
+function toNumber(value: number | string | null) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function normalizeConfig(config: ExamBuilderConfig) {
+  return {
+    ...config,
+    uiLanguage: config.uiLanguage ?? 'en',
+    promptLanguage: config.promptLanguage ?? 'en',
+    examLanguage: config.examLanguage ?? 'English',
+  };
+}
+
 function parseExamSet(row: ExamSetRow): ExamSetRecord {
+  const sourceImageDataUrls = row.source_image_data_urls_json
+    ? (JSON.parse(row.source_image_data_urls_json) as string[])
+    : row.source_image_data_url
+      ? [row.source_image_data_url]
+      : [];
+
   return {
     id: row.id,
     ownerId: row.owner_id,
@@ -54,9 +94,9 @@ function parseExamSet(row: ExamSetRow): ExamSetRecord {
     summary: row.summary,
     status: row.status,
     promptText: row.prompt_text,
-    config: JSON.parse(row.config_json) as ExamBuilderConfig,
+    config: normalizeConfig(JSON.parse(row.config_json) as ExamBuilderConfig),
     questions: JSON.parse(row.questions_json) as ExamQuestion[],
-    sourceImageDataUrl: row.source_image_data_url,
+    sourceImageDataUrls,
     sourceNotes: row.source_notes,
     publishedAt: row.published_at,
     createdAt: row.created_at,
@@ -78,6 +118,24 @@ function parseAttempt(row: AttemptRow): AttemptRecord {
     updatedAt: row.updated_at,
     completedAt: row.completed_at,
     abandonedAt: row.abandoned_at,
+  };
+}
+
+function parseOpenAiLog(row: OpenAiLogRow): OpenAiLogRecord {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    examSetId: row.exam_set_id,
+    model: row.model,
+    promptText: row.prompt_text,
+    responseText: row.response_text,
+    responseJson: row.response_json,
+    latencyMs: toNumber(row.latency_ms),
+    inputTokens: toNumber(row.input_tokens),
+    outputTokens: toNumber(row.output_tokens),
+    totalTokens: toNumber(row.total_tokens),
+    estimatedCostUsd: toNumber(row.estimated_cost_usd),
+    createdAt: row.created_at,
   };
 }
 
@@ -134,23 +192,26 @@ export async function saveExamSet(input: {
   promptText: string;
   config: ExamBuilderConfig;
   questions: ExamQuestion[];
-  sourceImageDataUrl?: string | null;
+  sourceImageDataUrls?: string[];
   sourceNotes?: string | null;
 }) {
   const now = new Date().toISOString();
+  const sourceImageDataUrls = (input.sourceImageDataUrls ?? []).slice(0, 5);
+  const firstImage = sourceImageDataUrls[0] ?? null;
 
   if (input.id) {
     await dbRun(
       `UPDATE exam_sets
-       SET title = ?, summary = ?, prompt_text = ?, config_json = ?, questions_json = ?, source_image_data_url = ?, source_notes = ?, updated_at = ?
+       SET title = ?, summary = ?, prompt_text = ?, config_json = ?, questions_json = ?, source_image_data_url = ?, source_image_data_urls_json = ?, source_notes = ?, updated_at = ?
        WHERE id = ? AND owner_id = ?`,
       [
         input.title,
         input.summary,
         input.promptText,
-        JSON.stringify(input.config),
+        JSON.stringify(normalizeConfig(input.config)),
         JSON.stringify(input.questions),
-        input.sourceImageDataUrl ?? null,
+        firstImage,
+        JSON.stringify(sourceImageDataUrls),
         input.sourceNotes ?? null,
         now,
         input.id,
@@ -165,17 +226,18 @@ export async function saveExamSet(input: {
   await dbRun(
     `INSERT INTO exam_sets (
       id, owner_id, title, summary, status, prompt_text, config_json, questions_json,
-      source_image_data_url, source_notes, published_at, created_at, updated_at
-     ) VALUES (?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, NULL, ?, ?)`,
+      source_image_data_url, source_image_data_urls_json, source_notes, published_at, created_at, updated_at
+     ) VALUES (?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, NULL, ?, ?)`,
     [
       examSetId,
       input.ownerId,
       input.title,
       input.summary,
       input.promptText,
-      JSON.stringify(input.config),
+      JSON.stringify(normalizeConfig(input.config)),
       JSON.stringify(input.questions),
-      input.sourceImageDataUrl ?? null,
+      firstImage,
+      JSON.stringify(sourceImageDataUrls),
       input.sourceNotes ?? null,
       now,
       now,
@@ -309,4 +371,52 @@ export async function completeAttempt(input: {
 
 export async function deleteAttempt(attemptId: string, userId: string) {
   await dbRun('DELETE FROM attempts WHERE id = ? AND user_id = ?', [attemptId, userId]);
+}
+
+export async function createOpenAiLog(input: {
+  userId: string;
+  model: string;
+  promptText: string;
+  responseText?: string | null;
+  responseJson?: string | null;
+  latencyMs?: number | null;
+  inputTokens?: number | null;
+  outputTokens?: number | null;
+  totalTokens?: number | null;
+  estimatedCostUsd?: number | null;
+}) {
+  const id = createId('log');
+  const now = new Date().toISOString();
+
+  await dbRun(
+    `INSERT INTO openai_logs (
+      id, user_id, exam_set_id, model, prompt_text, response_text, response_json,
+      latency_ms, input_tokens, output_tokens, total_tokens, estimated_cost_usd, created_at
+     ) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      input.userId,
+      input.model,
+      input.promptText,
+      input.responseText ?? null,
+      input.responseJson ?? null,
+      input.latencyMs ?? null,
+      input.inputTokens ?? null,
+      input.outputTokens ?? null,
+      input.totalTokens ?? null,
+      input.estimatedCostUsd ?? null,
+      now,
+    ],
+  );
+
+  return id;
+}
+
+export async function attachOpenAiLogToExamSet(logId: string, examSetId: string, userId: string) {
+  await dbRun('UPDATE openai_logs SET exam_set_id = ? WHERE id = ? AND user_id = ?', [examSetId, logId, userId]);
+}
+
+export async function listOpenAiLogs(limit = 200) {
+  const rows = await dbAll<OpenAiLogRow>('SELECT * FROM openai_logs ORDER BY created_at DESC LIMIT ?', [limit]);
+  return rows.map(parseOpenAiLog);
 }

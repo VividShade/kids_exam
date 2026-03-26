@@ -1,4 +1,5 @@
 export type QuestionKind = 'multiple_choice' | 'true_false' | 'short_answer';
+export type UILanguage = 'en' | 'ko' | 'es';
 
 export type ExamQuestion = {
   id: string;
@@ -20,6 +21,9 @@ export type ExamBuilderConfig = {
   title: string;
   gradeBand: string;
   notes: string;
+  uiLanguage: UILanguage;
+  promptLanguage: UILanguage;
+  examLanguage: string;
   blueprints: QuestionBlueprint[];
 };
 
@@ -41,7 +45,7 @@ export type ExamSetRecord = {
   promptText: string;
   config: ExamBuilderConfig;
   questions: ExamQuestion[];
-  sourceImageDataUrl: string | null;
+  sourceImageDataUrls: string[];
   sourceNotes: string | null;
   publishedAt: string | null;
   createdAt: string;
@@ -66,4 +70,20 @@ export type AttemptRecord = {
 export type DashboardData = {
   examSets: ExamSetRecord[];
   attempts: AttemptRecord[];
+};
+
+export type OpenAiLogRecord = {
+  id: string;
+  userId: string;
+  examSetId: string | null;
+  model: string;
+  promptText: string;
+  responseText: string | null;
+  responseJson: string | null;
+  latencyMs: number | null;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  totalTokens: number | null;
+  estimatedCostUsd: number | null;
+  createdAt: string;
 };

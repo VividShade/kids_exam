@@ -32,6 +32,7 @@ const schemaStatements = [
     config_json TEXT NOT NULL,
     questions_json TEXT NOT NULL,
     source_image_data_url TEXT,
+    source_image_data_urls_json TEXT,
     source_notes TEXT,
     published_at TEXT,
     created_at TEXT NOT NULL,
@@ -57,6 +58,25 @@ const schemaStatements = [
   )`,
   `CREATE INDEX IF NOT EXISTS attempts_user_idx ON attempts(user_id, updated_at DESC)`,
   `CREATE INDEX IF NOT EXISTS attempts_exam_idx ON attempts(exam_set_id, updated_at DESC)`,
+  `CREATE TABLE IF NOT EXISTS openai_logs (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    exam_set_id TEXT,
+    model TEXT NOT NULL,
+    prompt_text TEXT NOT NULL,
+    response_text TEXT,
+    response_json TEXT,
+    latency_ms INTEGER,
+    input_tokens INTEGER,
+    output_tokens INTEGER,
+    total_tokens INTEGER,
+    estimated_cost_usd REAL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES users(id),
+    FOREIGN KEY(exam_set_id) REFERENCES exam_sets(id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS openai_logs_user_idx ON openai_logs(user_id, created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS openai_logs_exam_idx ON openai_logs(exam_set_id, created_at DESC)`,
 ];
 
 let initPromise: Promise<void> | null = null;
@@ -106,12 +126,18 @@ async function initialize() {
       for (const statement of schemaStatements) {
         await client.unsafe(statement);
       }
+      await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS source_image_data_urls_json TEXT');
       return;
     }
 
     const db = getLocalDb();
     for (const statement of schemaStatements) {
       db.exec(statement);
+    }
+    const columns = db.prepare('PRAGMA table_info(exam_sets)').all() as Array<{ name: string }>;
+    const hasSourceImageDataUrlsJson = columns.some((column) => column.name === 'source_image_data_urls_json');
+    if (!hasSourceImageDataUrlsJson) {
+      db.exec('ALTER TABLE exam_sets ADD COLUMN source_image_data_urls_json TEXT');
     }
   })();
 

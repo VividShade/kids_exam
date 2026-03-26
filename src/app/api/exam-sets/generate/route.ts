@@ -2,15 +2,19 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { auth } from '@/auth';
-import { generateExamSetFromImage } from '@/lib/openai';
+import { generateExamSetFromImages } from '@/lib/openai';
+import { createOpenAiLog } from '@/lib/repository';
 
 const requestSchema = z.object({
-  imageDataUrl: z.string().min(1),
+  imageDataUrls: z.array(z.string().min(1)).min(1).max(5),
   notes: z.string().default(''),
   config: z.object({
     title: z.string().min(1),
     gradeBand: z.string().min(1),
     notes: z.string().default(''),
+    uiLanguage: z.enum(['en', 'ko', 'es']).default('en'),
+    promptLanguage: z.enum(['en', 'ko', 'es']).default('en'),
+    examLanguage: z.string().min(1),
     blueprints: z.array(
       z.object({
         label: z.string().min(1),
@@ -31,13 +35,20 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const parsed = requestSchema.parse(body);
-    const generated = await generateExamSetFromImage({
-      imageDataUrl: parsed.imageDataUrl,
+    const result = await generateExamSetFromImages({
+      imageDataUrls: parsed.imageDataUrls,
       config: parsed.config,
       notes: parsed.notes,
     });
+    const generationLogId = await createOpenAiLog({
+      userId: session.user.id,
+      ...result.log,
+    });
 
-    return NextResponse.json(generated);
+    return NextResponse.json({
+      ...result.generated,
+      generationLogId,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to generate exam set.';
     return NextResponse.json({ error: message }, { status: 400 });

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { deleteAttemptAction, publishExamSetAction } from '@/app/dashboard/actions';
 import { SignOutButton } from '@/components/auth-buttons';
+import { adminEmailList } from '@/lib/env';
 import { listDashboardData } from '@/lib/repository';
 
 export default async function DashboardPage() {
@@ -13,6 +14,7 @@ export default async function DashboardPage() {
   }
 
   const { examSets, attempts } = await listDashboardData(session.user.id);
+  const isAdmin = !!session.user.email && adminEmailList.includes(session.user.email.toLowerCase());
   const examSetById = new Map(examSets.map((examSet) => [examSet.id, examSet]));
   const activeAttempts = attempts.filter((attempt) => attempt.status !== 'completed');
   const completedAttempts = attempts.filter((attempt) => attempt.status === 'completed');
@@ -33,6 +35,11 @@ export default async function DashboardPage() {
               <Link className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white" href="/dashboard/exams/new">
                 New exam set
               </Link>
+              {isAdmin ? (
+                <Link className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700" href="/admin/ai-logs">
+                  Admin AI Logs
+                </Link>
+              ) : null}
               <SignOutButton />
             </div>
           </div>

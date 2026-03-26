@@ -2,19 +2,23 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { auth } from '@/auth';
-import { saveExamSet } from '@/lib/repository';
+import { attachOpenAiLogToExamSet, saveExamSet } from '@/lib/repository';
 
 const payloadSchema = z.object({
   id: z.string().optional(),
+  generationLogId: z.string().optional(),
   title: z.string().min(1),
   summary: z.string().min(1),
   promptText: z.string().min(1),
-  sourceImageDataUrl: z.string().nullable().optional(),
+  sourceImageDataUrls: z.array(z.string()).max(5).optional(),
   sourceNotes: z.string().nullable().optional(),
   config: z.object({
     title: z.string().min(1),
     gradeBand: z.string().min(1),
     notes: z.string(),
+    uiLanguage: z.enum(['en', 'ko', 'es']).default('en'),
+    promptLanguage: z.enum(['en', 'ko', 'es']).default('en'),
+    examLanguage: z.string().min(1),
     blueprints: z.array(
       z.object({
         label: z.string().min(1),
@@ -44,10 +48,14 @@ export async function POST(request: Request) {
 
   try {
     const payload = payloadSchema.parse(await request.json());
+    const { generationLogId, ...examPayload } = payload;
     const examSetId = await saveExamSet({
-      ...payload,
+      ...examPayload,
       ownerId: session.user.id,
     });
+    if (generationLogId) {
+      await attachOpenAiLogToExamSet(generationLogId, examSetId, session.user.id);
+    }
 
     return NextResponse.json({ examSetId });
   } catch (error) {
