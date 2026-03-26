@@ -6,8 +6,38 @@ import { JsonTreeViewer } from '@/components/json-tree-viewer';
 import { adminEmailList } from '@/lib/env';
 import { listOpenAiLogs } from '@/lib/repository';
 
-function formatCost(value: number) {
+const modelPricingPer1M: Record<string, { input: number; output: number }> = {
+  'gpt-5.4': { input: 2.5, output: 15 },
+  'gpt-5.4-mini': { input: 0.75, output: 4.5 },
+  'gpt-5.4-nano': { input: 0.2, output: 1.25 },
+  'gpt-5.4-pro': { input: 30, output: 180 },
+  'gpt-5.2': { input: 1.75, output: 14 },
+  'gpt-5.2-pro': { input: 21, output: 168 },
+  'gpt-5.1': { input: 1.25, output: 10 },
+  'gpt-5': { input: 1.25, output: 10 },
+  'gpt-5-mini': { input: 0.25, output: 2 },
+  'gpt-5-nano': { input: 0.05, output: 0.4 },
+  'gpt-5-pro': { input: 15, output: 120 },
+};
+
+function formatCost(value: number | null) {
+  if (value === null) {
+    return '-';
+  }
   return `$${value.toFixed(4)}`;
+}
+
+function estimateCostUsd(model: string, inputTokens: number | null, outputTokens: number | null) {
+  if (inputTokens === null || outputTokens === null) {
+    return null;
+  }
+  const pricing = modelPricingPer1M[model];
+  if (!pricing) {
+    return null;
+  }
+  const inputCost = (inputTokens / 1_000_000) * pricing.input;
+  const outputCost = (outputTokens / 1_000_000) * pricing.output;
+  return Number((inputCost + outputCost).toFixed(6));
 }
 
 function parseResponseJson(input: string | null) {
@@ -54,7 +84,13 @@ export default async function AdminAiLogsPage({
   const totalInputTokens = logs.reduce((sum, item) => sum + (item.inputTokens ?? 0), 0);
   const totalOutputTokens = logs.reduce((sum, item) => sum + (item.outputTokens ?? 0), 0);
   const totalTokens = logs.reduce((sum, item) => sum + (item.totalTokens ?? 0), 0);
-  const totalCost = logs.reduce((sum, item) => sum + (item.estimatedCostUsd ?? 0), 0);
+  const logsWithResolvedCost = logs.map((item) => ({
+    ...item,
+    resolvedEstimatedCostUsd: item.estimatedCostUsd ?? estimateCostUsd(item.model, item.inputTokens, item.outputTokens),
+  }));
+  const knownCostEntries = logsWithResolvedCost.filter((item) => item.resolvedEstimatedCostUsd !== null);
+  const totalCost = knownCostEntries.reduce((sum, item) => sum + (item.resolvedEstimatedCostUsd ?? 0), 0);
+  const totalCostDisplay = knownCostEntries.length > 0 ? formatCost(totalCost) : '-';
   const avgLatency =
     totalRequests > 0
       ? Math.round(logs.reduce((sum, item) => sum + (item.latencyMs ?? 0), 0) / totalRequests)
@@ -96,7 +132,7 @@ export default async function AdminAiLogsPage({
           </article>
           <article className="rounded-3xl border border-slate-200 bg-white p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Est. Cost / Avg Latency</p>
-            <p className="mt-2 text-xl font-black text-slate-950">{formatCost(totalCost)}</p>
+            <p className="mt-2 text-xl font-black text-slate-950">{totalCostDisplay}</p>
             <p className="mt-1 text-sm text-slate-600">{avgLatency} ms</p>
           </article>
         </section>
@@ -104,26 +140,26 @@ export default async function AdminAiLogsPage({
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
           <h2 className="text-xl font-bold text-slate-950">Recent requests</h2>
           <p className="mt-2 text-xs text-slate-500">
-            Statistics and list are based on currently loaded items (latest {logs.length}).
+            Statistics and list are based on currently loaded items (latest {logsWithResolvedCost.length}).
           </p>
           <div className="mt-4 space-y-4">
-            {logs.length > 0 ? (
-              logs.map((log) => (
+            {logsWithResolvedCost.length > 0 ? (
+              logsWithResolvedCost.map((log) => (
                 <details key={log.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                   <summary className="cursor-pointer list-none">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-bold text-slate-950">{log.model}</p>
-                        <p className="mt-1 text-xs text-slate-500">{new Date(log.createdAt).toLocaleString()}</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2 text-xs">
+                    <span className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="flex flex-col">
+                        <span className="text-sm font-bold text-slate-950">{log.model}</span>
+                        <span className="mt-1 text-xs text-slate-500">{new Date(log.createdAt).toLocaleString()}</span>
+                      </span>
+                      <span className="flex flex-wrap gap-2 text-xs">
                         <span className="rounded-full bg-slate-200 px-2 py-1 text-slate-700">Input {log.inputTokens ?? 0}</span>
                         <span className="rounded-full bg-slate-200 px-2 py-1 text-slate-700">Output {log.outputTokens ?? 0}</span>
                         <span className="rounded-full bg-slate-200 px-2 py-1 text-slate-700">Total {log.totalTokens ?? 0}</span>
                         <span className="rounded-full bg-slate-200 px-2 py-1 text-slate-700">Latency {log.latencyMs ?? 0}ms</span>
-                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-emerald-700">{formatCost(log.estimatedCostUsd ?? 0)}</span>
-                      </div>
-                    </div>
+                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-emerald-700">{formatCost(log.resolvedEstimatedCostUsd)}</span>
+                      </span>
+                    </span>
                   </summary>
                   {(() => {
                     const parsedResponse = parseResponseJson(log.responseJson);
