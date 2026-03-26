@@ -35,6 +35,8 @@ const schemaStatements = [
     source_image_data_urls_json TEXT,
     source_images_json TEXT,
     source_notes TEXT,
+    generate_count INTEGER NOT NULL DEFAULT 0,
+    last_generated_at TEXT,
     published_at TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
@@ -50,6 +52,7 @@ const schemaStatements = [
     current_index INTEGER NOT NULL DEFAULT 0,
     score INTEGER,
     wrong_question_ids_json TEXT NOT NULL,
+    shuffle_seed TEXT NOT NULL DEFAULT '',
     started_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     completed_at TEXT,
@@ -59,6 +62,18 @@ const schemaStatements = [
   )`,
   `CREATE INDEX IF NOT EXISTS attempts_user_idx ON attempts(user_id, updated_at DESC)`,
   `CREATE INDEX IF NOT EXISTS attempts_exam_idx ON attempts(exam_set_id, updated_at DESC)`,
+  `CREATE TABLE IF NOT EXISTS cleanup_jobs (
+    id TEXT PRIMARY KEY,
+    job_type TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    status TEXT NOT NULL,
+    retry_count INTEGER NOT NULL DEFAULT 0,
+    run_after TEXT NOT NULL,
+    last_error TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS cleanup_jobs_status_idx ON cleanup_jobs(status, run_after)`,
   `CREATE TABLE IF NOT EXISTS openai_logs (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
@@ -129,6 +144,9 @@ async function initialize() {
       }
       await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS source_image_data_urls_json TEXT');
       await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS source_images_json TEXT');
+      await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS generate_count INTEGER NOT NULL DEFAULT 0');
+      await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS last_generated_at TEXT');
+      await client.unsafe("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS shuffle_seed TEXT NOT NULL DEFAULT ''");
       return;
     }
 
@@ -144,6 +162,19 @@ async function initialize() {
     const hasSourceImagesJson = columns.some((column) => column.name === 'source_images_json');
     if (!hasSourceImagesJson) {
       db.exec('ALTER TABLE exam_sets ADD COLUMN source_images_json TEXT');
+    }
+    const hasGenerateCount = columns.some((column) => column.name === 'generate_count');
+    if (!hasGenerateCount) {
+      db.exec('ALTER TABLE exam_sets ADD COLUMN generate_count INTEGER NOT NULL DEFAULT 0');
+    }
+    const hasLastGeneratedAt = columns.some((column) => column.name === 'last_generated_at');
+    if (!hasLastGeneratedAt) {
+      db.exec('ALTER TABLE exam_sets ADD COLUMN last_generated_at TEXT');
+    }
+    const attemptColumns = db.prepare('PRAGMA table_info(attempts)').all() as Array<{ name: string }>;
+    const hasShuffleSeed = attemptColumns.some((column) => column.name === 'shuffle_seed');
+    if (!hasShuffleSeed) {
+      db.exec("ALTER TABLE attempts ADD COLUMN shuffle_seed TEXT NOT NULL DEFAULT ''");
     }
   })();
 

@@ -28,7 +28,7 @@ const payloadSchema = z.object({
     .optional(),
   sourceNotes: z.string().nullable().optional(),
   config: z.object({
-    title: z.string().min(1),
+    title: z.string().default(''),
     gradeBand: z.string().min(1),
     notes: z.string(),
     uiLanguage: z.enum(['en', 'ko', 'es']).default('en'),

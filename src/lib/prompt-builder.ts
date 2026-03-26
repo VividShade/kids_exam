@@ -18,7 +18,9 @@ export function buildExamGenerationPrompt(config: ExamBuilderConfig, notes: stri
   return [
     startLine,
     `Target grade band: ${config.gradeBand}.`,
-    `Requested title: ${config.title}.`,
+    config.title.trim().length > 0
+      ? `Requested title: ${config.title}.`
+      : 'No title was provided. Generate a concise and suitable exam title based on source content and selected question style.',
     `Prompt language for instruction: ${config.promptLanguage}.`,
     `Output language for exam questions and answers: ${config.examLanguage}.`,
     '',
@@ -30,7 +32,8 @@ export function buildExamGenerationPrompt(config: ExamBuilderConfig, notes: stri
     '- Match the level and wording to the requested grade band.',
     '- Use only content supported by the uploaded material unless the teacher note explicitly asks for an extension.',
     '- Every question must include a concise explanation for the answer.',
-    '- For multiple choice and true/false questions, include the answer choices in the choices array.',
+    '- For multiple choice questions, provide exactly 4 answer choices.',
+    '- For true/false questions, include two choices: True and False.',
     '- For short answer questions, keep the expected answer short and directly gradable.',
     '',
     'Teacher notes:',

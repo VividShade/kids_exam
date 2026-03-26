@@ -2,14 +2,16 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { auth } from '@/auth';
+import { env } from '@/lib/env';
 import { generateExamSetFromImages } from '@/lib/openai';
-import { createOpenAiLog } from '@/lib/repository';
+import { createOpenAiLog, getOwnedExamSetGenerateCount, incrementExamSetGenerateCount } from '@/lib/repository';
 
 const requestSchema = z.object({
+  examSetId: z.string().optional(),
   imageDataUrls: z.array(z.string().min(1)).min(1).max(5),
   notes: z.string().default(''),
   config: z.object({
-    title: z.string().min(1),
+    title: z.string().default(''),
     gradeBand: z.string().min(1),
     notes: z.string().default(''),
     uiLanguage: z.enum(['en', 'ko', 'es']).default('en'),
@@ -35,6 +37,15 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const parsed = requestSchema.parse(body);
+    if (parsed.examSetId) {
+      const count = await getOwnedExamSetGenerateCount(parsed.examSetId, session.user.id);
+      if (count >= env.examSetGenerateLimit) {
+        return NextResponse.json(
+          { error: `Generation limit reached for this exam set (${env.examSetGenerateLimit}).` },
+          { status: 400 },
+        );
+      }
+    }
     const result = await generateExamSetFromImages({
       imageDataUrls: parsed.imageDataUrls,
       config: parsed.config,
@@ -42,8 +53,12 @@ export async function POST(request: Request) {
     });
     const generationLogId = await createOpenAiLog({
       userId: session.user.id,
+      examSetId: parsed.examSetId ?? null,
       ...result.log,
     });
+    if (parsed.examSetId) {
+      await incrementExamSetGenerateCount(parsed.examSetId, session.user.id);
+    }
 
     return NextResponse.json({
       ...result.generated,

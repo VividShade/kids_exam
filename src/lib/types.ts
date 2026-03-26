@@ -56,6 +56,8 @@ export type ExamSetRecord = {
   title: string;
   summary: string;
   status: 'draft' | 'published';
+  generateCount: number;
+  lastGeneratedAt: string | null;
   promptText: string;
   config: ExamBuilderConfig;
   questions: ExamQuestion[];
@@ -75,6 +77,7 @@ export type AttemptRecord = {
   currentIndex: number;
   score: number | null;
   wrongQuestionIds: string[];
+  shuffleSeed: string;
   startedAt: string;
   updatedAt: string;
   completedAt: string | null;
@@ -100,4 +103,16 @@ export type OpenAiLogRecord = {
   totalTokens: number | null;
   estimatedCostUsd: number | null;
   createdAt: string;
+};
+
+export type CleanupJobRecord = {
+  id: string;
+  jobType: 'delete_storage_paths';
+  payloadJson: string;
+  status: 'queued' | 'running' | 'done' | 'failed';
+  retryCount: number;
+  runAfter: string;
+  lastError: string | null;
+  createdAt: string;
+  updatedAt: string;
 };

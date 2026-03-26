@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import type { ExamBuilderConfig, ExamSetRecord, ExamSourceImage, GeneratedExamSet, QuestionBlueprint, QuestionKind, UILanguage } from '@/lib/types';
+import type { ExamBuilderConfig, ExamSetRecord, ExamSourceImage, GeneratedExamSet, OpenAiLogRecord, QuestionBlueprint, QuestionKind, UILanguage } from '@/lib/types';
 
 const MAX_IMAGE_COUNT = 5;
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
@@ -13,6 +13,7 @@ const MAX_LONG_EDGE = 2560;
 const MAX_MEGAPIXELS = 8_000_000;
 const THUMB_LONG_EDGE = 480;
 const QUALITY_STEPS = [0.86, 0.8, 0.74, 0.68];
+const LAST_GRADE_BAND_KEY = 'exam_builder_last_grade_band';
 
 type BuilderImage = {
   id: string;
@@ -30,57 +31,47 @@ type BuilderImage = {
   sourceImage?: ExamSourceImage;
 };
 
+const gradeBandOptions = [
+  'Elementary (Grades 1-3)',
+  'Elementary (Grades 4-6)',
+  'Middle School (Grades 7-9)',
+  'High School (Grades 10-12)',
+  'College / Adult',
+] as const;
+
 const quickOptionsByLanguage: Record<UILanguage, Array<{ id: string; label: string; prompt: string }>> = {
   en: [
-    {
-      id: 'vocabulary_mix',
-      label: 'Vocabulary mix',
-      prompt: 'Create a vocabulary test with meaning matching, fill-in-the-blank multiple choice, and short answer spelling checks.',
-    },
-    {
-      id: 'reading_check',
-      label: 'Reading check',
-      prompt: 'Create a comprehension quiz with grade-appropriate multiple choice and true/false questions.',
-    },
-    {
-      id: 'grammar_practice',
-      label: 'Grammar practice',
-      prompt: 'Create a grammar-focused quiz with short context sentences and error-resistant explanations.',
-    },
+    { id: 'vocabulary_mix', label: 'Vocabulary', prompt: 'Create a vocabulary-focused quiz based on the source material.' },
+    { id: 'reading_check', label: 'Reading', prompt: 'Create a reading comprehension quiz from the source material.' },
+    { id: 'grammar_practice', label: 'Grammar', prompt: 'Create a grammar practice quiz related to the source material.' },
   ],
   ko: [
-    {
-      id: 'vocabulary_mix',
-      label: '어휘 혼합',
-      prompt: '어휘 뜻 맞추기, 빈칸 객관식, 철자 주관식을 섞어서 어휘 테스트를 만들어줘.',
-    },
-    {
-      id: 'reading_check',
-      label: '독해 확인',
-      prompt: '학년 수준에 맞는 객관식과 true/false로 독해 확인 퀴즈를 만들어줘.',
-    },
-    {
-      id: 'grammar_practice',
-      label: '문법 연습',
-      prompt: '문법 중심의 퀴즈를 만들고 해설은 짧고 명확하게 만들어줘.',
-    },
+    { id: 'vocabulary_mix', label: '어휘', prompt: '소스 자료를 바탕으로 어휘 중심 퀴즈를 만들어줘.' },
+    { id: 'reading_check', label: '독해', prompt: '소스 자료를 바탕으로 독해 확인 퀴즈를 만들어줘.' },
+    { id: 'grammar_practice', label: '문법', prompt: '소스 자료와 연계된 문법 연습 퀴즈를 만들어줘.' },
   ],
   es: [
-    {
-      id: 'vocabulary_mix',
-      label: 'Vocabulario mixto',
-      prompt: 'Crea una prueba de vocabulario con emparejar significados, opción múltiple con espacios y respuestas cortas.',
-    },
-    {
-      id: 'reading_check',
-      label: 'Comprensión lectora',
-      prompt: 'Crea un quiz de comprensión con opción múltiple y verdadero/falso acorde al nivel.',
-    },
-    {
-      id: 'grammar_practice',
-      label: 'Práctica gramatical',
-      prompt: 'Crea un quiz de gramática con explicaciones breves y claras.',
-    },
+    { id: 'vocabulary_mix', label: 'Vocabulario', prompt: 'Crea un quiz de vocabulario basado en el material fuente.' },
+    { id: 'reading_check', label: 'Lectura', prompt: 'Crea un quiz de comprensión lectora basado en el material fuente.' },
+    { id: 'grammar_practice', label: 'Gramática', prompt: 'Crea un quiz de práctica gramatical relacionado con el material fuente.' },
+  ],
+};
+
+const blueprintPresetsByCategory: Record<string, QuestionBlueprint[]> = {
+  vocabulary_mix: [
+    { label: 'Word -> Meaning (MCQ)', format: 'multiple_choice', count: 10, focus: 'Choose the best meaning for each word.' },
+    { label: 'Meaning -> Word (MCQ)', format: 'multiple_choice', count: 10, focus: 'Choose the correct word from the meaning clue.' },
+    { label: 'Context Fill-in (Short)', format: 'short_answer', count: 5, focus: 'Write the missing word in context.' },
+  ],
+  reading_check: [
+    { label: 'Main Idea (MCQ)', format: 'multiple_choice', count: 6, focus: 'Identify central ideas and key details.' },
+    { label: 'True/False Check', format: 'true_false', count: 8, focus: 'Verify factual understanding from the text.' },
+    { label: 'Inference (MCQ)', format: 'multiple_choice', count: 6, focus: 'Choose the best inference from context.' },
+  ],
+  grammar_practice: [
+    { label: 'Grammar Choice (MCQ)', format: 'multiple_choice', count: 10, focus: 'Choose grammatically correct options.' },
+    { label: 'Error Spotting (MCQ)', format: 'multiple_choice', count: 6, focus: 'Find and fix grammar mistakes.' },
+    { label: 'Sentence Rewrite (Short)', format: 'short_answer', count: 4, focus: 'Rewrite to satisfy grammar constraints.' },
   ],
 };
 
@@ -90,16 +81,12 @@ const starterBlueprints: QuestionBlueprint[] = [
   { label: 'Short answer recall', format: 'short_answer', count: 5, focus: 'Write the missing word directly.' },
 ];
 
-const outputLanguageOptions = [
-  'English',
-  'Korean',
-  'Spanish',
-  'Japanese',
-  'Chinese',
-] as const;
+const outputLanguageOptions = ['English', 'Korean', 'Spanish', 'Japanese', 'Chinese'] as const;
 
 type BuilderProps = {
   initialExamSet?: ExamSetRecord | null;
+  initialGenerateHistory?: OpenAiLogRecord[];
+  generateLimit?: number;
 };
 
 type GeneratedPayload = GeneratedExamSet & {
@@ -110,48 +97,54 @@ type GeneratedPayload = GeneratedExamSet & {
 const uiLabel = {
   en: {
     assistant: 'Assistant',
-    uploadHelp: 'Upload up to 5 images. Images are compressed in your browser before upload.',
+    uploadHelp: 'Upload up to 5 images. They are compressed in-browser before upload.',
     sourceImage: 'Source images (max 5)',
-    shortcuts: 'Question style',
+    shortcuts: 'Recommended category',
     uiLanguage: 'Builder language',
     promptLanguage: 'Prompt language (advanced)',
     examLanguage: 'Exam output language',
+    gradeBand: 'Grade band',
     questionBlueprint: 'Question blueprint',
     addSection: 'Add section',
-    dragHint: 'Drag rows to reorder sections.',
+    addPreset: 'Add preset sections',
+    dragHint: 'Drag by handle to reorder sections.',
     teacherNotes: 'Teacher custom instructions (optional)',
     advanced: 'Advanced language settings',
-    syncPromptLanguage: 'Keep prompt language synced with builder language',
+    syncPromptLanguage: 'Sync prompt language with builder language',
   },
   ko: {
     assistant: '도우미',
-    uploadHelp: '이미지를 최대 5장까지 올릴 수 있고, 브라우저에서 먼저 압축됩니다.',
+    uploadHelp: '이미지를 최대 5장까지 업로드할 수 있고, 브라우저에서 먼저 압축됩니다.',
     sourceImage: '기초 이미지 (최대 5장)',
-    shortcuts: '문항 스타일',
+    shortcuts: '추천 카테고리',
     uiLanguage: '빌더 언어',
     promptLanguage: '프롬프트 언어 (고급)',
     examLanguage: '문제 출력 언어',
+    gradeBand: '난이도 범위',
     questionBlueprint: '문항 blueprint',
     addSection: '섹션 추가',
-    dragHint: '행을 드래그해서 순서를 변경해요.',
+    addPreset: '프리셋 섹션 추가',
+    dragHint: '핸들을 잡고 드래그해서 순서를 바꿔요.',
     teacherNotes: '교사 맞춤 지침 (선택)',
     advanced: '고급 언어 설정',
-    syncPromptLanguage: '프롬프트 언어를 빌더 언어와 자동 동기화',
+    syncPromptLanguage: '프롬프트 언어를 빌더 언어와 동기화',
   },
   es: {
     assistant: 'Asistente',
-    uploadHelp: 'Puedes subir hasta 5 imágenes. Se comprimen en el navegador antes de subir.',
+    uploadHelp: 'Puedes subir hasta 5 imágenes. Se comprimen en el navegador antes del envío.',
     sourceImage: 'Imágenes fuente (máx. 5)',
-    shortcuts: 'Estilo de preguntas',
-    uiLanguage: 'Idioma del constructor',
+    shortcuts: 'Categoría recomendada',
+    uiLanguage: 'Idioma del editor',
     promptLanguage: 'Idioma del prompt (avanzado)',
     examLanguage: 'Idioma de salida del examen',
+    gradeBand: 'Rango de nivel',
     questionBlueprint: 'Blueprint de preguntas',
     addSection: 'Agregar sección',
-    dragHint: 'Arrastra filas para reordenar secciones.',
+    addPreset: 'Agregar presets',
+    dragHint: 'Arrastra con el handle para reordenar.',
     teacherNotes: 'Instrucciones personalizadas del docente (opcional)',
     advanced: 'Ajustes avanzados de idioma',
-    syncPromptLanguage: 'Mantener sincronizado el idioma del prompt con el constructor',
+    syncPromptLanguage: 'Sincronizar idioma del prompt con el editor',
   },
 } as const;
 
@@ -171,18 +164,13 @@ function getScaledDimensions(width: number, height: number, longEdgeLimit: numbe
     targetWidth = Math.round(width * ratio);
     targetHeight = Math.round(height * ratio);
   }
-
   const pixels = targetWidth * targetHeight;
   if (pixels > pixelLimit) {
     const ratio = Math.sqrt(pixelLimit / pixels);
     targetWidth = Math.round(targetWidth * ratio);
     targetHeight = Math.round(targetHeight * ratio);
   }
-
-  return {
-    width: Math.max(1, targetWidth),
-    height: Math.max(1, targetHeight),
-  };
+  return { width: Math.max(1, targetWidth), height: Math.max(1, targetHeight) };
 }
 
 function loadImage(file: File) {
@@ -275,7 +263,6 @@ async function compressImage(file: File) {
   const thumbScaled = getScaledDimensions(currentWidth, currentHeight, THUMB_LONG_EDGE, THUMB_LONG_EDGE * THUMB_LONG_EDGE);
   const thumbCanvas = drawResized(image, thumbScaled.width, thumbScaled.height);
   const thumbBlob = await canvasToBlob(thumbCanvas, 0.72);
-
   const originalDataUrl = await blobToDataUrl(currentBlob);
   const thumbnailDataUrl = await blobToDataUrl(thumbBlob);
 
@@ -294,9 +281,25 @@ async function compressImage(file: File) {
   };
 }
 
-export function ExamBuilder({ initialExamSet }: BuilderProps) {
+function createSignature(input: {
+  title: string;
+  gradeBand: string;
+  notes: string;
+  uiLanguage: UILanguage;
+  promptLanguage: UILanguage;
+  examLanguage: string;
+  selectedShortcutId: string;
+  imageIds: string[];
+  blueprints: QuestionBlueprint[];
+  generatedQuestionCount: number;
+}) {
+  return JSON.stringify(input);
+}
+
+export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], generateLimit = 5 }: BuilderProps) {
   const router = useRouter();
   const initialConfig = initialExamSet?.config;
+  const [currentExamSetId, setCurrentExamSetId] = useState<string | null>(initialExamSet?.id ?? null);
   const [uiLanguage, setUiLanguage] = useState<UILanguage>(initialConfig?.uiLanguage ?? 'en');
   const [promptLanguage, setPromptLanguage] = useState<UILanguage>(initialConfig?.promptLanguage ?? (initialConfig?.uiLanguage ?? 'en'));
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
@@ -311,12 +314,14 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
     })),
   );
   const [title, setTitle] = useState(initialExamSet?.title ?? '');
-  const [gradeBand, setGradeBand] = useState(initialConfig?.gradeBand ?? 'US Grade 4-5');
+  const [gradeBand, setGradeBand] = useState(initialConfig?.gradeBand ?? gradeBandOptions[1]);
   const [notes, setNotes] = useState(initialExamSet?.sourceNotes ?? '');
   const [selectedShortcutId, setSelectedShortcutId] = useState(quickOptionsByLanguage[uiLanguage][0].id);
   const [blueprints, setBlueprints] = useState<QuestionBlueprint[]>(initialConfig?.blueprints ?? starterBlueprints);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [generationLogId, setGenerationLogId] = useState<string | null>(null);
+  const [generateCount, setGenerateCount] = useState(initialExamSet?.generateCount ?? 0);
+  const [generatedHistory, setGeneratedHistory] = useState<OpenAiLogRecord[]>(initialGenerateHistory);
   const [generated, setGenerated] = useState<GeneratedExamSet | null>(
     initialExamSet
       ? {
@@ -332,6 +337,7 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
   const [statusMessage, setStatusMessage] = useState('Upload source images and generate your exam set.');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedSignature, setLastSavedSignature] = useState('');
 
   const quickOptions = quickOptionsByLanguage[uiLanguage];
   const selectedShortcut = quickOptions.find((option) => option.id === selectedShortcutId) ?? quickOptions[0];
@@ -339,7 +345,7 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
 
   const config: ExamBuilderConfig = useMemo(
     () => ({
-      title: title || 'Untitled exam set',
+      title: title.trim(),
       gradeBand,
       notes,
       uiLanguage,
@@ -351,6 +357,51 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
   );
 
   const totalQuestions = blueprints.reduce((sum, blueprint) => sum + blueprint.count, 0);
+  const currentSignature = createSignature({
+    title,
+    gradeBand,
+    notes,
+    uiLanguage,
+    promptLanguage,
+    examLanguage,
+    selectedShortcutId,
+    imageIds: images.map((image) => image.id),
+    blueprints,
+    generatedQuestionCount: generated?.questions.length ?? 0,
+  });
+  const hasUnsavedChanges = lastSavedSignature.length > 0 && currentSignature !== lastSavedSignature;
+  const canGenerate = currentExamSetId ? generateCount < generateLimit : true;
+
+  useEffect(() => {
+    if (!initialExamSet) {
+      const saved = window.localStorage.getItem(LAST_GRADE_BAND_KEY);
+      if (saved && gradeBandOptions.includes(saved as (typeof gradeBandOptions)[number])) {
+        setGradeBand(saved as (typeof gradeBandOptions)[number]);
+      }
+    }
+  }, [initialExamSet]);
+
+  useEffect(() => {
+    window.localStorage.setItem(LAST_GRADE_BAND_KEY, gradeBand);
+  }, [gradeBand]);
+
+  useEffect(() => {
+    if (!lastSavedSignature) {
+      setLastSavedSignature(currentSignature);
+    }
+  }, [currentSignature, lastSavedSignature]);
+
+  useEffect(() => {
+    const handler = (event: BeforeUnloadEvent) => {
+      if (!hasUnsavedChanges) {
+        return;
+      }
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [hasUnsavedChanges]);
 
   function updateBlueprint(index: number, patch: Partial<QuestionBlueprint>) {
     setBlueprints((current) => current.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)));
@@ -363,6 +414,11 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
     ]);
   }
 
+  function addPresetBlueprints() {
+    const presets = blueprintPresetsByCategory[selectedShortcut.id] ?? [];
+    setBlueprints((current) => [...current, ...presets.map((preset) => ({ ...preset }))]);
+  }
+
   function removeBlueprint(index: number) {
     setBlueprints((current) => current.filter((_, itemIndex) => itemIndex !== index));
   }
@@ -372,7 +428,6 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
       setDraggingIndex(null);
       return;
     }
-
     setBlueprints((current) => moveItem(current, draggingIndex, toIndex));
     setDraggingIndex(null);
   }
@@ -383,7 +438,6 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
     if (files.length === 0) {
       return;
     }
-
     const remainingSlots = MAX_IMAGE_COUNT - images.length;
     if (remainingSlots <= 0) {
       setStatusMessage(`You can upload up to ${MAX_IMAGE_COUNT} images.`);
@@ -394,26 +448,23 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
     const selected = files.slice(0, remainingSlots);
     try {
       const compressed = await Promise.all(selected.map((file) => compressImage(file)));
-      const nextImages = compressed.map((item) => ({
+      const nextImages: BuilderImage[] = compressed.map((item) => ({
         id: crypto.randomUUID(),
         originalInput: item.originalInput,
         thumbnailPreview: item.thumbnailPreview,
         uploadPayload: item.uploadPayload,
       }));
-
       const totalBytes = [...images, ...nextImages].reduce((sum, item) => sum + (item.uploadPayload?.sizeBytes ?? item.sourceImage?.sizeBytes ?? 0), 0);
       if (totalBytes > MAX_TOTAL_BYTES_HARD) {
         setStatusMessage(`Total payload is too large. Keep total under ${Math.round(MAX_TOTAL_BYTES_HARD / 1024 / 1024)}MB.`);
         input.value = '';
         return;
       }
-
       setImages((current) => [...current, ...nextImages]);
       setStatusMessage(`Loaded ${nextImages.length} image(s). ${Math.min(images.length + nextImages.length, MAX_IMAGE_COUNT)}/${MAX_IMAGE_COUNT} ready.`);
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Failed to process images.');
     }
-
     input.value = '';
   }
 
@@ -424,33 +475,74 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
   async function ensureUploadedImages() {
     const existingImages = images.filter((item) => item.sourceImage).map((item) => item.sourceImage!) as ExamSourceImage[];
     const newUploads = images.filter((item) => item.uploadPayload).map((item) => item.uploadPayload!);
-
     if (newUploads.length === 0) {
       return existingImages;
     }
 
     const response = await fetch('/api/storage/images', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ images: newUploads }),
     });
-
     const payload = (await response.json()) as { images?: ExamSourceImage[]; error?: string };
     if (!response.ok || !payload.images) {
       throw new Error(payload.error ?? 'Failed to upload source images.');
     }
-
     return [...existingImages, ...payload.images];
   }
 
+  async function saveDraft(generatedPayload: GeneratedExamSet, options?: { auto?: boolean }) {
+    const uploadedImages = await ensureUploadedImages();
+    const response = await fetch('/api/exam-sets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: currentExamSetId ?? undefined,
+        generationLogId,
+        title: (title || generatedPayload.title).trim(),
+        summary: generatedPayload.summary,
+        promptText: selectedShortcut.prompt,
+        sourceImages: uploadedImages,
+        sourceNotes: notes,
+        config,
+        questions: generatedPayload.questions,
+      }),
+    });
+    const payload = (await response.json()) as { examSetId?: string; error?: string };
+    if (!response.ok || !payload.examSetId) {
+      throw new Error(payload.error ?? 'Save failed.');
+    }
+    if (!currentExamSetId && generationLogId) {
+      setGenerateCount(1);
+    }
+    setCurrentExamSetId(payload.examSetId);
+    setLastSavedSignature(createSignature({
+      title,
+      gradeBand,
+      notes,
+      uiLanguage,
+      promptLanguage,
+      examLanguage,
+      selectedShortcutId,
+      imageIds: images.map((image) => image.id),
+      blueprints,
+      generatedQuestionCount: generatedPayload.questions.length,
+    }));
+    if (!options?.auto) {
+      router.push('/dashboard');
+      router.refresh();
+    }
+  }
+
   async function handleGenerate() {
+    if (!canGenerate) {
+      setStatusMessage(`Generation limit reached (${generateLimit}/${generateLimit}).`);
+      return;
+    }
     if (images.length === 0) {
       setStatusMessage('At least one image is required before generation.');
       return;
     }
-
     const imageInputs = images.map((image) => image.originalInput).filter(Boolean);
     if (imageInputs.length === 0) {
       setStatusMessage('Image input is unavailable. Re-upload image files before generating.');
@@ -459,20 +551,17 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
 
     setIsGenerating(true);
     setStatusMessage('Generating exam questions from uploaded images...');
-
     try {
       const response = await fetch('/api/exam-sets/generate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          examSetId: currentExamSetId ?? undefined,
           imageDataUrls: imageInputs,
           notes: [selectedShortcut.prompt, notes].filter(Boolean).join('\n\n'),
           config,
         }),
       });
-
       const payload = (await response.json()) as GeneratedPayload;
       if (!response.ok) {
         throw new Error(payload.error ?? 'Generation failed.');
@@ -480,8 +569,28 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
 
       setGenerated(payload);
       setGenerationLogId(payload.generationLogId);
-      setTitle(payload.title);
-      setStatusMessage(`Generated ${payload.questions.length} questions.`);
+      setTitle((previous) => (previous.trim().length > 0 ? previous : payload.title));
+      setGeneratedHistory((current) => [
+        {
+          id: payload.generationLogId,
+          userId: '',
+          examSetId: currentExamSetId,
+          model: 'openai',
+          promptText: selectedShortcut.prompt,
+          responseText: null,
+          responseJson: JSON.stringify(payload),
+          latencyMs: null,
+          inputTokens: null,
+          outputTokens: null,
+          totalTokens: null,
+          estimatedCostUsd: null,
+          createdAt: new Date().toISOString(),
+        },
+        ...current,
+      ]);
+      setGenerateCount((value) => value + (currentExamSetId ? 1 : 0));
+      await saveDraft(payload, { auto: true });
+      setStatusMessage('Generated and auto-saved draft.');
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Generation failed.');
     } finally {
@@ -494,41 +603,24 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
       setStatusMessage('Generate questions before saving the exam set.');
       return;
     }
-
     setIsSaving(true);
     setStatusMessage('Saving exam set draft...');
-
     try {
-      const uploadedImages = await ensureUploadedImages();
-      const response = await fetch('/api/exam-sets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: initialExamSet?.id,
-          generationLogId,
-          title: title || generated.title,
-          summary: generated.summary,
-          promptText: selectedShortcut.prompt,
-          sourceImages: uploadedImages,
-          sourceNotes: notes,
-          config,
-          questions: generated.questions,
-        }),
-      });
-
-      const payload = (await response.json()) as { examSetId?: string; error?: string };
-      if (!response.ok || !payload.examSetId) {
-        throw new Error(payload.error ?? 'Save failed.');
-      }
-
-      router.push('/dashboard');
-      router.refresh();
+      await saveDraft(generated);
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Save failed.');
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  function handleBackToDashboard(event: React.MouseEvent<HTMLAnchorElement>) {
+    if (!hasUnsavedChanges) {
+      return;
+    }
+    const confirmed = window.confirm('You have unsaved changes. Leave this page?');
+    if (!confirmed) {
+      event.preventDefault();
     }
   }
 
@@ -539,18 +631,17 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Exam builder</p>
           <h1 className="text-3xl font-black text-slate-950">Chat-style exam generation</h1>
         </div>
-        <Link className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700" href="/dashboard">
+        <Link className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700" href="/dashboard" onClick={handleBackToDashboard}>
           Back to dashboard
         </Link>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-slate-950">Builder conversation</h2>
             <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">{totalQuestions} questions planned</span>
           </div>
-
           <div className="space-y-4">
             <div className="rounded-3xl bg-slate-950 p-4 text-sm text-white">
               <p className="font-semibold">{labels.assistant}</p>
@@ -570,6 +661,7 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
                     }
                     setSelectedShortcutId(quickOptionsByLanguage[next][0].id);
                   }}
+                  title="Language used for builder UI labels."
                   value={uiLanguage}
                 >
                   <option value="en">English</option>
@@ -577,17 +669,39 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
                   <option value="es">Spanish</option>
                 </select>
               </label>
+
               <label className="text-sm font-semibold text-slate-800">
-                {labels.examLanguage}
-                <select className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm" onChange={(event) => setExamLanguage(event.target.value)} value={examLanguage}>
-                  {outputLanguageOptions.map((language) => (
-                    <option key={language} value={language}>
-                      {language}
+                {labels.gradeBand}
+                <select
+                  className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm"
+                  onChange={(event) => setGradeBand(event.target.value)}
+                  title="Difficulty level for generated questions."
+                  value={gradeBand}
+                >
+                  {gradeBandOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
                     </option>
                   ))}
                 </select>
               </label>
             </div>
+
+            <label className="text-sm font-semibold text-slate-800">
+              {labels.examLanguage}
+              <select
+                className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm"
+                onChange={(event) => setExamLanguage(event.target.value)}
+                title="Final language for questions and answers."
+                value={examLanguage}
+              >
+                {outputLanguageOptions.map((language) => (
+                  <option key={language} value={language}>
+                    {language}
+                  </option>
+                ))}
+              </select>
+            </label>
 
             <button className="rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700" onClick={() => setIsAdvancedOpen((value) => !value)} type="button">
               {labels.advanced}
@@ -653,49 +767,67 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
               </div>
             ) : null}
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-semibold text-slate-800">
-                Exam set title
-                <input className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm" onChange={(event) => setTitle(event.target.value)} value={title} />
-              </label>
-              <label className="text-sm font-semibold text-slate-800">
-                Grade band
-                <input className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm" onChange={(event) => setGradeBand(event.target.value)} value={gradeBand} />
-              </label>
-            </div>
+            <label className="text-sm font-semibold text-slate-800">
+              Exam set title
+              <input
+                className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm"
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="Leave blank to auto-generate title from content."
+                title="Optional. If empty, AI will generate a suitable title."
+                value={title}
+              />
+            </label>
 
             <label className="block text-sm font-semibold text-slate-800">
               {labels.teacherNotes}
-              <textarea className="mt-2 min-h-28 w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm" onChange={(event) => setNotes(event.target.value)} value={notes} />
+              <textarea
+                className="mt-2 min-h-28 w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm"
+                onChange={(event) => setNotes(event.target.value)}
+                placeholder="Example: Keep vocabulary from this chapter only. Add 3 inference questions."
+                title="Additional custom constraints or instructions."
+                value={notes}
+              />
             </label>
 
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-950">{labels.questionBlueprint}</h3>
-                <button className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700" onClick={addBlueprint} type="button">
-                  {labels.addSection}
-                </button>
+                <div className="flex gap-2">
+                  <button className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700" onClick={addPresetBlueprints} type="button">
+                    {labels.addPreset}
+                  </button>
+                  <button className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700" onClick={addBlueprint} type="button">
+                    {labels.addSection}
+                  </button>
+                </div>
               </div>
               <p className="mb-3 text-xs text-slate-500">{labels.dragHint}</p>
               <div className="space-y-3">
                 {blueprints.map((blueprint, index) => (
                   <div
                     key={`${blueprint.label}-${index}`}
-                    className="grid cursor-grab gap-3 rounded-3xl bg-white p-4 md:grid-cols-[1.2fr_0.9fr_0.6fr_1.4fr_auto]"
-                    draggable
-                    onDragEnd={() => setDraggingIndex(null)}
+                    className="grid gap-3 rounded-3xl bg-white p-4 md:grid-cols-[auto_1.15fr_0.9fr_0.6fr_1.4fr_auto]"
                     onDragOver={(event) => event.preventDefault()}
-                    onDragStart={() => setDraggingIndex(index)}
                     onDrop={() => handleDrop(index)}
                   >
-                    <input className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" onChange={(event) => updateBlueprint(index, { label: event.target.value })} value={blueprint.label} />
-                    <select className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" onChange={(event) => updateBlueprint(index, { format: event.target.value as QuestionKind })} value={blueprint.format}>
+                    <button
+                      className="cursor-grab rounded-xl border border-slate-300 px-2 text-sm text-slate-500"
+                      draggable
+                      onDragEnd={() => setDraggingIndex(null)}
+                      onDragStart={() => setDraggingIndex(index)}
+                      title="Drag handle"
+                      type="button"
+                    >
+                      ::
+                    </button>
+                    <input className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" onChange={(event) => updateBlueprint(index, { label: event.target.value })} placeholder="Section title" title="Section title" value={blueprint.label} />
+                    <select className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" onChange={(event) => updateBlueprint(index, { format: event.target.value as QuestionKind })} title="Question type" value={blueprint.format}>
                       <option value="multiple_choice">Multiple choice</option>
                       <option value="true_false">True / False</option>
                       <option value="short_answer">Short answer</option>
                     </select>
-                    <input className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" min={1} onChange={(event) => updateBlueprint(index, { count: Number(event.target.value) || 1 })} type="number" value={blueprint.count} />
-                    <input className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" onChange={(event) => updateBlueprint(index, { focus: event.target.value })} value={blueprint.focus} />
+                    <input className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" min={1} onChange={(event) => updateBlueprint(index, { count: Number(event.target.value) || 1 })} placeholder="Count" title="Question count" type="number" value={blueprint.count} />
+                    <input className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" onChange={(event) => updateBlueprint(index, { focus: event.target.value })} placeholder="Focus / pattern" title="Question intent or pattern" value={blueprint.focus} />
                     <button className="rounded-2xl border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700" onClick={() => removeBlueprint(index)} type="button">
                       Delete
                     </button>
@@ -704,15 +836,22 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <button className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50" disabled={isGenerating} onClick={handleGenerate} type="button">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={isGenerating || !canGenerate}
+                onClick={handleGenerate}
+                type="button"
+              >
                 {isGenerating ? 'Generating...' : 'Generate exam set'}
               </button>
+              <span className="rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700">
+                Generate usage: {currentExamSetId ? `${generateCount}/${generateLimit}` : `0/${generateLimit} (applies after first save)`}
+              </span>
               <button className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 disabled:cursor-not-allowed disabled:opacity-50" disabled={isSaving || !generated} onClick={handleSave} type="button">
-                {isSaving ? 'Saving...' : initialExamSet ? 'Update draft' : 'Save draft'}
+                {isSaving ? 'Saving...' : currentExamSetId ? 'Save draft' : 'Create draft'}
               </button>
             </div>
-
             <p className="rounded-3xl bg-amber-50 px-4 py-3 text-sm text-amber-900">{statusMessage}</p>
           </div>
         </section>
@@ -728,20 +867,22 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
                 <p className="mt-3 text-sm text-slate-500">Source recap: {generated.sourceSummary}</p>
               </div>
 
-              {generated.recommendedPrompts.length > 0 ? (
-                <div className="rounded-3xl bg-white p-4">
-                  <p className="text-sm font-bold text-slate-950">Recommended next prompts</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {generated.recommendedPrompts.map((prompt) => (
-                      <p key={prompt} className="rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700">
-                        {prompt}
-                      </p>
-                    ))}
-                  </div>
+              <div className="rounded-3xl bg-white p-4">
+                <p className="text-sm font-bold text-slate-950">Generated exam history</p>
+                <div className="mt-3 max-h-40 space-y-2 overflow-y-auto">
+                  {generatedHistory.length > 0 ? (
+                    generatedHistory.map((history) => (
+                      <div key={history.id} className="rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                        <span className="font-semibold">{new Date(history.createdAt).toLocaleString()}</span> · {history.model}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-slate-500">No history yet for this exam set.</p>
+                  )}
                 </div>
-              ) : null}
+              </div>
 
-              <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+              <div className="max-h-[65vh] space-y-3 overflow-y-auto pr-1">
                 {generated.questions.map((question, index) => (
                   <article key={question.id} className="rounded-3xl border border-slate-200 bg-white p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Question {index + 1}</p>
@@ -761,7 +902,7 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
             </div>
           ) : (
             <div className="mt-4 rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-sm text-slate-500">
-              Generated questions will appear here after the first multi-modal run.
+              Generated questions will appear here after generation.
             </div>
           )}
         </section>
@@ -769,4 +910,3 @@ export function ExamBuilder({ initialExamSet }: BuilderProps) {
     </div>
   );
 }
-

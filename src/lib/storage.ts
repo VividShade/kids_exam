@@ -23,7 +23,7 @@ function getStorageClient() {
   }
 
   if (!storageClient) {
-    storageClient = createClient(env.supabaseUrl, env.supabaseServiceRoleKey, {
+    storageClient = createClient(env.supabaseUrl, env.supabaseSecretKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
   }
@@ -89,3 +89,53 @@ export async function createSignedImageUrl(path: string, expiresInSeconds = 60 *
   return result.data.signedUrl;
 }
 
+export async function deleteStoragePaths(paths: string[]) {
+  if (paths.length === 0) {
+    return;
+  }
+
+  const client = getStorageClient();
+  const result = await client.storage.from(env.supabaseStorageBucket).remove(paths);
+  if (result.error) {
+    throw new Error(result.error.message);
+  }
+}
+
+async function listDirectoryPaths(prefix: string): Promise<string[]> {
+  const client = getStorageClient();
+  const results: string[] = [];
+  let offset = 0;
+  const pageSize = 100;
+
+  while (true) {
+    const { data, error } = await client.storage.from(env.supabaseStorageBucket).list(prefix, { limit: pageSize, offset });
+    if (error) {
+      throw new Error(error.message);
+    }
+    if (!data || data.length === 0) {
+      break;
+    }
+
+    for (const entry of data) {
+      const fullPath = prefix ? `${prefix}/${entry.name}` : entry.name;
+      const hasMetadata = !!entry.metadata;
+      if (hasMetadata) {
+        results.push(fullPath);
+      } else {
+        const nested = await listDirectoryPaths(fullPath);
+        results.push(...nested);
+      }
+    }
+
+    if (data.length < pageSize) {
+      break;
+    }
+    offset += pageSize;
+  }
+
+  return results;
+}
+
+export async function listAllStoragePaths() {
+  return listDirectoryPaths('');
+}

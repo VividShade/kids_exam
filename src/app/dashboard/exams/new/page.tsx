@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 
 import { auth } from '@/auth';
 import { ExamBuilder } from '@/components/exam-builder';
+import { env } from '@/lib/env';
 
 export default async function NewExamSetPage() {
   const session = await auth();
@@ -9,5 +10,5 @@ export default async function NewExamSetPage() {
     redirect('/');
   }
 
-  return <ExamBuilder />;
+  return <ExamBuilder generateLimit={env.examSetGenerateLimit} />;
 }

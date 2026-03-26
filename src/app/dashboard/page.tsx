@@ -64,6 +64,7 @@ export default async function DashboardPage() {
                           </span>
                         </div>
                         <p className="mt-2 max-w-2xl text-sm text-slate-600">{examSet.summary}</p>
+                        <p className="mt-1 text-xs text-slate-500">Generated {examSet.generateCount} time(s)</p>
                         <p className="mt-2 text-xs text-slate-500">Updated {new Date(examSet.updatedAt).toLocaleString()}</p>
                       </div>
                       <div className="flex flex-wrap gap-2">

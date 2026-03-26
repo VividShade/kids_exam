@@ -2,7 +2,16 @@ import 'server-only';
 
 import { createId } from '@/lib/id';
 import { dbAll, dbGet, dbRun } from '@/lib/db';
-import type { AttemptRecord, DashboardData, ExamBuilderConfig, ExamQuestion, ExamSetRecord, ExamSourceImage, OpenAiLogRecord } from '@/lib/types';
+import type {
+  AttemptRecord,
+  CleanupJobRecord,
+  DashboardData,
+  ExamBuilderConfig,
+  ExamQuestion,
+  ExamSetRecord,
+  ExamSourceImage,
+  OpenAiLogRecord,
+} from '@/lib/types';
 
 type UserRow = {
   id: string;
@@ -28,6 +37,8 @@ type ExamSetRow = {
   source_image_data_urls_json: string | null;
   source_images_json: string | null;
   source_notes: string | null;
+  generate_count: number | string;
+  last_generated_at: string | null;
   published_at: string | null;
   created_at: string;
   updated_at: string;
@@ -42,6 +53,7 @@ type AttemptRow = {
   current_index: number;
   score: number | null;
   wrong_question_ids_json: string;
+  shuffle_seed: string;
   started_at: string;
   updated_at: string;
   completed_at: string | null;
@@ -62,6 +74,18 @@ type OpenAiLogRow = {
   total_tokens: number | string | null;
   estimated_cost_usd: number | string | null;
   created_at: string;
+};
+
+type CleanupJobRow = {
+  id: string;
+  job_type: 'delete_storage_paths';
+  payload_json: string;
+  status: 'queued' | 'running' | 'done' | 'failed';
+  retry_count: number | string;
+  run_after: string;
+  last_error: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 function toNumber(value: number | string | null) {
@@ -118,6 +142,8 @@ function parseExamSet(row: ExamSetRow): ExamSetRecord {
     title: row.title,
     summary: row.summary,
     status: row.status,
+    generateCount: toNumber(row.generate_count) ?? 0,
+    lastGeneratedAt: row.last_generated_at,
     promptText: row.prompt_text,
     config: normalizeConfig(JSON.parse(row.config_json) as ExamBuilderConfig),
     questions: JSON.parse(row.questions_json) as ExamQuestion[],
@@ -139,10 +165,25 @@ function parseAttempt(row: AttemptRow): AttemptRecord {
     currentIndex: row.current_index,
     score: row.score,
     wrongQuestionIds: JSON.parse(row.wrong_question_ids_json) as string[],
+    shuffleSeed: row.shuffle_seed || '',
     startedAt: row.started_at,
     updatedAt: row.updated_at,
     completedAt: row.completed_at,
     abandonedAt: row.abandoned_at,
+  };
+}
+
+function parseCleanupJob(row: CleanupJobRow): CleanupJobRecord {
+  return {
+    id: row.id,
+    jobType: row.job_type,
+    payloadJson: row.payload_json,
+    status: row.status,
+    retryCount: toNumber(row.retry_count) ?? 0,
+    runAfter: row.run_after,
+    lastError: row.last_error,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -238,7 +279,7 @@ export async function saveExamSet(input: {
         firstImage,
         JSON.stringify(sourceImages.map((item) => item.originalPath)),
         JSON.stringify(sourceImages),
-        input.sourceNotes ?? null,
+       input.sourceNotes ?? null,
         now,
         input.id,
         input.ownerId,
@@ -287,6 +328,21 @@ export async function getOwnedExamSetById(examSetId: string, ownerId: string) {
   return row ? parseExamSet(row) : null;
 }
 
+export async function incrementExamSetGenerateCount(examSetId: string, ownerId: string) {
+  const now = new Date().toISOString();
+  await dbRun(
+    `UPDATE exam_sets
+     SET generate_count = COALESCE(generate_count, 0) + 1, last_generated_at = ?, updated_at = ?
+     WHERE id = ? AND owner_id = ?`,
+    [now, now, examSetId, ownerId],
+  );
+}
+
+export async function getOwnedExamSetGenerateCount(examSetId: string, ownerId: string) {
+  const row = await dbGet<{ generate_count: number | string }>('SELECT generate_count FROM exam_sets WHERE id = ? AND owner_id = ?', [examSetId, ownerId]);
+  return toNumber(row?.generate_count ?? null) ?? 0;
+}
+
 export async function getPublishedExamSetById(examSetId: string) {
   const row = await dbGet<ExamSetRow>('SELECT * FROM exam_sets WHERE id = ? AND status = ?', [examSetId, 'published']);
   return row ? parseExamSet(row) : null;
@@ -328,13 +384,14 @@ export async function createOrResumeAttempt(examSetId: string, userId: string) {
 
   const now = new Date().toISOString();
   const id = createId('attempt');
+  const shuffleSeed = crypto.randomUUID();
 
   await dbRun(
     `INSERT INTO attempts (
       id, exam_set_id, user_id, status, answers_json, current_index, score,
-      wrong_question_ids_json, started_at, updated_at, completed_at, abandoned_at
-     ) VALUES (?, ?, ?, 'in_progress', '{}', 0, NULL, '[]', ?, ?, NULL, NULL)`,
-    [id, examSetId, userId, now, now],
+      wrong_question_ids_json, shuffle_seed, started_at, updated_at, completed_at, abandoned_at
+     ) VALUES (?, ?, ?, 'in_progress', '{}', 0, NULL, '[]', ?, ?, ?, NULL, NULL)`,
+    [id, examSetId, userId, shuffleSeed, now, now],
   );
 
   const created = await getAttemptById(id, userId);
@@ -402,6 +459,7 @@ export async function deleteAttempt(attemptId: string, userId: string) {
 
 export async function createOpenAiLog(input: {
   userId: string;
+  examSetId?: string | null;
   model: string;
   promptText: string;
   responseText?: string | null;
@@ -417,12 +475,13 @@ export async function createOpenAiLog(input: {
 
   await dbRun(
     `INSERT INTO openai_logs (
-      id, user_id, exam_set_id, model, prompt_text, response_text, response_json,
+     id, user_id, exam_set_id, model, prompt_text, response_text, response_json,
       latency_ms, input_tokens, output_tokens, total_tokens, estimated_cost_usd, created_at
-     ) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       input.userId,
+      input.examSetId ?? null,
       input.model,
       input.promptText,
       input.responseText ?? null,
@@ -446,4 +505,97 @@ export async function attachOpenAiLogToExamSet(logId: string, examSetId: string,
 export async function listOpenAiLogs(limit = 200) {
   const rows = await dbAll<OpenAiLogRow>('SELECT * FROM openai_logs ORDER BY created_at DESC LIMIT ?', [limit]);
   return rows.map(parseOpenAiLog);
+}
+
+export async function listOpenAiLogsByExamSet(examSetId: string, userId: string, limit = 20) {
+  const rows = await dbAll<OpenAiLogRow>(
+    `SELECT * FROM openai_logs
+     WHERE exam_set_id = ? AND user_id = ?
+     ORDER BY created_at DESC
+     LIMIT ?`,
+    [examSetId, userId, limit],
+  );
+  return rows.map(parseOpenAiLog);
+}
+
+export async function createCleanupJobForStoragePaths(paths: string[]) {
+  if (paths.length === 0) {
+    return null;
+  }
+
+  const id = createId('cleanup');
+  const now = new Date().toISOString();
+  await dbRun(
+    `INSERT INTO cleanup_jobs (
+      id, job_type, payload_json, status, retry_count, run_after, last_error, created_at, updated_at
+     ) VALUES (?, 'delete_storage_paths', ?, 'queued', 0, ?, NULL, ?, ?)`,
+    [id, JSON.stringify({ paths }), now, now, now],
+  );
+
+  return id;
+}
+
+export async function claimCleanupJobs(limit = 20) {
+  const now = new Date().toISOString();
+  const rows = await dbAll<CleanupJobRow>(
+    `SELECT * FROM cleanup_jobs
+     WHERE status = 'queued' AND run_after <= ?
+     ORDER BY created_at ASC
+     LIMIT ?`,
+    [now, limit],
+  );
+
+  const jobs = rows.map(parseCleanupJob);
+  for (const job of jobs) {
+    await dbRun(`UPDATE cleanup_jobs SET status = 'running', updated_at = ? WHERE id = ? AND status = 'queued'`, [now, job.id]);
+  }
+
+  return jobs;
+}
+
+export async function markCleanupJobDone(jobId: string) {
+  const now = new Date().toISOString();
+  await dbRun(`UPDATE cleanup_jobs SET status = 'done', updated_at = ? WHERE id = ?`, [now, jobId]);
+}
+
+export async function markCleanupJobFailed(jobId: string, retryCount: number, errorMessage: string) {
+  const now = Date.now();
+  const delayMs = Math.min(60 * 60 * 1000, Math.pow(2, retryCount) * 30 * 1000);
+  const runAfter = new Date(now + delayMs).toISOString();
+  await dbRun(
+    `UPDATE cleanup_jobs
+     SET status = ?, retry_count = ?, run_after = ?, last_error = ?, updated_at = ?
+     WHERE id = ?`,
+    [retryCount >= 8 ? 'failed' : 'queued', retryCount, runAfter, errorMessage.slice(0, 600), new Date(now).toISOString(), jobId],
+  );
+}
+
+export async function listReferencedStoragePaths() {
+  const rows = await dbAll<{ source_images_json: string | null }>(
+    `SELECT source_images_json
+     FROM exam_sets
+     WHERE source_images_json IS NOT NULL AND source_images_json <> ''`,
+  );
+
+  const set = new Set<string>();
+  for (const row of rows) {
+    if (!row.source_images_json) {
+      continue;
+    }
+    try {
+      const images = JSON.parse(row.source_images_json) as ExamSourceImage[];
+      for (const image of images) {
+        if (image.originalPath) {
+          set.add(image.originalPath);
+        }
+        if (image.thumbnailPath) {
+          set.add(image.thumbnailPath);
+        }
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return Array.from(set);
 }

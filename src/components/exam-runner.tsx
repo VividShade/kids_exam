@@ -14,6 +14,7 @@ type RunnerProps = {
 export function ExamRunner({ examSet, initialAttempt }: RunnerProps) {
   const router = useRouter();
   const [attemptId, setAttemptId] = useState(initialAttempt?.id ?? '');
+  const [shuffleSeed, setShuffleSeed] = useState(initialAttempt?.shuffleSeed ?? crypto.randomUUID());
   const [answers, setAnswers] = useState<Record<string, string>>(initialAttempt?.answers ?? {});
   const [currentIndex, setCurrentIndex] = useState(initialAttempt?.currentIndex ?? 0);
   const [statusMessage, setStatusMessage] = useState('Your progress will be saved while the attempt is in progress.');
@@ -26,10 +27,36 @@ export function ExamRunner({ examSet, initialAttempt }: RunnerProps) {
   const saveTimeoutRef = useRef<number | null>(null);
 
   const currentQuestion = examSet.questions[currentIndex];
+  function getChoiceOrderScore(questionId: string, choice: string) {
+    const input = `${shuffleSeed}:${questionId}:${choice}`;
+    let hash = 2166136261;
+    for (let index = 0; index < input.length; index += 1) {
+      hash ^= input.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  }
+
+  const shuffledChoicesByQuestionId = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const question of examSet.questions) {
+      if (question.kind !== 'multiple_choice') {
+        map.set(question.id, question.choices);
+        continue;
+      }
+      const choices = [...question.choices].sort(
+        (left, right) => getChoiceOrderScore(question.id, left) - getChoiceOrderScore(question.id, right),
+      );
+      map.set(question.id, choices);
+    }
+    return map;
+  }, [examSet.questions, shuffleSeed]);
+
   const answeredCount = useMemo(
     () => examSet.questions.filter((question) => (answers[question.id] ?? '').trim().length > 0).length,
     [answers, examSet.questions],
   );
+  const unansweredCount = examSet.questions.length - answeredCount;
 
   async function ensureAttempt() {
     if (attemptId) {
@@ -50,6 +77,7 @@ export function ExamRunner({ examSet, initialAttempt }: RunnerProps) {
     }
 
     setAttemptId(payload.id);
+    setShuffleSeed(payload.shuffleSeed || crypto.randomUUID());
     return payload.id;
   }
 
@@ -140,6 +168,15 @@ export function ExamRunner({ examSet, initialAttempt }: RunnerProps) {
   }
 
   async function handleSubmit() {
+    const warningMessage =
+      unansweredCount > 0
+        ? `There are ${unansweredCount} unanswered questions. Unanswered items may be counted as wrong. Submit anyway?`
+        : 'All questions are answered. Submit your exam now?';
+    const confirmed = window.confirm(warningMessage);
+    if (!confirmed) {
+      return;
+    }
+
     setIsSubmitting(true);
     setStatusMessage('Submitting your answers...');
 
@@ -195,7 +232,7 @@ export function ExamRunner({ examSet, initialAttempt }: RunnerProps) {
               />
             ) : (
               <div className="mt-5 space-y-3">
-                {currentQuestion.choices.map((choice) => (
+                {(shuffledChoicesByQuestionId.get(currentQuestion.id) ?? currentQuestion.choices).map((choice) => (
                   <label key={choice} className="flex cursor-pointer items-center gap-3 rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
                     <input checked={(answers[currentQuestion.id] ?? '') === choice} name={currentQuestion.id} onChange={() => updateAnswer(choice)} type="radio" />
                     <span>{choice}</span>
@@ -211,9 +248,6 @@ export function ExamRunner({ examSet, initialAttempt }: RunnerProps) {
             </button>
             <button className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50" disabled={currentIndex >= examSet.questions.length - 1} onClick={() => setCurrentIndex((value) => value + 1)} type="button">
               Next
-            </button>
-            <button className="rounded-full bg-slate-950 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50" disabled={isSubmitting} onClick={handleSubmit} type="button">
-              {isSubmitting ? 'Submitting...' : 'Submit exam'}
             </button>
           </div>
 
@@ -252,6 +286,27 @@ export function ExamRunner({ examSet, initialAttempt }: RunnerProps) {
               <p className="text-sm font-semibold text-slate-500">Final score</p>
               <p className="mt-2 text-4xl font-black text-slate-950">{result.score}</p>
               <p className="mt-2 text-sm text-slate-600">Wrong answers: {result.wrongQuestionIds.length}</p>
+            </div>
+          ) : null}
+
+          {!result ? (
+            <div className="rounded-3xl border border-slate-300 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Submit</p>
+              <p className="mt-2 text-sm text-slate-600">
+                {unansweredCount > 0
+                  ? `You still have ${unansweredCount} unanswered question(s).`
+                  : 'All questions are answered. Ready to submit.'}
+              </p>
+              <button
+                className={`mt-3 w-full rounded-full px-4 py-2 text-sm font-semibold ${
+                  unansweredCount > 0 ? 'bg-amber-200 text-amber-900 hover:bg-amber-300' : 'bg-slate-950 text-white'
+                } disabled:opacity-50`}
+                disabled={isSubmitting}
+                onClick={handleSubmit}
+                type="button"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit exam'}
+              </button>
             </div>
           ) : null}
         </aside>
