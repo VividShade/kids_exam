@@ -21,7 +21,19 @@ function parseResponseJson(input: string | null) {
   }
 }
 
-export default async function AdminAiLogsPage() {
+function parsePositiveInt(input: string | undefined, fallback: number) {
+  const parsed = Number(input ?? '');
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return fallback;
+  }
+  return Math.floor(parsed);
+}
+
+export default async function AdminAiLogsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ limit?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.id || !session.user.email) {
     redirect('/');
@@ -32,7 +44,12 @@ export default async function AdminAiLogsPage() {
     redirect('/dashboard');
   }
 
-  const logs = await listOpenAiLogs(300);
+  const resolvedSearchParams = await searchParams;
+  const pageSize = Math.min(100, Math.max(1, parsePositiveInt(resolvedSearchParams.limit, 10)));
+  const requestedLogs = await listOpenAiLogs(pageSize + 1, 0);
+  const hasMore = requestedLogs.length > pageSize;
+  const logs = hasMore ? requestedLogs.slice(0, pageSize) : requestedLogs;
+
   const totalRequests = logs.length;
   const totalInputTokens = logs.reduce((sum, item) => sum + (item.inputTokens ?? 0), 0);
   const totalOutputTokens = logs.reduce((sum, item) => sum + (item.outputTokens ?? 0), 0);
@@ -63,6 +80,7 @@ export default async function AdminAiLogsPage() {
           <article className="rounded-3xl border border-slate-200 bg-white p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Requests</p>
             <p className="mt-2 text-2xl font-black text-slate-950">{totalRequests}</p>
+            <p className="mt-1 text-xs text-slate-500">Loaded range only</p>
           </article>
           <article className="rounded-3xl border border-slate-200 bg-white p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Input Tokens</p>
@@ -85,50 +103,65 @@ export default async function AdminAiLogsPage() {
 
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
           <h2 className="text-xl font-bold text-slate-950">Recent requests</h2>
+          <p className="mt-2 text-xs text-slate-500">
+            Statistics and list are based on currently loaded items (latest {logs.length}).
+          </p>
           <div className="mt-4 space-y-4">
             {logs.length > 0 ? (
               logs.map((log) => (
-                <article key={log.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                <details key={log.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                  <summary className="cursor-pointer list-none">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-bold text-slate-950">{log.model}</p>
+                        <p className="mt-1 text-xs text-slate-500">{new Date(log.createdAt).toLocaleString()}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <span className="rounded-full bg-slate-200 px-2 py-1 text-slate-700">Input {log.inputTokens ?? 0}</span>
+                        <span className="rounded-full bg-slate-200 px-2 py-1 text-slate-700">Output {log.outputTokens ?? 0}</span>
+                        <span className="rounded-full bg-slate-200 px-2 py-1 text-slate-700">Total {log.totalTokens ?? 0}</span>
+                        <span className="rounded-full bg-slate-200 px-2 py-1 text-slate-700">Latency {log.latencyMs ?? 0}ms</span>
+                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-emerald-700">{formatCost(log.estimatedCostUsd ?? 0)}</span>
+                      </div>
+                    </div>
+                  </summary>
                   {(() => {
                     const parsedResponse = parseResponseJson(log.responseJson);
                     return (
-                      <>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-sm font-bold text-slate-950">{log.model}</p>
-                    <p className="text-xs text-slate-500">{new Date(log.createdAt).toLocaleString()}</p>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                    <span className="rounded-full bg-slate-200 px-2 py-1 text-slate-700">Input {log.inputTokens ?? 0}</span>
-                    <span className="rounded-full bg-slate-200 px-2 py-1 text-slate-700">Output {log.outputTokens ?? 0}</span>
-                    <span className="rounded-full bg-slate-200 px-2 py-1 text-slate-700">Total {log.totalTokens ?? 0}</span>
-                    <span className="rounded-full bg-slate-200 px-2 py-1 text-slate-700">Latency {log.latencyMs ?? 0}ms</span>
-                    <span className="rounded-full bg-emerald-100 px-2 py-1 text-emerald-700">{formatCost(log.estimatedCostUsd ?? 0)}</span>
-                  </div>
-                  <div className="mt-3 space-y-2">
-                    <div className="rounded-2xl bg-white p-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Prompt (no images)</p>
-                      <pre className="mt-2 overflow-x-auto whitespace-pre-wrap text-xs text-slate-700">{log.promptText}</pre>
-                    </div>
-                    <div className="rounded-2xl bg-white p-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Response</p>
-                      <div className="mt-2">
-                        {parsedResponse ? (
-                          <JsonTreeViewer value={parsedResponse as never} />
-                        ) : (
-                          <pre className="overflow-x-auto whitespace-pre-wrap text-xs text-slate-700">{log.responseText ?? log.responseJson ?? '-'}</pre>
-                        )}
+                      <div className="mt-3 space-y-2">
+                        <div className="rounded-2xl bg-white p-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Prompt (no images)</p>
+                          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap text-xs text-slate-700">{log.promptText}</pre>
+                        </div>
+                        <div className="rounded-2xl bg-white p-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Response</p>
+                          <div className="mt-2">
+                            {parsedResponse ? (
+                              <JsonTreeViewer value={parsedResponse as never} />
+                            ) : (
+                              <pre className="overflow-x-auto whitespace-pre-wrap text-xs text-slate-700">{log.responseText ?? log.responseJson ?? '-'}</pre>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                      </>
                     );
                   })()}
-                </article>
+                </details>
               ))
             ) : (
               <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">No OpenAI logs yet.</p>
             )}
           </div>
+          {hasMore ? (
+            <div className="mt-4">
+              <Link
+                className="inline-flex rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
+                href={`/admin/ai-logs?limit=${pageSize + 10}`}
+              >
+                더 불러오기
+              </Link>
+            </div>
+          ) : null}
         </section>
       </div>
     </main>

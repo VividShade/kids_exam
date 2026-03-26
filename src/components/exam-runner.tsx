@@ -242,12 +242,12 @@ export function ExamRunner({ examSet, initialAttempt }: RunnerProps) {
             )}
           </article>
 
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <button className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50" disabled={currentIndex === 0} onClick={() => setCurrentIndex((value) => value - 1)} type="button">
-              Previous
+              ← Previous
             </button>
             <button className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50" disabled={currentIndex >= examSet.questions.length - 1} onClick={() => setCurrentIndex((value) => value + 1)} type="button">
-              Next
+              Next →
             </button>
           </div>
 

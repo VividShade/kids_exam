@@ -108,7 +108,7 @@ export const quizTextKo: QuizText = {
   nextLabel: '다음 문제',
   seeResultsLabel: '결과 보기',
   correctFeedbackLabel: '✅ 정답입니다!',
-  incorrectFeedbackPrefix: '❌ 오답입니다. 정답은',
+  incorrectFeedbackPrefix: '🚫 오답입니다. 정답은',
   inputPlaceholder: '정답을 입력하세요',
   questionLabel: '문제',
 };
