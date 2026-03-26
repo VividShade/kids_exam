@@ -18,7 +18,7 @@ const requestSchema = z.object({
       }),
     )
     .min(1)
-    .max(5),
+    .max(6),
 });
 
 export async function POST(request: Request) {
@@ -36,4 +36,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
-

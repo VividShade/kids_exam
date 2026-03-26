@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import type { ExamBuilderConfig, ExamSetRecord, ExamSourceImage, GeneratedExamSet, OpenAiLogRecord, QuestionBlueprint, QuestionKind, UILanguage } from '@/lib/types';
 
-const MAX_IMAGE_COUNT = 5;
+const MAX_IMAGE_COUNT = 6;
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 const MAX_TOTAL_BYTES_HARD = 18 * 1024 * 1024;
 const MAX_LONG_EDGE = 2560;
@@ -14,6 +14,7 @@ const MAX_MEGAPIXELS = 8_000_000;
 const THUMB_LONG_EDGE = 480;
 const QUALITY_STEPS = [0.86, 0.8, 0.74, 0.68];
 const LAST_GRADE_BAND_KEY = 'exam_builder_last_grade_band';
+const APP_UI_LANGUAGE_KEY = 'app_ui_language';
 
 type BuilderImage = {
   id: string;
@@ -46,14 +47,14 @@ const quickOptionsByLanguage: Record<UILanguage, Array<{ id: string; label: stri
     { id: 'grammar_practice', label: 'Grammar', prompt: 'Create a grammar practice quiz related to the source material.' },
   ],
   ko: [
-    { id: 'vocabulary_mix', label: '어휘', prompt: '소스 자료를 바탕으로 어휘 중심 퀴즈를 만들어줘.' },
-    { id: 'reading_check', label: '독해', prompt: '소스 자료를 바탕으로 독해 확인 퀴즈를 만들어줘.' },
-    { id: 'grammar_practice', label: '문법', prompt: '소스 자료와 연계된 문법 연습 퀴즈를 만들어줘.' },
+    { id: 'vocabulary_mix', label: '어휘', prompt: 'Create a vocabulary-focused quiz based on the source material.' },
+    { id: 'reading_check', label: '독해', prompt: 'Create a reading comprehension quiz from the source material.' },
+    { id: 'grammar_practice', label: '문법', prompt: 'Create a grammar practice quiz related to the source material.' },
   ],
   es: [
-    { id: 'vocabulary_mix', label: 'Vocabulario', prompt: 'Crea un quiz de vocabulario basado en el material fuente.' },
-    { id: 'reading_check', label: 'Lectura', prompt: 'Crea un quiz de comprensión lectora basado en el material fuente.' },
-    { id: 'grammar_practice', label: 'Gramática', prompt: 'Crea un quiz de práctica gramatical relacionado con el material fuente.' },
+    { id: 'vocabulary_mix', label: 'Vocabulario', prompt: 'Create a vocabulary-focused quiz based on the source material.' },
+    { id: 'reading_check', label: 'Lectura', prompt: 'Create a reading comprehension quiz from the source material.' },
+    { id: 'grammar_practice', label: 'Gramática', prompt: 'Create a grammar practice quiz related to the source material.' },
   ],
 };
 
@@ -82,6 +83,7 @@ const starterBlueprints: QuestionBlueprint[] = [
 ];
 
 const outputLanguageOptions = ['English', 'Korean', 'Spanish', 'Japanese', 'Chinese'] as const;
+const sourceLanguageOptions = ['auto', 'English', 'Korean', 'Spanish', 'Japanese', 'Chinese'] as const;
 
 type BuilderProps = {
   initialExamSet?: ExamSetRecord | null;
@@ -97,11 +99,11 @@ type GeneratedPayload = GeneratedExamSet & {
 const uiLabel = {
   en: {
     assistant: 'Assistant',
-    uploadHelp: 'Upload up to 5 images. They are compressed in-browser before upload.',
-    sourceImage: 'Source images (max 5)',
-    shortcuts: 'Recommended category',
+    uploadHelp: 'Upload up to 6 images. They are compressed in-browser before upload.',
+    sourceImage: 'Source images (max 6)',
+    shortcuts: 'Exam type',
     uiLanguage: 'Builder language',
-    promptLanguage: 'Prompt language (advanced)',
+    sourceLanguage: 'Source language',
     examLanguage: 'Exam output language',
     gradeBand: 'Grade band',
     questionBlueprint: 'Question blueprint',
@@ -109,16 +111,14 @@ const uiLabel = {
     addPreset: 'Add preset sections',
     dragHint: 'Drag by handle to reorder sections.',
     teacherNotes: 'Teacher custom instructions (optional)',
-    advanced: 'Advanced language settings',
-    syncPromptLanguage: 'Sync prompt language with builder language',
   },
   ko: {
     assistant: '도우미',
-    uploadHelp: '이미지를 최대 5장까지 업로드할 수 있고, 브라우저에서 먼저 압축됩니다.',
-    sourceImage: '기초 이미지 (최대 5장)',
-    shortcuts: '추천 카테고리',
+    uploadHelp: '이미지를 최대 6장까지 업로드할 수 있고, 브라우저에서 먼저 압축됩니다.',
+    sourceImage: '기초 이미지 (최대 6장)',
+    shortcuts: '시험 유형',
     uiLanguage: '빌더 언어',
-    promptLanguage: '프롬프트 언어 (고급)',
+    sourceLanguage: '원문 언어',
     examLanguage: '문제 출력 언어',
     gradeBand: '난이도 범위',
     questionBlueprint: '문항 blueprint',
@@ -126,16 +126,14 @@ const uiLabel = {
     addPreset: '프리셋 섹션 추가',
     dragHint: '핸들을 잡고 드래그해서 순서를 바꿔요.',
     teacherNotes: '교사 맞춤 지침 (선택)',
-    advanced: '고급 언어 설정',
-    syncPromptLanguage: '프롬프트 언어를 빌더 언어와 동기화',
   },
   es: {
     assistant: 'Asistente',
-    uploadHelp: 'Puedes subir hasta 5 imágenes. Se comprimen en el navegador antes del envío.',
-    sourceImage: 'Imágenes fuente (máx. 5)',
-    shortcuts: 'Categoría recomendada',
+    uploadHelp: 'Puedes subir hasta 6 imágenes. Se comprimen en el navegador antes del envío.',
+    sourceImage: 'Imágenes fuente (máx. 6)',
+    shortcuts: 'Tipo de examen',
     uiLanguage: 'Idioma del editor',
-    promptLanguage: 'Idioma del prompt (avanzado)',
+    sourceLanguage: 'Idioma de origen',
     examLanguage: 'Idioma de salida del examen',
     gradeBand: 'Rango de nivel',
     questionBlueprint: 'Blueprint de preguntas',
@@ -143,8 +141,6 @@ const uiLabel = {
     addPreset: 'Agregar presets',
     dragHint: 'Arrastra con el handle para reordenar.',
     teacherNotes: 'Instrucciones personalizadas del docente (opcional)',
-    advanced: 'Ajustes avanzados de idioma',
-    syncPromptLanguage: 'Sincronizar idioma del prompt con el editor',
   },
 } as const;
 
@@ -287,6 +283,7 @@ function createSignature(input: {
   notes: string;
   uiLanguage: UILanguage;
   promptLanguage: UILanguage;
+  sourceLanguage: string;
   examLanguage: string;
   selectedShortcutId: string;
   imageIds: string[];
@@ -296,14 +293,62 @@ function createSignature(input: {
   return JSON.stringify(input);
 }
 
+function parseGeneratedFromLog(log: OpenAiLogRecord): GeneratedExamSet | null {
+  if (!log.responseJson) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(log.responseJson) as Partial<GeneratedExamSet> | { generated?: Partial<GeneratedExamSet> };
+    const candidate = 'generated' in parsed ? parsed.generated : parsed;
+    if (
+      candidate &&
+      typeof candidate.title === 'string' &&
+      (typeof candidate.summary === 'string' || typeof candidate.outputSummary === 'string') &&
+      typeof candidate.gradeBand === 'string' &&
+      typeof candidate.sourceSummary === 'string' &&
+      Array.isArray(candidate.recommendedPrompts) &&
+      Array.isArray(candidate.questions)
+    ) {
+      const normalized = candidate as GeneratedExamSet;
+      return {
+        ...normalized,
+        summary: normalized.summary || normalized.outputSummary || '',
+        outputSummary: normalized.outputSummary || normalized.summary || '',
+        sourceKeywords: normalized.sourceKeywords ?? [],
+        outputKeywords: normalized.outputKeywords ?? [],
+      };
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function inferOutputLanguageFromLog(log: OpenAiLogRecord, fallbackLanguage: string) {
+  const matched = log.promptText.match(/Output language for exam questions and answers:\s*([^\n.]+)\.?/i);
+  if (matched?.[1]) {
+    return matched[1].trim();
+  }
+  return fallbackLanguage;
+}
+
+function editionSignature(payload: GeneratedExamSet) {
+  return JSON.stringify({
+    gradeBand: payload.gradeBand,
+    outputSummary: payload.outputSummary || payload.summary,
+    sourceSummary: payload.sourceSummary,
+    outputKeywords: payload.outputKeywords ?? [],
+    sourceKeywords: payload.sourceKeywords ?? [],
+    questions: payload.questions,
+  });
+}
+
 export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], generateLimit = 5 }: BuilderProps) {
   const router = useRouter();
   const initialConfig = initialExamSet?.config;
   const [currentExamSetId, setCurrentExamSetId] = useState<string | null>(initialExamSet?.id ?? null);
   const [uiLanguage, setUiLanguage] = useState<UILanguage>(initialConfig?.uiLanguage ?? 'en');
-  const [promptLanguage, setPromptLanguage] = useState<UILanguage>(initialConfig?.promptLanguage ?? (initialConfig?.uiLanguage ?? 'en'));
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-  const [isPromptSynced, setIsPromptSynced] = useState((initialConfig?.promptLanguage ?? initialConfig?.uiLanguage ?? 'en') === (initialConfig?.uiLanguage ?? 'en'));
+  const [sourceLanguage, setSourceLanguage] = useState(initialConfig?.sourceLanguage ?? 'auto');
   const [examLanguage, setExamLanguage] = useState(initialConfig?.examLanguage ?? 'English');
   const [images, setImages] = useState<BuilderImage[]>(
     (initialExamSet?.sourceImages ?? []).map((image) => ({
@@ -319,9 +364,11 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
   const [selectedShortcutId, setSelectedShortcutId] = useState(quickOptionsByLanguage[uiLanguage][0].id);
   const [blueprints, setBlueprints] = useState<QuestionBlueprint[]>(initialConfig?.blueprints ?? starterBlueprints);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [dropIndicatorIndex, setDropIndicatorIndex] = useState<number | null>(null);
   const [generationLogId, setGenerationLogId] = useState<string | null>(null);
   const [generateCount, setGenerateCount] = useState(initialExamSet?.generateCount ?? 0);
   const [generatedHistory, setGeneratedHistory] = useState<OpenAiLogRecord[]>(initialGenerateHistory);
+  const [selectedHistoryLogId, setSelectedHistoryLogId] = useState<string | null>(null);
   const [generated, setGenerated] = useState<GeneratedExamSet | null>(
     initialExamSet
       ? {
@@ -329,11 +376,30 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
           summary: initialExamSet.summary,
           gradeBand: initialExamSet.config.gradeBand,
           sourceSummary: initialExamSet.summary,
+          outputSummary: initialExamSet.summary,
+          sourceKeywords: [],
+          outputKeywords: [],
           recommendedPrompts: [],
           questions: initialExamSet.questions,
         }
       : null,
   );
+  const [publishedSignature, setPublishedSignature] = useState<string>(() => {
+    if (!initialExamSet || initialExamSet.status !== 'published') {
+      return '';
+    }
+    return editionSignature({
+      title: initialExamSet.title,
+      summary: initialExamSet.summary,
+      gradeBand: initialExamSet.config.gradeBand,
+      sourceSummary: initialExamSet.summary,
+      outputSummary: initialExamSet.summary,
+      sourceKeywords: [],
+      outputKeywords: [],
+      recommendedPrompts: [],
+      questions: initialExamSet.questions,
+    });
+  });
   const [statusMessage, setStatusMessage] = useState('Upload source images and generate your exam set.');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -349,11 +415,12 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
       gradeBand,
       notes,
       uiLanguage,
-      promptLanguage,
+      promptLanguage: uiLanguage,
+      sourceLanguage,
       examLanguage,
       blueprints,
     }),
-    [blueprints, examLanguage, gradeBand, notes, promptLanguage, title, uiLanguage],
+    [blueprints, examLanguage, gradeBand, notes, sourceLanguage, title, uiLanguage],
   );
 
   const totalQuestions = blueprints.reduce((sum, blueprint) => sum + blueprint.count, 0);
@@ -362,7 +429,8 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
     gradeBand,
     notes,
     uiLanguage,
-    promptLanguage,
+    promptLanguage: uiLanguage,
+    sourceLanguage,
     examLanguage,
     selectedShortcutId,
     imageIds: images.map((image) => image.id),
@@ -371,6 +439,14 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
   });
   const hasUnsavedChanges = lastSavedSignature.length > 0 && currentSignature !== lastSavedSignature;
   const canGenerate = currentExamSetId ? generateCount < generateLimit : true;
+
+  useEffect(() => {
+    const preferredLanguage = window.localStorage.getItem(APP_UI_LANGUAGE_KEY) as UILanguage | null;
+    if (preferredLanguage && ['en', 'ko', 'es'].includes(preferredLanguage)) {
+      setUiLanguage(preferredLanguage);
+      setSelectedShortcutId(quickOptionsByLanguage[preferredLanguage][0].id);
+    }
+  }, []);
 
   useEffect(() => {
     if (!initialExamSet) {
@@ -426,10 +502,22 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
   function handleDrop(toIndex: number) {
     if (draggingIndex === null || draggingIndex === toIndex) {
       setDraggingIndex(null);
+      setDropIndicatorIndex(null);
       return;
     }
     setBlueprints((current) => moveItem(current, draggingIndex, toIndex));
     setDraggingIndex(null);
+    setDropIndicatorIndex(null);
+  }
+
+  function getUntitledTitle() {
+    const defaultLabelByShortcutId: Record<string, string> = {
+      vocabulary_mix: 'Vocabulary',
+      reading_check: 'Reading',
+      grammar_practice: 'Grammar',
+    };
+    const label = defaultLabelByShortcutId[selectedShortcutId] ?? 'Practice';
+    return `Untitled ${label} Quiz`;
   }
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -498,8 +586,8 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         id: currentExamSetId ?? undefined,
-        generationLogId,
-        title: (title || generatedPayload.title).trim(),
+        generationLogId: generationLogId ?? undefined,
+        title: title.trim().length > 0 ? title.trim() : getUntitledTitle(),
         summary: generatedPayload.summary,
         promptText: selectedShortcut.prompt,
         sourceImages: uploadedImages,
@@ -521,7 +609,8 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
       gradeBand,
       notes,
       uiLanguage,
-      promptLanguage,
+      promptLanguage: uiLanguage,
+      sourceLanguage,
       examLanguage,
       selectedShortcutId,
       imageIds: images.map((image) => image.id),
@@ -532,6 +621,7 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
       router.push('/dashboard');
       router.refresh();
     }
+    return payload.examSetId;
   }
 
   async function handleGenerate() {
@@ -569,14 +659,14 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
 
       setGenerated(payload);
       setGenerationLogId(payload.generationLogId);
-      setTitle((previous) => (previous.trim().length > 0 ? previous : payload.title));
+      setSelectedHistoryLogId(payload.generationLogId);
       setGeneratedHistory((current) => [
         {
           id: payload.generationLogId,
           userId: '',
           examSetId: currentExamSetId,
           model: 'openai',
-          promptText: selectedShortcut.prompt,
+          promptText: `Output language for exam questions and answers: ${examLanguage}.`,
           responseText: null,
           responseJson: JSON.stringify(payload),
           latencyMs: null,
@@ -614,6 +704,34 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
     }
   }
 
+  async function publishEdition(payload: GeneratedExamSet, logId: string) {
+    setIsSaving(true);
+    setStatusMessage('Publishing this edition...');
+    try {
+      setGenerationLogId(logId);
+      setGenerated(payload);
+      setSelectedHistoryLogId(logId);
+      const examSetId = await saveDraft(payload, { auto: true });
+      const response = await fetch('/api/exam-sets/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ examSetId }),
+      });
+      const payload = (await response.json()) as { ok?: boolean; error?: string };
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error ?? 'Publish failed.');
+      }
+      setPublishedSignature(editionSignature(payload));
+      setStatusMessage('Published selected edition.');
+      router.push('/dashboard');
+      router.refresh();
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Publish failed.');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   function handleBackToDashboard(event: React.MouseEvent<HTMLAnchorElement>) {
     if (!hasUnsavedChanges) {
       return;
@@ -636,7 +754,7 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
         </Link>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+      <div className="flex flex-col gap-6">
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-slate-950">Builder conversation</h2>
@@ -648,106 +766,16 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
               <p className="mt-2 text-slate-200">{labels.uploadHelp}</p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-semibold text-slate-800">
-                {labels.uiLanguage}
-                <select
-                  className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm"
-                  onChange={(event) => {
-                    const next = event.target.value as UILanguage;
-                    setUiLanguage(next);
-                    if (isPromptSynced) {
-                      setPromptLanguage(next);
-                    }
-                    setSelectedShortcutId(quickOptionsByLanguage[next][0].id);
-                  }}
-                  title="Language used for builder UI labels."
-                  value={uiLanguage}
-                >
-                  <option value="en">English</option>
-                  <option value="ko">Korean</option>
-                  <option value="es">Spanish</option>
-                </select>
-              </label>
-
-              <label className="text-sm font-semibold text-slate-800">
-                {labels.gradeBand}
-                <select
-                  className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm"
-                  onChange={(event) => setGradeBand(event.target.value)}
-                  title="Difficulty level for generated questions."
-                  value={gradeBand}
-                >
-                  {gradeBandOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
             <label className="text-sm font-semibold text-slate-800">
-              {labels.examLanguage}
-              <select
+              Exam set title
+              <input
                 className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm"
-                onChange={(event) => setExamLanguage(event.target.value)}
-                title="Final language for questions and answers."
-                value={examLanguage}
-              >
-                {outputLanguageOptions.map((language) => (
-                  <option key={language} value={language}>
-                    {language}
-                  </option>
-                ))}
-              </select>
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="Leave blank to auto-generate title from content."
+                title="Optional. If empty, AI will generate a suitable title."
+                value={title}
+              />
             </label>
-
-            <button className="rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700" onClick={() => setIsAdvancedOpen((value) => !value)} type="button">
-              {labels.advanced}
-            </button>
-            {isAdvancedOpen ? (
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
-                  <input
-                    checked={isPromptSynced}
-                    onChange={(event) => {
-                      const checked = event.target.checked;
-                      setIsPromptSynced(checked);
-                      if (checked) {
-                        setPromptLanguage(uiLanguage);
-                      }
-                    }}
-                    type="checkbox"
-                  />
-                  {labels.syncPromptLanguage}
-                </label>
-                <label className="text-sm font-semibold text-slate-800">
-                  {labels.promptLanguage}
-                  <select className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm" disabled={isPromptSynced} onChange={(event) => setPromptLanguage(event.target.value as UILanguage)} value={promptLanguage}>
-                    <option value="en">English</option>
-                    <option value="ko">Korean</option>
-                    <option value="es">Spanish</option>
-                  </select>
-                </label>
-              </div>
-            ) : null}
-
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-              <p className="font-semibold text-slate-950">{labels.shortcuts}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {quickOptions.map((option) => (
-                  <button
-                    key={option.id}
-                    className={`rounded-full border px-3 py-2 text-xs font-semibold ${selectedShortcutId === option.id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700'}`}
-                    onClick={() => setSelectedShortcutId(option.id)}
-                    type="button"
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             <label className="block rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-700">
               <span className="mb-3 block font-semibold text-slate-950">{labels.sourceImage}</span>
@@ -767,16 +795,69 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
               </div>
             ) : null}
 
-            <label className="text-sm font-semibold text-slate-800">
-              Exam set title
-              <input
-                className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm"
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="Leave blank to auto-generate title from content."
-                title="Optional. If empty, AI will generate a suitable title."
-                value={title}
-              />
-            </label>
+            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+              <p className="font-semibold text-slate-950">{labels.shortcuts}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {quickOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    className={`rounded-full border px-3 py-2 text-xs font-semibold ${selectedShortcutId === option.id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700'}`}
+                    onClick={() => setSelectedShortcutId(option.id)}
+                    type="button"
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <label className="text-sm font-semibold text-slate-800">
+                {labels.sourceLanguage}
+                <select
+                  className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm"
+                  onChange={(event) => setSourceLanguage(event.target.value)}
+                  title="Language of source materials. Auto will detect from uploaded content."
+                  value={sourceLanguage}
+                >
+                  {sourceLanguageOptions.map((language) => (
+                    <option key={language} value={language}>
+                      {language}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm font-semibold text-slate-800">
+                {labels.examLanguage}
+                <select
+                  className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm"
+                  onChange={(event) => setExamLanguage(event.target.value)}
+                  title="Final language for questions and answers."
+                  value={examLanguage}
+                >
+                  {outputLanguageOptions.map((language) => (
+                    <option key={language} value={language}>
+                      {language}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm font-semibold text-slate-800">
+                {labels.gradeBand}
+                <select
+                  className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm"
+                  onChange={(event) => setGradeBand(event.target.value)}
+                  title="Difficulty level for generated questions."
+                  value={gradeBand}
+                >
+                  {gradeBandOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
 
             <label className="block text-sm font-semibold text-slate-800">
               {labels.teacherNotes}
@@ -806,14 +887,24 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
                 {blueprints.map((blueprint, index) => (
                   <div
                     key={`${blueprint.label}-${index}`}
-                    className="grid gap-3 rounded-3xl bg-white p-4 md:grid-cols-[auto_1.15fr_0.9fr_0.6fr_1.4fr_auto]"
-                    onDragOver={(event) => event.preventDefault()}
+                    className={`grid gap-3 rounded-3xl bg-white p-4 md:grid-cols-[auto_1.15fr_0.9fr_0.6fr_1.4fr_auto] ${
+                      dropIndicatorIndex === index ? 'ring-2 ring-sky-400 ring-offset-2' : ''
+                    }`}
+                    onDragOver={(event) => {
+                      event.preventDefault();
+                      if (draggingIndex !== null) {
+                        setDropIndicatorIndex(index);
+                      }
+                    }}
                     onDrop={() => handleDrop(index)}
                   >
                     <button
                       className="cursor-grab rounded-xl border border-slate-300 px-2 text-sm text-slate-500"
                       draggable
-                      onDragEnd={() => setDraggingIndex(null)}
+                      onDragEnd={() => {
+                        setDraggingIndex(null);
+                        setDropIndicatorIndex(null);
+                      }}
                       onDragStart={() => setDraggingIndex(index)}
                       title="Drag handle"
                       type="button"
@@ -861,28 +952,83 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
           {generated ? (
             <div className="mt-4 space-y-5">
               <div className="rounded-3xl bg-white p-4">
-                <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Summary</p>
-                <h3 className="mt-2 text-2xl font-black text-slate-950">{generated.title}</h3>
-                <p className="mt-2 text-sm text-slate-600">{generated.summary}</p>
-                <p className="mt-3 text-sm text-slate-500">Source recap: {generated.sourceSummary}</p>
-              </div>
-
-              <div className="rounded-3xl bg-white p-4">
                 <p className="text-sm font-bold text-slate-950">Generated exam history</p>
-                <div className="mt-3 max-h-40 space-y-2 overflow-y-auto">
+                <div className="mt-3 space-y-2">
                   {generatedHistory.length > 0 ? (
-                    generatedHistory.map((history) => (
-                      <div key={history.id} className="rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-700">
-                        <span className="font-semibold">{new Date(history.createdAt).toLocaleString()}</span> · {history.model}
-                      </div>
-                    ))
+                    generatedHistory.map((history, index) => {
+                      const isSelected = selectedHistoryLogId === history.id;
+                      const preview = parseGeneratedFromLog(history);
+                      const outputLanguage = inferOutputLanguageFromLog(history, examLanguage);
+                      const questionCount = preview?.questions.length ?? 0;
+                      const grade = preview?.gradeBand ?? '-';
+                      const editionNumber = generatedHistory.length - index;
+                      const isPublished = preview ? editionSignature(preview) === publishedSignature : false;
+                      return (
+                        <button
+                          key={history.id}
+                          className={`w-full rounded-2xl border px-3 py-2 text-left text-xs ${
+                            isSelected ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-slate-50 text-slate-700'
+                          }`}
+                          onClick={() => {
+                            setSelectedHistoryLogId(history.id);
+                            setGenerationLogId(history.id);
+                            if (preview) {
+                              setGenerated(preview);
+                            }
+                          }}
+                          type="button"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-semibold">Edition {editionNumber}</p>
+                              <p className="mt-1 text-[11px]">{new Date(history.createdAt).toLocaleString()}</p>
+                              <p className="mt-1 text-[11px]">
+                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                                  {outputLanguage}
+                                </span>
+                              </p>
+                              <p className="mt-1 text-[11px]">{grade} · {questionCount} questions</p>
+                            </div>
+                            <div className="pt-0.5">
+                              <button
+                                className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
+                                  isPublished
+                                    ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500'
+                                    : 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                                }`}
+                                disabled={isSaving || !preview || isPublished}
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  if (!preview || isPublished) {
+                                    return;
+                                  }
+                                  void publishEdition(preview, history.id);
+                                }}
+                                type="button"
+                              >
+                                {isPublished ? '현재 발행됨' : '이 에디션 발행'}
+                              </button>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })
                   ) : (
                     <p className="text-xs text-slate-500">No history yet for this exam set.</p>
                   )}
                 </div>
               </div>
 
-              <div className="max-h-[65vh] space-y-3 overflow-y-auto pr-1">
+              <div className="rounded-3xl bg-white p-4">
+                <p className="text-sm uppercase tracking-[0.25em] text-slate-500">History detail</p>
+                <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Summary</p>
+                <p className="mt-1 text-sm text-slate-600">{generated.outputSummary || generated.summary}</p>
+                <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Keywords</p>
+                <p className="mt-1 text-sm text-slate-600">{(generated.outputKeywords ?? []).join(', ') || '-'}</p>
+              </div>
+
+              <div className="space-y-3">
                 {generated.questions.map((question, index) => (
                   <article key={question.id} className="rounded-3xl border border-slate-200 bg-white p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Question {index + 1}</p>
@@ -890,11 +1036,17 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
                     {question.choices.length > 0 ? (
                       <ul className="mt-3 space-y-1 text-sm text-slate-600">
                         {question.choices.map((choice) => (
-                          <li key={choice}>• {choice}</li>
+                          <li
+                            key={choice}
+                            className={choice === question.answer ? 'font-semibold text-emerald-700' : undefined}
+                          >
+                            <span className="inline-block w-5">{choice === question.answer ? '✅' : '⚪️'}</span>
+                            {choice}
+                          </li>
                         ))}
                       </ul>
                     ) : null}
-                    <p className="mt-3 text-sm text-emerald-700">Answer: {question.answer}</p>
+                    {question.choices.length === 0 ? <p className="mt-3 text-sm text-emerald-700">Answer: {question.answer}</p> : null}
                     <p className="mt-1 text-sm text-slate-500">{question.explanation}</p>
                   </article>
                 ))}

@@ -19,9 +19,12 @@ const QuestionSchema = z.object({
 
 const GeneratedExamSetSchema = z.object({
   title: z.string().min(1),
-  summary: z.string().min(1),
+  summary: z.string().optional(),
   gradeBand: z.string().min(1),
   sourceSummary: z.string().min(1),
+  outputSummary: z.string().min(1),
+  sourceKeywords: z.array(z.string()).min(3).max(30),
+  outputKeywords: z.array(z.string()).min(3).max(30),
   recommendedPrompts: z.array(z.string()).min(3).max(5),
   questions: z.array(QuestionSchema).min(1),
 });
@@ -104,6 +107,7 @@ export async function generateExamSetFromImages(input: {
   const parsed = response.output_parsed as GeneratedExamSet;
   const normalized = {
     ...parsed,
+    summary: parsed.summary ?? parsed.outputSummary,
     questions: parsed.questions.map((question, index) => ({
       ...question,
       id: question.id || `q_${index + 1}`,

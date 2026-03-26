@@ -24,7 +24,7 @@ const payloadSchema = z.object({
         uploadedAt: z.string(),
       }),
     )
-    .max(5)
+    .max(6)
     .optional(),
   sourceNotes: z.string().nullable().optional(),
   config: z.object({
@@ -33,6 +33,7 @@ const payloadSchema = z.object({
     notes: z.string(),
     uiLanguage: z.enum(['en', 'ko', 'es']).default('en'),
     promptLanguage: z.enum(['en', 'ko', 'es']).default('en'),
+    sourceLanguage: z.string().default('auto'),
     examLanguage: z.string().min(1),
     blueprints: z.array(
       z.object({

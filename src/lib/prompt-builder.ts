@@ -13,15 +13,14 @@ export function buildExamGenerationPrompt(config: ExamBuilderConfig, notes: stri
     })
     .join('\n');
 
-  const startLine = promptStartByLanguage[config.promptLanguage] ?? promptStartByLanguage.en;
+  const startLine = promptStartByLanguage[config.uiLanguage] ?? promptStartByLanguage.en;
 
   return [
     startLine,
     `Target grade band: ${config.gradeBand}.`,
-    config.title.trim().length > 0
-      ? `Requested title: ${config.title}.`
-      : 'No title was provided. Generate a concise and suitable exam title based on source content and selected question style.',
-    `Prompt language for instruction: ${config.promptLanguage}.`,
+    config.sourceLanguage === 'auto'
+      ? 'Source language: auto-detect from uploaded materials.'
+      : `Source language: ${config.sourceLanguage}.`,
     `Output language for exam questions and answers: ${config.examLanguage}.`,
     '',
     'Question blueprint:',
@@ -40,7 +39,10 @@ export function buildExamGenerationPrompt(config: ExamBuilderConfig, notes: stri
     notes || 'No extra teacher notes were provided.',
     '',
     'Also provide:',
-    '- a one-paragraph summary of the source material',
+    '- sourceSummary: one-paragraph summary in the source language',
+    '- outputSummary: one-paragraph summary in the exam output language',
+    '- sourceKeywords: 8-15 concise keywords in the source language',
+    '- outputKeywords: 8-15 concise keywords in the exam output language',
     '- 3 short follow-up prompt suggestions the teacher can reuse for regeneration',
   ].join('\n');
 }

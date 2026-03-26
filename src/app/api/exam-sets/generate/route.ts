@@ -8,7 +8,7 @@ import { createOpenAiLog, getOwnedExamSetGenerateCount, incrementExamSetGenerate
 
 const requestSchema = z.object({
   examSetId: z.string().optional(),
-  imageDataUrls: z.array(z.string().min(1)).min(1).max(5),
+  imageDataUrls: z.array(z.string().min(1)).min(1).max(6),
   notes: z.string().default(''),
   config: z.object({
     title: z.string().default(''),
@@ -16,6 +16,7 @@ const requestSchema = z.object({
     notes: z.string().default(''),
     uiLanguage: z.enum(['en', 'ko', 'es']).default('en'),
     promptLanguage: z.enum(['en', 'ko', 'es']).default('en'),
+    sourceLanguage: z.string().default('auto'),
     examLanguage: z.string().min(1),
     blueprints: z.array(
       z.object({
