@@ -26,6 +26,7 @@ const MAX_MEGAPIXELS = 8_000_000;
 const THUMB_LONG_EDGE = 480;
 const QUALITY_STEPS = [0.86, 0.8, 0.74, 0.68];
 const LAST_GRADE_BAND_KEY = 'exam_builder_last_grade_band';
+const LAST_SHORTCUT_ID_KEY = 'exam_builder_last_shortcut_id';
 const APP_UI_LANGUAGE_KEY = 'app_ui_language';
 const DEFAULT_EXAM_SET_TITLE = 'Untitled Quiz';
 const INITIAL_POLL_DELAY_MS = 12_000;
@@ -532,6 +533,16 @@ function findPublishedEditionFromHistory(examSet: ExamSetRecord | null | undefin
   return null;
 }
 
+function findLatestGeneratedEditionFromHistory(logs: OpenAiLogRecord[]) {
+  for (const log of logs) {
+    const parsed = parseGeneratedFromLog(log);
+    if (parsed) {
+      return { logId: log.id, generated: parsed };
+    }
+  }
+  return null;
+}
+
 export function ExamBuilder({
   initialExamSet,
   initialGenerateHistory = [],
@@ -542,6 +553,7 @@ export function ExamBuilder({
   const initialConfig = initialExamSet?.config;
   const initialBlueprintValues = initialConfig?.blueprints ?? starterBlueprints;
   const initialPublishedEdition = findPublishedEditionFromHistory(initialExamSet, initialGenerateHistory);
+  const initialSelectedEdition = initialPublishedEdition ?? findLatestGeneratedEditionFromHistory(initialGenerateHistory);
   const [currentExamSetId, setCurrentExamSetId] = useState<string | null>(initialExamSet?.id ?? null);
   const [uiLanguage, setUiLanguage] = useState<UILanguage>(initialConfig?.uiLanguage ?? 'en');
   const [sourceLanguage, setSourceLanguage] = useState(initialConfig?.sourceLanguage ?? 'auto');
@@ -557,19 +569,19 @@ export function ExamBuilder({
   const [title, setTitle] = useState(initialExamSet?.title ?? '');
   const [gradeBand, setGradeBand] = useState(initialConfig?.gradeBand ?? gradeBandOptions[1]);
   const [notes, setNotes] = useState(initialExamSet?.sourceNotes ?? '');
-  const [selectedShortcutId, setSelectedShortcutId] = useState(quickOptionsByLanguage[uiLanguage][0].id);
+  const [selectedShortcutId, setSelectedShortcutId] = useState(
+    initialExamSet?.selectedShortcutId ?? quickOptionsByLanguage[uiLanguage][0].id
+  );
   const [blueprints, setBlueprints] = useState<QuestionBlueprint[]>(initialBlueprintValues);
   const [blueprintIds, setBlueprintIds] = useState<string[]>(() =>
     initialBlueprintValues.map(() => crypto.randomUUID())
   );
-  const [generationLogId, setGenerationLogId] = useState<string | null>(initialPublishedEdition?.logId ?? null);
+  const [generationLogId, setGenerationLogId] = useState<string | null>(initialSelectedEdition?.logId ?? null);
   const [generateCount, setGenerateCount] = useState(initialExamSet?.generateCount ?? 0);
   const [generatedHistory, setGeneratedHistory] = useState<OpenAiLogRecord[]>(initialGenerateHistory);
-  const [selectedHistoryLogId, setSelectedHistoryLogId] = useState<string | null>(
-    initialPublishedEdition?.logId ?? null
-  );
+  const [selectedHistoryLogId, setSelectedHistoryLogId] = useState<string | null>(initialSelectedEdition?.logId ?? null);
   const [generated, setGenerated] = useState<GeneratedExamSet | null>(
-    initialPublishedEdition?.generated ?? (initialExamSet ? generatedFromExamSet(initialExamSet) : null)
+    initialSelectedEdition?.generated ?? (initialExamSet ? generatedFromExamSet(initialExamSet) : null)
   );
   const [publishedSignature, setPublishedSignature] = useState<string>(() => {
     if (!initialExamSet || initialExamSet.status !== 'published') {
@@ -621,14 +633,34 @@ export function ExamBuilder({
   });
   const hasUnsavedChanges = lastSavedSignature.length > 0 && currentSignature !== lastSavedSignature;
   const canGenerate = currentExamSetId ? generateCount < generateLimit : true;
+  const showManualRefreshButton = !!activeGenerationJobId && !autoPollingEnabled;
+  const showGenerateButton = !showManualRefreshButton;
+  const showGeneratingState = isGenerating || (!!activeGenerationJobId && autoPollingEnabled);
 
   useEffect(() => {
     const preferredLanguage = window.localStorage.getItem(APP_UI_LANGUAGE_KEY) as UILanguage | null;
     if (preferredLanguage && ['en', 'ko', 'es'].includes(preferredLanguage)) {
       setUiLanguage(preferredLanguage);
-      setSelectedShortcutId(quickOptionsByLanguage[preferredLanguage][0].id);
+      const savedShortcutId = window.localStorage.getItem(LAST_SHORTCUT_ID_KEY);
+      if (savedShortcutId && quickOptionsByLanguage[preferredLanguage].some((option) => option.id === savedShortcutId)) {
+        setSelectedShortcutId(savedShortcutId);
+      } else if (!initialExamSet?.selectedShortcutId) {
+        setSelectedShortcutId(quickOptionsByLanguage[preferredLanguage][0].id);
+      }
     }
-  }, []);
+  }, [initialExamSet?.selectedShortcutId]);
+
+  useEffect(() => {
+    if (quickOptionsByLanguage[uiLanguage].some((option) => option.id === selectedShortcutId)) {
+      return;
+    }
+    const savedShortcutId = window.localStorage.getItem(LAST_SHORTCUT_ID_KEY);
+    if (savedShortcutId && quickOptionsByLanguage[uiLanguage].some((option) => option.id === savedShortcutId)) {
+      setSelectedShortcutId(savedShortcutId);
+      return;
+    }
+    setSelectedShortcutId(quickOptionsByLanguage[uiLanguage][0].id);
+  }, [selectedShortcutId, uiLanguage]);
 
   useEffect(() => {
     if (!initialExamSet) {
@@ -642,6 +674,10 @@ export function ExamBuilder({
   useEffect(() => {
     window.localStorage.setItem(LAST_GRADE_BAND_KEY, gradeBand);
   }, [gradeBand]);
+
+  useEffect(() => {
+    window.localStorage.setItem(LAST_SHORTCUT_ID_KEY, selectedShortcutId);
+  }, [selectedShortcutId]);
 
   useEffect(() => {
     if (!lastSavedSignature) {
@@ -961,7 +997,8 @@ export function ExamBuilder({
         generationLogId: generationLogId ?? undefined,
         title: title.trim().length > 0 ? title.trim() : getUntitledTitle(),
         summary: generatedPayload.summary,
-        promptText: selectedShortcut.prompt,
+        selectedShortcutId,
+        customPrompt: notes,
         sourceImages: uploadedImages,
         sourceNotes: notes,
         config,
@@ -1028,7 +1065,8 @@ export function ExamBuilder({
           body: JSON.stringify({
             title: title.trim().length > 0 ? title.trim() : getUntitledTitle(),
             summary: 'Generating exam set in background...',
-            promptText: selectedShortcut.prompt,
+            selectedShortcutId,
+            customPrompt: notes,
             sourceImages: uploadedImages,
             sourceNotes: notes,
             config,
@@ -1049,9 +1087,9 @@ export function ExamBuilder({
         body: JSON.stringify({
           examSetId: targetExamSetId ?? undefined,
           imageDataUrls: imageInputs,
-          notes: [selectedShortcut.prompt, notes].filter(Boolean).join('\n\n'),
+          selectedShortcutId,
+          customPrompt: notes,
           title: title.trim().length > 0 ? title.trim() : getUntitledTitle(),
-          promptText: selectedShortcut.prompt,
           sourceImages: uploadedImages,
           config,
         }),
@@ -1325,22 +1363,27 @@ export function ExamBuilder({
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <button
-                className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={isGenerating || !canGenerate || !!activeGenerationJobId}
-                onClick={handleGenerate}
-                type="button"
-              >
-                {isGenerating ? 'Generating...' : 'Generate exam set'}
-              </button>
-              {activeGenerationJobId ? (
+              {showGenerateButton ? (
+                <button
+                  className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={showGeneratingState || !canGenerate || !!activeGenerationJobId}
+                  onClick={handleGenerate}
+                  type="button"
+                >
+                  {showGeneratingState ? (
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  ) : null}
+                  {showGeneratingState ? 'Generating...' : 'Generate exam set'}
+                </button>
+              ) : null}
+              {showManualRefreshButton ? (
                 <button
                   className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={isCheckingJobStatus}
                   onClick={checkGenerationJobStatusNow}
                   type="button"
                 >
-                  {isCheckingJobStatus ? 'Checking...' : 'Check status now'}
+                  {isCheckingJobStatus ? 'Checking...' : 'Manual refresh'}
                 </button>
               ) : null}
               <span className="rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700">

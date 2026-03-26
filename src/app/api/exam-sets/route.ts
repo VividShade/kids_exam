@@ -9,7 +9,8 @@ const payloadSchema = z.object({
   generationLogId: z.string().optional(),
   title: z.string().min(1),
   summary: z.string().min(1),
-  promptText: z.string().min(1),
+  selectedShortcutId: z.string().min(1),
+  customPrompt: z.string().nullable().optional(),
   sourceImages: z
     .array(
       z.object({

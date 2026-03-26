@@ -1,10 +1,6 @@
 import type { ExamBuilderConfig } from '@/lib/types';
 
-const promptStartByLanguage = {
-  en: 'Create an exam set from the attached image materials.',
-  ko: '첨부된 이미지 자료를 바탕으로 시험 세트를 생성해줘.',
-  es: 'Crea un conjunto de examen basado en los materiales de imagen adjuntos.',
-} as const;
+const promptStartLine = 'Create an exam set from the attached image materials.';
 
 export function buildExamGenerationPrompt(config: ExamBuilderConfig, notes: string) {
   const blueprintLines = config.blueprints
@@ -13,10 +9,8 @@ export function buildExamGenerationPrompt(config: ExamBuilderConfig, notes: stri
     })
     .join('\n');
 
-  const startLine = promptStartByLanguage[config.uiLanguage] ?? promptStartByLanguage.en;
-
   return [
-    startLine,
+    promptStartLine,
     `Target grade band: ${config.gradeBand}.`,
     config.sourceLanguage === 'auto'
       ? 'Source language: auto-detect from uploaded materials.'

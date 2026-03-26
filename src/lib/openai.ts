@@ -19,7 +19,6 @@ const QuestionSchema = z.object({
 
 const GeneratedExamSetSchema = z.object({
   title: z.string().min(1),
-  summary: z.string().nullable(),
   gradeBand: z.string().min(1),
   sourceSummary: z.string().min(1),
   outputSummary: z.string().min(1),
@@ -112,15 +111,19 @@ export async function generateExamSetFromImages(input: {
       ? estimateCostUsd(env.openAiModel, inputTokens, outputTokens)
       : null;
 
-  const parsed = response.output_parsed as GeneratedExamSet;
+  const parsed = response.output_parsed as Omit<GeneratedExamSet, 'summary'>;
   const normalized = {
     ...parsed,
-    summary: parsed.summary ?? parsed.outputSummary,
+    summary: parsed.outputSummary,
     questions: parsed.questions.map((question, index) => ({
       ...question,
       id: question.id || `q_${index + 1}`,
       choices: question.choices ?? [],
     })),
+  };
+  const responseForLog = {
+    ...normalized,
+    summary: undefined,
   };
 
   return {
@@ -129,7 +132,7 @@ export async function generateExamSetFromImages(input: {
       model: env.openAiModel,
       promptText,
       responseText: response.output_text ?? null,
-      responseJson: JSON.stringify(normalized),
+      responseJson: JSON.stringify(responseForLog),
       latencyMs,
       inputTokens,
       outputTokens,

@@ -71,9 +71,9 @@ const sourceImageSchema = z.object({
 export const examGenerationJobPayloadSchema = z.object({
   examSetId: z.string().optional(),
   imageDataUrls: z.array(z.string().min(1)).min(1).max(6),
-  notes: z.string().default(''),
+  selectedShortcutId: z.string().min(1),
+  customPrompt: z.string().default(''),
   title: z.string().min(1),
-  promptText: z.string().min(1),
   sourceImages: z.array(sourceImageSchema).max(6),
   config: configSchema,
 });
@@ -88,10 +88,20 @@ export const examGenerationJobResultSchema = z.object({
 async function processClaimedExamGenerationJob(job: ExamGenerationJobRecord) {
   try {
     const payload = examGenerationJobPayloadSchema.parse(JSON.parse(job.payloadJson));
+    const defaultPromptByCategory: Record<string, string> = {
+      vocabulary_mix: 'Create a vocabulary-focused quiz based on the source material.',
+      reading_check: 'Create a reading comprehension quiz from the source material.',
+      grammar_practice: 'Create a grammar practice quiz related to the source material.',
+    };
+    const mergedNotes = [defaultPromptByCategory[payload.selectedShortcutId] ?? '', payload.customPrompt]
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .join('\n\n');
+
     const result = await generateExamSetFromImages({
       imageDataUrls: payload.imageDataUrls,
       config: payload.config,
-      notes: payload.notes,
+      notes: mergedNotes,
     });
 
     const generationLogId = await createOpenAiLog({
@@ -111,9 +121,10 @@ async function processClaimedExamGenerationJob(job: ExamGenerationJobRecord) {
       ownerId: job.userId,
       title: resolvedTitle,
       summary: result.generated.summary,
-      promptText: payload.promptText,
+      selectedShortcutId: payload.selectedShortcutId,
+      customPrompt: payload.customPrompt,
       sourceImages: payload.sourceImages,
-      sourceNotes: payload.notes,
+      sourceNotes: payload.customPrompt,
       config: payload.config,
       questions: result.generated.questions,
     });

@@ -29,6 +29,8 @@ const schemaStatements = [
     summary TEXT NOT NULL,
     status TEXT NOT NULL,
     prompt_text TEXT NOT NULL,
+    selected_shortcut_id TEXT NOT NULL DEFAULT 'vocabulary_mix',
+    custom_prompt TEXT,
     config_json TEXT NOT NULL,
     questions_json TEXT NOT NULL,
     source_image_data_url TEXT,
@@ -168,6 +170,8 @@ async function initialize() {
       await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS source_images_json TEXT');
       await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS generate_count INTEGER NOT NULL DEFAULT 0');
       await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS last_generated_at TEXT');
+      await client.unsafe("ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS selected_shortcut_id TEXT NOT NULL DEFAULT 'vocabulary_mix'");
+      await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS custom_prompt TEXT');
       await client.unsafe("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS shuffle_seed TEXT NOT NULL DEFAULT ''");
       await client.unsafe("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS exam_title_snapshot TEXT NOT NULL DEFAULT ''");
       await client.unsafe("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS questions_snapshot_json TEXT NOT NULL DEFAULT '[]'");
@@ -195,6 +199,14 @@ async function initialize() {
     const hasLastGeneratedAt = columns.some((column) => column.name === 'last_generated_at');
     if (!hasLastGeneratedAt) {
       db.exec('ALTER TABLE exam_sets ADD COLUMN last_generated_at TEXT');
+    }
+    const hasSelectedShortcutId = columns.some((column) => column.name === 'selected_shortcut_id');
+    if (!hasSelectedShortcutId) {
+      db.exec("ALTER TABLE exam_sets ADD COLUMN selected_shortcut_id TEXT NOT NULL DEFAULT 'vocabulary_mix'");
+    }
+    const hasCustomPrompt = columns.some((column) => column.name === 'custom_prompt');
+    if (!hasCustomPrompt) {
+      db.exec('ALTER TABLE exam_sets ADD COLUMN custom_prompt TEXT');
     }
     const attemptColumns = db.prepare('PRAGMA table_info(attempts)').all() as Array<{ name: string }>;
     const hasShuffleSeed = attemptColumns.some((column) => column.name === 'shuffle_seed');

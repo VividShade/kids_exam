@@ -9,9 +9,9 @@ import { createExamGenerationJob, getOwnedExamSetGenerateCount } from '@/lib/rep
 const payloadSchema = z.object({
   examSetId: z.string().optional(),
   imageDataUrls: z.array(z.string().min(1)).min(1).max(6),
-  notes: z.string().default(''),
+  selectedShortcutId: z.string().min(1),
+  customPrompt: z.string().default(''),
   title: z.string().min(1),
-  promptText: z.string().min(1),
   sourceImages: z
     .array(
       z.object({

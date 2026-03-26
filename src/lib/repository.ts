@@ -32,6 +32,8 @@ type ExamSetRow = {
   summary: string;
   status: 'draft' | 'published';
   prompt_text: string;
+  selected_shortcut_id: string | null;
+  custom_prompt: string | null;
   config_json: string;
   questions_json: string;
   source_image_data_url: string | null;
@@ -166,6 +168,8 @@ function parseExamSet(row: ExamSetRow): ExamSetRecord {
     generateCount: toNumber(row.generate_count) ?? 0,
     lastGeneratedAt: row.last_generated_at,
     promptText: row.prompt_text,
+    selectedShortcutId: row.selected_shortcut_id ?? 'vocabulary_mix',
+    customPrompt: row.custom_prompt ?? row.source_notes ?? row.prompt_text ?? null,
     config: normalizeConfig(JSON.parse(row.config_json) as ExamBuilderConfig),
     questions: JSON.parse(row.questions_json) as ExamQuestion[],
     sourceImages,
@@ -297,7 +301,8 @@ export async function saveExamSet(input: {
   ownerId: string;
   title: string;
   summary: string;
-  promptText: string;
+  selectedShortcutId: string;
+  customPrompt?: string | null;
   config: ExamBuilderConfig;
   questions: ExamQuestion[];
   sourceImages?: ExamSourceImage[];
@@ -315,17 +320,23 @@ export async function saveExamSet(input: {
       [
         input.title,
         input.summary,
-        input.promptText,
+        input.customPrompt ?? '',
         JSON.stringify(normalizeConfig(input.config)),
         JSON.stringify(input.questions),
         firstImage,
         JSON.stringify(sourceImages.map((item) => item.originalPath)),
         JSON.stringify(sourceImages),
-       input.sourceNotes ?? null,
+        input.sourceNotes ?? null,
         now,
         input.id,
         input.ownerId,
       ],
+    );
+    await dbRun(
+      `UPDATE exam_sets
+       SET selected_shortcut_id = ?, custom_prompt = ?
+       WHERE id = ? AND owner_id = ?`,
+      [input.selectedShortcutId, input.customPrompt ?? null, input.id, input.ownerId],
     );
 
     return input.id;
@@ -334,15 +345,17 @@ export async function saveExamSet(input: {
   const examSetId = createId('set');
   await dbRun(
     `INSERT INTO exam_sets (
-      id, owner_id, title, summary, status, prompt_text, config_json, questions_json,
+      id, owner_id, title, summary, status, prompt_text, selected_shortcut_id, custom_prompt, config_json, questions_json,
       source_image_data_url, source_image_data_urls_json, source_images_json, source_notes, published_at, created_at, updated_at
-     ) VALUES (?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)`,
+     ) VALUES (?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)`,
     [
       examSetId,
       input.ownerId,
       input.title,
       input.summary,
-      input.promptText,
+      input.customPrompt ?? '',
+      input.selectedShortcutId,
+      input.customPrompt ?? null,
       JSON.stringify(normalizeConfig(input.config)),
       JSON.stringify(input.questions),
       firstImage,

@@ -63,6 +63,8 @@ export type ExamSetRecord = {
   generateCount: number;
   lastGeneratedAt: string | null;
   promptText: string;
+  selectedShortcutId: string;
+  customPrompt: string | null;
   config: ExamBuilderConfig;
   questions: ExamQuestion[];
   sourceImages: ExamSourceImage[];
