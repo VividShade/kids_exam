@@ -2,6 +2,10 @@ import 'server-only';
 
 import { createId } from '@/lib/id';
 import { dbAll, dbGet, dbRun } from '@/lib/db';
+import {
+  extractOutputKeywordsFromResponseJson,
+  extractQuestionsSignatureFromResponseJson,
+} from '@/lib/generated-exam-parser';
 import type {
   AttemptRecord,
   CleanupJobRecord,
@@ -233,53 +237,6 @@ function parseOpenAiLog(row: OpenAiLogRow): OpenAiLogRecord {
     estimatedCostUsd: toNumber(row.estimated_cost_usd),
     createdAt: row.created_at,
   };
-}
-
-function extractOutputKeywordsFromResponseJson(responseJson: string | null) {
-  if (!responseJson) {
-    return null;
-  }
-  try {
-    const parsed = JSON.parse(responseJson) as unknown;
-    const extracted =
-      parsed && typeof parsed === 'object' && 'generated' in parsed
-        ? (parsed as { generated?: unknown }).generated
-        : parsed;
-    if (!extracted || typeof extracted !== 'object') {
-      return null;
-    }
-    const candidate = extracted as { outputKeywords?: unknown };
-    if (!Array.isArray(candidate.outputKeywords)) {
-      return null;
-    }
-    const values = candidate.outputKeywords.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
-    return values.length > 0 ? values : null;
-  } catch {
-    return null;
-  }
-}
-
-function extractQuestionsSignatureFromResponseJson(responseJson: string | null) {
-  if (!responseJson) {
-    return null;
-  }
-  try {
-    const parsed = JSON.parse(responseJson) as unknown;
-    const extracted =
-      parsed && typeof parsed === 'object' && 'generated' in parsed
-        ? (parsed as { generated?: unknown }).generated
-        : parsed;
-    if (!extracted || typeof extracted !== 'object') {
-      return null;
-    }
-    const candidate = extracted as { questions?: unknown };
-    if (!Array.isArray(candidate.questions)) {
-      return null;
-    }
-    return JSON.stringify(candidate.questions);
-  } catch {
-    return null;
-  }
 }
 
 function parseExamGenerationJob(row: ExamGenerationJobRow): ExamGenerationJobRecord {

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { extractGeneratedExamSetFromResponseJson } from '@/lib/generated-exam-parser';
 import type {
   ExamBuilderConfig,
   ExamSetRecord,
@@ -454,40 +455,7 @@ function createSignature(input: {
 }
 
 function parseGeneratedFromLog(log: OpenAiLogRecord): GeneratedExamSet | null {
-  if (!log.responseJson) {
-    return null;
-  }
-  try {
-    const parsed = JSON.parse(log.responseJson) as unknown;
-    const extracted =
-      parsed && typeof parsed === 'object' && 'generated' in parsed
-        ? (parsed as { generated?: unknown }).generated
-        : parsed;
-    if (!extracted || typeof extracted !== 'object') {
-      return null;
-    }
-    const candidate = extracted as Partial<GeneratedExamSet>;
-    if (
-      typeof candidate.title === 'string' &&
-      (typeof candidate.summary === 'string' || typeof candidate.outputSummary === 'string') &&
-      typeof candidate.gradeBand === 'string' &&
-      typeof candidate.sourceSummary === 'string' &&
-      Array.isArray(candidate.recommendedPrompts) &&
-      Array.isArray(candidate.questions)
-    ) {
-      const normalized = candidate as GeneratedExamSet;
-      return {
-        ...normalized,
-        summary: normalized.summary || normalized.outputSummary || '',
-        outputSummary: normalized.outputSummary || normalized.summary || '',
-        sourceKeywords: normalized.sourceKeywords ?? [],
-        outputKeywords: normalized.outputKeywords ?? [],
-      };
-    }
-  } catch {
-    return null;
-  }
-  return null;
+  return extractGeneratedExamSetFromResponseJson(log.responseJson);
 }
 
 function inferOutputLanguageFromLog(log: OpenAiLogRecord, fallbackLanguage: string) {
