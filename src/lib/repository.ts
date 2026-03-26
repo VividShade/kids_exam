@@ -6,6 +6,7 @@ import type {
   AttemptRecord,
   CleanupJobRecord,
   DashboardData,
+  ExamGenerationJobRecord,
   ExamBuilderConfig,
   ExamQuestion,
   ExamSetRecord,
@@ -87,6 +88,22 @@ type CleanupJobRow = {
   retry_count: number | string;
   run_after: string;
   last_error: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type ExamGenerationJobRow = {
+  id: string;
+  user_id: string;
+  exam_set_id: string | null;
+  status: 'queued' | 'running' | 'completed' | 'failed';
+  payload_json: string;
+  result_json: string | null;
+  error_message: string | null;
+  retry_count: number | string;
+  run_after: string;
+  started_at: string | null;
+  completed_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -209,6 +226,24 @@ function parseOpenAiLog(row: OpenAiLogRow): OpenAiLogRecord {
     totalTokens: toNumber(row.total_tokens),
     estimatedCostUsd: toNumber(row.estimated_cost_usd),
     createdAt: row.created_at,
+  };
+}
+
+function parseExamGenerationJob(row: ExamGenerationJobRow): ExamGenerationJobRecord {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    examSetId: row.exam_set_id,
+    status: row.status,
+    payloadJson: row.payload_json,
+    resultJson: row.result_json,
+    errorMessage: row.error_message,
+    retryCount: toNumber(row.retry_count) ?? 0,
+    runAfter: row.run_after,
+    startedAt: row.started_at,
+    completedAt: row.completed_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -529,6 +564,105 @@ export async function listOpenAiLogsByExamSet(examSetId: string, userId: string,
     [examSetId, userId, limit],
   );
   return rows.map(parseOpenAiLog);
+}
+
+export async function createExamGenerationJob(input: {
+  userId: string;
+  examSetId?: string | null;
+  payloadJson: string;
+}) {
+  const id = createId('genjob');
+  const now = new Date().toISOString();
+  await dbRun(
+    `INSERT INTO exam_generation_jobs (
+      id, user_id, exam_set_id, status, payload_json, result_json, error_message,
+      retry_count, run_after, started_at, completed_at, created_at, updated_at
+     ) VALUES (?, ?, ?, 'queued', ?, NULL, NULL, 0, ?, NULL, NULL, ?, ?)`,
+    [id, input.userId, input.examSetId ?? null, input.payloadJson, now, now, now],
+  );
+  return id;
+}
+
+export async function getExamGenerationJobById(jobId: string, userId: string) {
+  const row = await dbGet<ExamGenerationJobRow>('SELECT * FROM exam_generation_jobs WHERE id = ? AND user_id = ?', [jobId, userId]);
+  return row ? parseExamGenerationJob(row) : null;
+}
+
+export async function getActiveExamGenerationJobByExamSet(examSetId: string, userId: string) {
+  const row = await dbGet<ExamGenerationJobRow>(
+    `SELECT * FROM exam_generation_jobs
+     WHERE exam_set_id = ? AND user_id = ? AND status IN ('queued', 'running')
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [examSetId, userId],
+  );
+  return row ? parseExamGenerationJob(row) : null;
+}
+
+export async function claimExamGenerationJobById(jobId: string) {
+  const now = new Date().toISOString();
+  const row = await dbGet<ExamGenerationJobRow>(
+    `SELECT * FROM exam_generation_jobs
+     WHERE id = ? AND status = 'queued' AND run_after <= ?`,
+    [jobId, now],
+  );
+  if (!row) {
+    return null;
+  }
+  await dbRun(
+    `UPDATE exam_generation_jobs
+     SET status = 'running', started_at = ?, updated_at = ?
+     WHERE id = ? AND status = 'queued'`,
+    [now, now, jobId],
+  );
+  const claimed = await dbGet<ExamGenerationJobRow>('SELECT * FROM exam_generation_jobs WHERE id = ? AND status = ?', [jobId, 'running']);
+  return claimed ? parseExamGenerationJob(claimed) : null;
+}
+
+export async function claimExamGenerationJobs(limit = 10) {
+  const now = new Date().toISOString();
+  const rows = await dbAll<ExamGenerationJobRow>(
+    `SELECT * FROM exam_generation_jobs
+     WHERE status = 'queued' AND run_after <= ?
+     ORDER BY created_at ASC
+     LIMIT ?`,
+    [now, limit],
+  );
+  const jobs = rows.map(parseExamGenerationJob);
+  const claimed: ExamGenerationJobRecord[] = [];
+  for (const job of jobs) {
+    await dbRun(
+      `UPDATE exam_generation_jobs
+       SET status = 'running', started_at = ?, updated_at = ?
+       WHERE id = ? AND status = 'queued'`,
+      [now, now, job.id],
+    );
+    const row = await dbGet<ExamGenerationJobRow>('SELECT * FROM exam_generation_jobs WHERE id = ? AND status = ?', [job.id, 'running']);
+    if (row) {
+      claimed.push(parseExamGenerationJob(row));
+    }
+  }
+  return claimed;
+}
+
+export async function markExamGenerationJobCompleted(jobId: string, resultJson: string) {
+  const now = new Date().toISOString();
+  await dbRun(
+    `UPDATE exam_generation_jobs
+     SET status = 'completed', result_json = ?, error_message = NULL, completed_at = ?, updated_at = ?
+     WHERE id = ?`,
+    [resultJson, now, now, jobId],
+  );
+}
+
+export async function markExamGenerationJobFailed(jobId: string, retryCount: number, errorMessage: string) {
+  const now = new Date().toISOString();
+  await dbRun(
+    `UPDATE exam_generation_jobs
+     SET status = 'failed', retry_count = ?, error_message = ?, completed_at = ?, updated_at = ?
+     WHERE id = ?`,
+    [retryCount, errorMessage.slice(0, 600), now, now, jobId],
+  );
 }
 
 export async function createCleanupJobForStoragePaths(paths: string[]) {

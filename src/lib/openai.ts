@@ -19,7 +19,7 @@ const QuestionSchema = z.object({
 
 const GeneratedExamSetSchema = z.object({
   title: z.string().min(1),
-  summary: z.string().optional(),
+  summary: z.string().nullable(),
   gradeBand: z.string().min(1),
   sourceSummary: z.string().min(1),
   outputSummary: z.string().min(1),

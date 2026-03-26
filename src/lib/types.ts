@@ -123,3 +123,19 @@ export type CleanupJobRecord = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type ExamGenerationJobRecord = {
+  id: string;
+  userId: string;
+  examSetId: string | null;
+  status: 'queued' | 'running' | 'completed' | 'failed';
+  payloadJson: string;
+  resultJson: string | null;
+  errorMessage: string | null;
+  retryCount: number;
+  runAfter: string;
+  createdAt: string;
+  updatedAt: string;
+  startedAt: string | null;
+  completedAt: string | null;
+};

@@ -1,13 +1,22 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
-import { DndContext, PointerSensor, closestCenter, type DragEndEvent, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import type { ExamBuilderConfig, ExamSetRecord, ExamSourceImage, GeneratedExamSet, OpenAiLogRecord, QuestionBlueprint, QuestionKind, UILanguage } from '@/lib/types';
+import type {
+  ExamBuilderConfig,
+  ExamSetRecord,
+  ExamSourceImage,
+  GeneratedExamSet,
+  OpenAiLogRecord,
+  QuestionBlueprint,
+  QuestionKind,
+  UILanguage,
+} from '@/lib/types';
 
 const MAX_IMAGE_COUNT = 6;
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
@@ -18,6 +27,10 @@ const THUMB_LONG_EDGE = 480;
 const QUALITY_STEPS = [0.86, 0.8, 0.74, 0.68];
 const LAST_GRADE_BAND_KEY = 'exam_builder_last_grade_band';
 const APP_UI_LANGUAGE_KEY = 'app_ui_language';
+const INITIAL_POLL_DELAY_MS = 12_000;
+const QUEUED_POLL_DELAY_MS = 10_000;
+const RUNNING_POLL_DELAY_MS = 5_000;
+const MAX_AUTO_POLL_DURATION_MS = 3 * 60 * 1000;
 
 type BuilderImage = {
   id: string;
@@ -45,9 +58,17 @@ const gradeBandOptions = [
 
 const quickOptionsByLanguage: Record<UILanguage, Array<{ id: string; label: string; prompt: string }>> = {
   en: [
-    { id: 'vocabulary_mix', label: 'Vocabulary', prompt: 'Create a vocabulary-focused quiz based on the source material.' },
+    {
+      id: 'vocabulary_mix',
+      label: 'Vocabulary',
+      prompt: 'Create a vocabulary-focused quiz based on the source material.',
+    },
     { id: 'reading_check', label: 'Reading', prompt: 'Create a reading comprehension quiz from the source material.' },
-    { id: 'grammar_practice', label: 'Grammar', prompt: 'Create a grammar practice quiz related to the source material.' },
+    {
+      id: 'grammar_practice',
+      label: 'Grammar',
+      prompt: 'Create a grammar practice quiz related to the source material.',
+    },
   ],
   ko: [
     { id: 'vocabulary_mix', label: '어휘', prompt: 'Create a vocabulary-focused quiz based on the source material.' },
@@ -55,16 +76,34 @@ const quickOptionsByLanguage: Record<UILanguage, Array<{ id: string; label: stri
     { id: 'grammar_practice', label: '문법', prompt: 'Create a grammar practice quiz related to the source material.' },
   ],
   es: [
-    { id: 'vocabulary_mix', label: 'Vocabulario', prompt: 'Create a vocabulary-focused quiz based on the source material.' },
+    {
+      id: 'vocabulary_mix',
+      label: 'Vocabulario',
+      prompt: 'Create a vocabulary-focused quiz based on the source material.',
+    },
     { id: 'reading_check', label: 'Lectura', prompt: 'Create a reading comprehension quiz from the source material.' },
-    { id: 'grammar_practice', label: 'Gramática', prompt: 'Create a grammar practice quiz related to the source material.' },
+    {
+      id: 'grammar_practice',
+      label: 'Gramática',
+      prompt: 'Create a grammar practice quiz related to the source material.',
+    },
   ],
 };
 
 const blueprintPresetsByCategory: Record<string, QuestionBlueprint[]> = {
   vocabulary_mix: [
-    { label: 'Word -> Meaning (MCQ)', format: 'multiple_choice', count: 10, focus: 'Choose the best meaning for each word.' },
-    { label: 'Meaning -> Word (MCQ)', format: 'multiple_choice', count: 10, focus: 'Choose the correct word from the meaning clue.' },
+    {
+      label: 'Word -> Meaning (MCQ)',
+      format: 'multiple_choice',
+      count: 10,
+      focus: 'Choose the best meaning for each word.',
+    },
+    {
+      label: 'Meaning -> Word (MCQ)',
+      format: 'multiple_choice',
+      count: 10,
+      focus: 'Choose the correct word from the meaning clue.',
+    },
     { label: 'Context Fill-in (Short)', format: 'short_answer', count: 5, focus: 'Write the missing word in context.' },
   ],
   reading_check: [
@@ -73,15 +112,30 @@ const blueprintPresetsByCategory: Record<string, QuestionBlueprint[]> = {
     { label: 'Inference (MCQ)', format: 'multiple_choice', count: 6, focus: 'Choose the best inference from context.' },
   ],
   grammar_practice: [
-    { label: 'Grammar Choice (MCQ)', format: 'multiple_choice', count: 10, focus: 'Choose grammatically correct options.' },
+    {
+      label: 'Grammar Choice (MCQ)',
+      format: 'multiple_choice',
+      count: 10,
+      focus: 'Choose grammatically correct options.',
+    },
     { label: 'Error Spotting (MCQ)', format: 'multiple_choice', count: 6, focus: 'Find and fix grammar mistakes.' },
-    { label: 'Sentence Rewrite (Short)', format: 'short_answer', count: 4, focus: 'Rewrite to satisfy grammar constraints.' },
+    {
+      label: 'Sentence Rewrite (Short)',
+      format: 'short_answer',
+      count: 4,
+      focus: 'Rewrite to satisfy grammar constraints.',
+    },
   ],
 };
 
 const starterBlueprints: QuestionBlueprint[] = [
   { label: 'Meaning match', format: 'multiple_choice', count: 10, focus: 'Match a word with the correct meaning.' },
-  { label: 'Sentence clue', format: 'multiple_choice', count: 10, focus: 'Choose the best word for a blank in a sentence.' },
+  {
+    label: 'Sentence clue',
+    format: 'multiple_choice',
+    count: 10,
+    focus: 'Choose the best word for a blank in a sentence.',
+  },
   { label: 'Short answer recall', format: 'short_answer', count: 5, focus: 'Write the missing word directly.' },
 ];
 
@@ -92,11 +146,26 @@ type BuilderProps = {
   initialExamSet?: ExamSetRecord | null;
   initialGenerateHistory?: OpenAiLogRecord[];
   generateLimit?: number;
+  initialGenerationJobId?: string | null;
 };
 
-type GeneratedPayload = GeneratedExamSet & {
-  generationLogId: string;
+type EnqueueGenerationJobPayload = {
+  jobId?: string;
+  status?: 'queued';
   error?: string;
+};
+
+type GenerationJobResult = {
+  examSetId: string;
+  generationLogId: string;
+  generated: GeneratedExamSet;
+};
+
+type GenerationJobStatusPayload = {
+  id: string;
+  status: 'queued' | 'running' | 'completed' | 'failed';
+  errorMessage?: string | null;
+  result?: GenerationJobResult | null;
 };
 
 type SortableBlueprintRowProps = {
@@ -186,15 +255,44 @@ function SortableBlueprintRow({ id, blueprint, index, onUpdate, onRemove }: Sort
       >
         ::
       </button>
-      <input className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" onChange={(event) => onUpdate(index, { label: event.target.value })} placeholder="Section title" title="Section title" value={blueprint.label} />
-      <select className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" onChange={(event) => onUpdate(index, { format: event.target.value as QuestionKind })} title="Question type" value={blueprint.format}>
+      <input
+        className="rounded-2xl border border-slate-300 px-3 py-2 text-sm"
+        onChange={(event) => onUpdate(index, { label: event.target.value })}
+        placeholder="Section title"
+        title="Section title"
+        value={blueprint.label}
+      />
+      <select
+        className="rounded-2xl border border-slate-300 px-3 py-2 text-sm"
+        onChange={(event) => onUpdate(index, { format: event.target.value as QuestionKind })}
+        title="Question type"
+        value={blueprint.format}
+      >
         <option value="multiple_choice">Multiple choice</option>
         <option value="true_false">True / False</option>
         <option value="short_answer">Short answer</option>
       </select>
-      <input className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" min={1} onChange={(event) => onUpdate(index, { count: Number(event.target.value) || 1 })} placeholder="Count" title="Question count" type="number" value={blueprint.count} />
-      <input className="rounded-2xl border border-slate-300 px-3 py-2 text-sm" onChange={(event) => onUpdate(index, { focus: event.target.value })} placeholder="Focus / pattern" title="Question intent or pattern" value={blueprint.focus} />
-      <button className="rounded-2xl border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700" onClick={() => onRemove(index)} type="button">
+      <input
+        className="rounded-2xl border border-slate-300 px-3 py-2 text-sm"
+        min={1}
+        onChange={(event) => onUpdate(index, { count: Number(event.target.value) || 1 })}
+        placeholder="Count"
+        title="Question count"
+        type="number"
+        value={blueprint.count}
+      />
+      <input
+        className="rounded-2xl border border-slate-300 px-3 py-2 text-sm"
+        onChange={(event) => onUpdate(index, { focus: event.target.value })}
+        placeholder="Focus / pattern"
+        title="Question intent or pattern"
+        value={blueprint.focus}
+      />
+      <button
+        className="rounded-2xl border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700"
+        onClick={() => onRemove(index)}
+        type="button"
+      >
         Delete
       </button>
     </div>
@@ -237,13 +335,17 @@ function loadImage(file: File) {
 
 function canvasToBlob(canvas: HTMLCanvasElement, quality: number) {
   return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error('Failed to encode image.'));
-        return;
-      }
-      resolve(blob);
-    }, 'image/jpeg', quality);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error('Failed to encode image.'));
+          return;
+        }
+        resolve(blob);
+      },
+      'image/jpeg',
+      quality
+    );
   });
 }
 
@@ -306,7 +408,12 @@ async function compressImage(file: File) {
     throw new Error('Image is too large after compression. Try a smaller image.');
   }
 
-  const thumbScaled = getScaledDimensions(currentWidth, currentHeight, THUMB_LONG_EDGE, THUMB_LONG_EDGE * THUMB_LONG_EDGE);
+  const thumbScaled = getScaledDimensions(
+    currentWidth,
+    currentHeight,
+    THUMB_LONG_EDGE,
+    THUMB_LONG_EDGE * THUMB_LONG_EDGE
+  );
   const thumbCanvas = drawResized(image, thumbScaled.width, thumbScaled.height);
   const thumbBlob = await canvasToBlob(thumbCanvas, 0.72);
   const originalDataUrl = await blobToDataUrl(currentBlob);
@@ -423,7 +530,12 @@ function findPublishedEditionFromHistory(examSet: ExamSetRecord | null | undefin
   return null;
 }
 
-export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], generateLimit = 5 }: BuilderProps) {
+export function ExamBuilder({
+  initialExamSet,
+  initialGenerateHistory = [],
+  generateLimit = 5,
+  initialGenerationJobId = null,
+}: BuilderProps) {
   const router = useRouter();
   const initialConfig = initialExamSet?.config;
   const initialBlueprintValues = initialConfig?.blueprints ?? starterBlueprints;
@@ -438,20 +550,24 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
       originalInput: image.originalSignedUrl ?? '',
       thumbnailPreview: image.thumbnailSignedUrl ?? image.originalSignedUrl ?? '',
       sourceImage: image,
-    })),
+    }))
   );
   const [title, setTitle] = useState(initialExamSet?.title ?? '');
   const [gradeBand, setGradeBand] = useState(initialConfig?.gradeBand ?? gradeBandOptions[1]);
   const [notes, setNotes] = useState(initialExamSet?.sourceNotes ?? '');
   const [selectedShortcutId, setSelectedShortcutId] = useState(quickOptionsByLanguage[uiLanguage][0].id);
   const [blueprints, setBlueprints] = useState<QuestionBlueprint[]>(initialBlueprintValues);
-  const [blueprintIds, setBlueprintIds] = useState<string[]>(() => initialBlueprintValues.map(() => crypto.randomUUID()));
+  const [blueprintIds, setBlueprintIds] = useState<string[]>(() =>
+    initialBlueprintValues.map(() => crypto.randomUUID())
+  );
   const [generationLogId, setGenerationLogId] = useState<string | null>(initialPublishedEdition?.logId ?? null);
   const [generateCount, setGenerateCount] = useState(initialExamSet?.generateCount ?? 0);
   const [generatedHistory, setGeneratedHistory] = useState<OpenAiLogRecord[]>(initialGenerateHistory);
-  const [selectedHistoryLogId, setSelectedHistoryLogId] = useState<string | null>(initialPublishedEdition?.logId ?? null);
+  const [selectedHistoryLogId, setSelectedHistoryLogId] = useState<string | null>(
+    initialPublishedEdition?.logId ?? null
+  );
   const [generated, setGenerated] = useState<GeneratedExamSet | null>(
-    initialPublishedEdition?.generated ?? (initialExamSet ? generatedFromExamSet(initialExamSet) : null),
+    initialPublishedEdition?.generated ?? (initialExamSet ? generatedFromExamSet(initialExamSet) : null)
   );
   const [publishedSignature, setPublishedSignature] = useState<string>(() => {
     if (!initialExamSet || initialExamSet.status !== 'published') {
@@ -462,7 +578,11 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
   const [statusMessage, setStatusMessage] = useState('Upload source images and generate your exam set.');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeGenerationJobId, setActiveGenerationJobId] = useState<string | null>(initialGenerationJobId);
+  const [autoPollingEnabled, setAutoPollingEnabled] = useState(true);
+  const [isCheckingJobStatus, setIsCheckingJobStatus] = useState(false);
   const [lastSavedSignature, setLastSavedSignature] = useState('');
+  const autoPollingStartedAtRef = useRef<number | null>(initialGenerationJobId ? Date.now() : null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   const quickOptions = quickOptionsByLanguage[uiLanguage];
@@ -480,7 +600,7 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
       examLanguage,
       blueprints,
     }),
-    [blueprints, examLanguage, gradeBand, notes, sourceLanguage, title, uiLanguage],
+    [blueprints, examLanguage, gradeBand, notes, sourceLanguage, title, uiLanguage]
   );
 
   const totalQuestions = blueprints.reduce((sum, blueprint) => sum + blueprint.count, 0);
@@ -539,6 +659,178 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
     return () => window.removeEventListener('beforeunload', handler);
   }, [hasUnsavedChanges]);
 
+  function applyGenerationJobStatus(payload: GenerationJobStatusPayload) {
+    if (payload.status === 'completed' && payload.result) {
+      const result = payload.result;
+      const nextGenerated = result.generated;
+      setGenerated(nextGenerated);
+      setCurrentExamSetId(result.examSetId);
+      setGenerationLogId(result.generationLogId);
+      setSelectedHistoryLogId(result.generationLogId);
+      setGeneratedHistory((current) => {
+        const exists = current.some((item) => item.id === result.generationLogId);
+        if (exists) {
+          return current;
+        }
+        return [
+          {
+            id: result.generationLogId,
+            userId: '',
+            examSetId: result.examSetId,
+            model: 'openai',
+            promptText: `Output language for exam questions and answers: ${examLanguage}.`,
+            responseText: null,
+            responseJson: JSON.stringify(nextGenerated),
+            latencyMs: null,
+            inputTokens: null,
+            outputTokens: null,
+            totalTokens: null,
+            estimatedCostUsd: null,
+            createdAt: new Date().toISOString(),
+          },
+          ...current,
+        ];
+      });
+      setGenerateCount((value) => value + 1);
+      setLastSavedSignature(
+        createSignature({
+          title: nextGenerated.title,
+          gradeBand,
+          notes,
+          uiLanguage,
+          promptLanguage: uiLanguage,
+          sourceLanguage,
+          examLanguage,
+          selectedShortcutId,
+          imageIds: images.map((image) => image.id),
+          blueprints,
+          generatedQuestionCount: nextGenerated.questions.length,
+        })
+      );
+      setStatusMessage('Generated and auto-saved draft.');
+      setIsGenerating(false);
+      setAutoPollingEnabled(true);
+      setActiveGenerationJobId(null);
+      autoPollingStartedAtRef.current = null;
+      return;
+    }
+
+    if (payload.status === 'failed') {
+      setStatusMessage(payload.errorMessage || 'Generation job failed.');
+      setIsGenerating(false);
+      setAutoPollingEnabled(true);
+      setActiveGenerationJobId(null);
+      autoPollingStartedAtRef.current = null;
+      return;
+    }
+
+    setIsGenerating(true);
+    setStatusMessage(
+      payload.status === 'running'
+        ? 'Generating exam questions in background...'
+        : 'Generation queued. Waiting for worker...'
+    );
+  }
+
+  async function checkGenerationJobStatusNow() {
+    if (!activeGenerationJobId) {
+      return;
+    }
+    setIsCheckingJobStatus(true);
+    try {
+      const response = await fetch(`/api/exam-generation-jobs/${activeGenerationJobId}`, {
+        method: 'GET',
+        cache: 'no-store',
+      });
+      const payload = (await response.json()) as GenerationJobStatusPayload & { error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error ?? 'Failed to read generation job status.');
+      }
+      applyGenerationJobStatus(payload);
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Failed to poll generation job.');
+    } finally {
+      setIsCheckingJobStatus(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!activeGenerationJobId || !autoPollingEnabled) {
+      return;
+    }
+
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const schedule = (delayMs: number) => {
+      timer = setTimeout(() => {
+        void poll();
+      }, delayMs);
+    };
+
+    const poll = async () => {
+      try {
+        const startedAt = autoPollingStartedAtRef.current ?? Date.now();
+        autoPollingStartedAtRef.current = startedAt;
+        const elapsed = Date.now() - startedAt;
+        if (elapsed >= MAX_AUTO_POLL_DURATION_MS) {
+          setAutoPollingEnabled(false);
+          setIsGenerating(false);
+          setStatusMessage(
+            'Generation is still in progress. Auto status checks paused after 3 minutes. Click "Check status now".'
+          );
+          return;
+        }
+
+        const response = await fetch(`/api/exam-generation-jobs/${activeGenerationJobId}`, {
+          method: 'GET',
+          cache: 'no-store',
+        });
+        const payload = (await response.json()) as GenerationJobStatusPayload & { error?: string };
+        if (!response.ok) {
+          throw new Error(payload.error ?? 'Failed to read generation job status.');
+        }
+        if (stopped) {
+          return;
+        }
+
+        applyGenerationJobStatus(payload);
+        if (payload.status === 'completed' || payload.status === 'failed') {
+          return;
+        }
+        schedule(payload.status === 'running' ? RUNNING_POLL_DELAY_MS : QUEUED_POLL_DELAY_MS);
+      } catch (error) {
+        if (!stopped) {
+          setStatusMessage(error instanceof Error ? error.message : 'Failed to poll generation job.');
+          setIsGenerating(false);
+          setAutoPollingEnabled(true);
+          setActiveGenerationJobId(null);
+          autoPollingStartedAtRef.current = null;
+        }
+      }
+    };
+
+    schedule(INITIAL_POLL_DELAY_MS);
+
+    return () => {
+      stopped = true;
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [
+    activeGenerationJobId,
+    autoPollingEnabled,
+    blueprints,
+    examLanguage,
+    gradeBand,
+    images,
+    notes,
+    selectedShortcutId,
+    sourceLanguage,
+    uiLanguage,
+  ]);
+
   function updateBlueprint(index: number, patch: Partial<QuestionBlueprint>) {
     setBlueprints((current) => current.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)));
   }
@@ -546,7 +838,12 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
   function addBlueprint() {
     setBlueprints((current) => [
       ...current,
-      { label: `Section ${current.length + 1}`, format: 'multiple_choice', count: 5, focus: 'Check understanding of the main ideas.' },
+      {
+        label: `Section ${current.length + 1}`,
+        format: 'multiple_choice',
+        count: 5,
+        focus: 'Check understanding of the main ideas.',
+      },
     ]);
     setBlueprintIds((current) => [...current, crypto.randomUUID()]);
   }
@@ -608,14 +905,24 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
         thumbnailPreview: item.thumbnailPreview,
         uploadPayload: item.uploadPayload,
       }));
-      const totalBytes = [...images, ...nextImages].reduce((sum, item) => sum + (item.uploadPayload?.sizeBytes ?? item.sourceImage?.sizeBytes ?? 0), 0);
+      const totalBytes = [...images, ...nextImages].reduce(
+        (sum, item) => sum + (item.uploadPayload?.sizeBytes ?? item.sourceImage?.sizeBytes ?? 0),
+        0
+      );
       if (totalBytes > MAX_TOTAL_BYTES_HARD) {
-        setStatusMessage(`Total payload is too large. Keep total under ${Math.round(MAX_TOTAL_BYTES_HARD / 1024 / 1024)}MB.`);
+        setStatusMessage(
+          `Total payload is too large. Keep total under ${Math.round(MAX_TOTAL_BYTES_HARD / 1024 / 1024)}MB.`
+        );
         input.value = '';
         return;
       }
       setImages((current) => [...current, ...nextImages]);
-      setStatusMessage(`Loaded ${nextImages.length} image(s). ${Math.min(images.length + nextImages.length, MAX_IMAGE_COUNT)}/${MAX_IMAGE_COUNT} ready.`);
+      setStatusMessage(
+        `Loaded ${nextImages.length} image(s). ${Math.min(
+          images.length + nextImages.length,
+          MAX_IMAGE_COUNT
+        )}/${MAX_IMAGE_COUNT} ready.`
+      );
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Failed to process images.');
     }
@@ -627,7 +934,9 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
   }
 
   async function ensureUploadedImages() {
-    const existingImages = images.filter((item) => item.sourceImage).map((item) => item.sourceImage!) as ExamSourceImage[];
+    const existingImages = images
+      .filter((item) => item.sourceImage)
+      .map((item) => item.sourceImage!) as ExamSourceImage[];
     const newUploads = images.filter((item) => item.uploadPayload).map((item) => item.uploadPayload!);
     if (newUploads.length === 0) {
       return existingImages;
@@ -670,19 +979,21 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
       setGenerateCount(1);
     }
     setCurrentExamSetId(payload.examSetId);
-    setLastSavedSignature(createSignature({
-      title,
-      gradeBand,
-      notes,
-      uiLanguage,
-      promptLanguage: uiLanguage,
-      sourceLanguage,
-      examLanguage,
-      selectedShortcutId,
-      imageIds: images.map((image) => image.id),
-      blueprints,
-      generatedQuestionCount: generatedPayload.questions.length,
-    }));
+    setLastSavedSignature(
+      createSignature({
+        title,
+        gradeBand,
+        notes,
+        uiLanguage,
+        promptLanguage: uiLanguage,
+        sourceLanguage,
+        examLanguage,
+        selectedShortcutId,
+        imageIds: images.map((image) => image.id),
+        blueprints,
+        generatedQuestionCount: generatedPayload.questions.length,
+      })
+    );
     if (!options?.auto) {
       router.push('/dashboard');
       router.refresh();
@@ -691,6 +1002,9 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
   }
 
   async function handleGenerate() {
+    if (isGenerating || activeGenerationJobId) {
+      return;
+    }
     if (!canGenerate) {
       setStatusMessage(`Generation limit reached (${generateLimit}/${generateLimit}).`);
       return;
@@ -706,50 +1020,58 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
     }
 
     setIsGenerating(true);
-    setStatusMessage('Generating exam questions from uploaded images...');
+    setStatusMessage('Uploading images and queueing generation job...');
     try {
-      const response = await fetch('/api/exam-sets/generate', {
+      const uploadedImages = await ensureUploadedImages();
+      let targetExamSetId = currentExamSetId;
+      if (!targetExamSetId) {
+        const draftResponse = await fetch('/api/exam-sets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: title.trim().length > 0 ? title.trim() : getUntitledTitle(),
+            summary: 'Generating exam set in background...',
+            promptText: selectedShortcut.prompt,
+            sourceImages: uploadedImages,
+            sourceNotes: notes,
+            config,
+            questions: [],
+          }),
+        });
+        const draftPayload = (await draftResponse.json()) as { examSetId?: string; error?: string };
+        if (!draftResponse.ok || !draftPayload.examSetId) {
+          throw new Error(draftPayload.error ?? 'Failed to create draft slot.');
+        }
+        targetExamSetId = draftPayload.examSetId;
+        setCurrentExamSetId(targetExamSetId);
+      }
+
+      const response = await fetch('/api/exam-generation-jobs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          examSetId: currentExamSetId ?? undefined,
+          examSetId: targetExamSetId ?? undefined,
           imageDataUrls: imageInputs,
           notes: [selectedShortcut.prompt, notes].filter(Boolean).join('\n\n'),
+          title: title.trim().length > 0 ? title.trim() : getUntitledTitle(),
+          promptText: selectedShortcut.prompt,
+          sourceImages: uploadedImages,
           config,
         }),
       });
-      const payload = (await response.json()) as GeneratedPayload;
+      const payload = (await response.json()) as EnqueueGenerationJobPayload;
       if (!response.ok) {
         throw new Error(payload.error ?? 'Generation failed.');
       }
-
-      setGenerated(payload);
-      setGenerationLogId(payload.generationLogId);
-      setSelectedHistoryLogId(payload.generationLogId);
-      setGeneratedHistory((current) => [
-        {
-          id: payload.generationLogId,
-          userId: '',
-          examSetId: currentExamSetId,
-          model: 'openai',
-          promptText: `Output language for exam questions and answers: ${examLanguage}.`,
-          responseText: null,
-          responseJson: JSON.stringify(payload),
-          latencyMs: null,
-          inputTokens: null,
-          outputTokens: null,
-          totalTokens: null,
-          estimatedCostUsd: null,
-          createdAt: new Date().toISOString(),
-        },
-        ...current,
-      ]);
-      setGenerateCount((value) => value + (currentExamSetId ? 1 : 0));
-      await saveDraft(payload, { auto: true });
-      setStatusMessage('Generated and auto-saved draft.');
+      if (!payload.jobId) {
+        throw new Error('Generation job was not created.');
+      }
+      autoPollingStartedAtRef.current = Date.now();
+      setAutoPollingEnabled(true);
+      setActiveGenerationJobId(payload.jobId);
+      setStatusMessage('Generation queued. You can leave this page and come back later.');
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Generation failed.');
-    } finally {
       setIsGenerating(false);
     }
   }
@@ -815,7 +1137,11 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Exam builder</p>
           <h1 className="text-3xl font-black text-slate-950">Chat-style exam generation</h1>
         </div>
-        <Link className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700" href="/dashboard" onClick={handleBackToDashboard}>
+        <Link
+          className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
+          href="/dashboard"
+          onClick={handleBackToDashboard}
+        >
           Back to dashboard
         </Link>
       </div>
@@ -824,7 +1150,9 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-slate-950">Builder conversation</h2>
-            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">{totalQuestions} questions planned</span>
+            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+              {totalQuestions} questions planned
+            </span>
           </div>
           <div className="space-y-4">
             <div className="rounded-3xl bg-slate-950 p-4 text-sm text-white">
@@ -845,15 +1173,29 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
 
             <label className="block rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-700">
               <span className="mb-3 block font-semibold text-slate-950">{labels.sourceImage}</span>
-              <input accept="image/*" className="block w-full text-sm" multiple onChange={handleFileChange} type="file" />
+              <input
+                accept="image/*"
+                className="block w-full text-sm"
+                multiple
+                onChange={handleFileChange}
+                type="file"
+              />
             </label>
 
             {images.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                 {images.map((image, index) => (
                   <div key={image.id} className="relative overflow-hidden rounded-2xl border border-slate-200">
-                    <img alt={`Uploaded source ${index + 1}`} className="h-32 w-full object-cover" src={image.thumbnailPreview} />
-                    <button className="absolute right-2 top-2 rounded-full bg-slate-950 px-2 py-1 text-xs font-semibold text-white" onClick={() => removeImage(index)} type="button">
+                    <img
+                      alt={`Uploaded source ${index + 1}`}
+                      className="h-32 w-full object-cover"
+                      src={image.thumbnailPreview}
+                    />
+                    <button
+                      className="absolute right-2 top-2 rounded-full bg-slate-950 px-2 py-1 text-xs font-semibold text-white"
+                      onClick={() => removeImage(index)}
+                      type="button"
+                    >
                       Remove
                     </button>
                   </div>
@@ -867,7 +1209,11 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
                 {quickOptions.map((option) => (
                   <button
                     key={option.id}
-                    className={`rounded-full border px-3 py-2 text-xs font-semibold ${selectedShortcutId === option.id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700'}`}
+                    className={`rounded-full border px-3 py-2 text-xs font-semibold ${
+                      selectedShortcutId === option.id
+                        ? 'border-slate-900 bg-slate-900 text-white'
+                        : 'border-slate-300 bg-white text-slate-700'
+                    }`}
                     onClick={() => setSelectedShortcutId(option.id)}
                     type="button"
                   >
@@ -940,10 +1286,18 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-950">{labels.questionBlueprint}</h3>
                 <div className="flex gap-2">
-                  <button className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700" onClick={addPresetBlueprints} type="button">
+                  <button
+                    className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700"
+                    onClick={addPresetBlueprints}
+                    type="button"
+                  >
                     {labels.addPreset}
                   </button>
-                  <button className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700" onClick={addBlueprint} type="button">
+                  <button
+                    className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700"
+                    onClick={addBlueprint}
+                    type="button"
+                  >
                     {labels.addSection}
                   </button>
                 </div>
@@ -957,7 +1311,16 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
                       if (!blueprint) {
                         return null;
                       }
-                      return <SortableBlueprintRow blueprint={blueprint} id={id} index={index} key={id} onRemove={removeBlueprint} onUpdate={updateBlueprint} />;
+                      return (
+                        <SortableBlueprintRow
+                          blueprint={blueprint}
+                          id={id}
+                          index={index}
+                          key={id}
+                          onRemove={removeBlueprint}
+                          onUpdate={updateBlueprint}
+                        />
+                      );
                     })}
                   </div>
                 </SortableContext>
@@ -967,16 +1330,34 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
             <div className="flex flex-wrap items-center gap-3">
               <button
                 className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={isGenerating || !canGenerate}
+                disabled={isGenerating || !canGenerate || !!activeGenerationJobId}
                 onClick={handleGenerate}
                 type="button"
               >
                 {isGenerating ? 'Generating...' : 'Generate exam set'}
               </button>
+              {activeGenerationJobId ? (
+                <button
+                  className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={isCheckingJobStatus}
+                  onClick={checkGenerationJobStatusNow}
+                  type="button"
+                >
+                  {isCheckingJobStatus ? 'Checking...' : 'Check status now'}
+                </button>
+              ) : null}
               <span className="rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700">
-                Generate usage: {currentExamSetId ? `${generateCount}/${generateLimit}` : `0/${generateLimit} (applies after first save)`}
+                Generate usage:{' '}
+                {currentExamSetId
+                  ? `${generateCount}/${generateLimit}`
+                  : `0/${generateLimit} (applies after first save)`}
               </span>
-              <button className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 disabled:cursor-not-allowed disabled:opacity-50" disabled={isSaving || !generated} onClick={handleSave} type="button">
+              <button
+                className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={isSaving || !generated}
+                onClick={handleSave}
+                type="button"
+              >
                 {isSaving ? 'Saving...' : currentExamSetId ? 'Save draft' : 'Create draft'}
               </button>
             </div>
@@ -1004,7 +1385,9 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
                         <div
                           key={history.id}
                           className={`w-full cursor-pointer rounded-2xl border px-3 py-2 text-left text-xs ${
-                            isSelected ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-slate-50 text-slate-700'
+                            isSelected
+                              ? 'border-slate-900 bg-slate-900 text-white'
+                              : 'border-slate-200 bg-slate-50 text-slate-700'
                           }`}
                           onClick={() => {
                             setSelectedHistoryLogId(history.id);
@@ -1031,11 +1414,17 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
                               <p className="font-semibold">Edition {editionNumber}</p>
                               <p className="mt-1 text-[11px]">{new Date(history.createdAt).toLocaleString()}</p>
                               <p className="mt-1 text-[11px]">
-                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                                <span
+                                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                    isSelected ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                                  }`}
+                                >
                                   {outputLanguage}
                                 </span>
                               </p>
-                              <p className="mt-1 text-[11px]">{grade} · {questionCount} questions</p>
+                              <p className="mt-1 text-[11px]">
+                                {grade} · {questionCount} questions
+                              </p>
                             </div>
                             <div className="pt-0.5">
                               <button
@@ -1079,7 +1468,9 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
               <div className="space-y-3">
                 {generated.questions.map((question, index) => (
                   <article key={question.id} className="rounded-3xl border border-slate-200 bg-white p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Question {index + 1}</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Question {index + 1}
+                    </p>
                     <p className="mt-2 font-semibold text-slate-950">{question.prompt}</p>
                     {question.choices.length > 0 ? (
                       <ul className="mt-3 space-y-1 text-sm text-slate-600">
@@ -1094,7 +1485,9 @@ export function ExamBuilder({ initialExamSet, initialGenerateHistory = [], gener
                         ))}
                       </ul>
                     ) : null}
-                    {question.choices.length === 0 ? <p className="mt-3 text-sm text-emerald-700">Answer: {question.answer}</p> : null}
+                    {question.choices.length === 0 ? (
+                      <p className="mt-3 text-sm text-emerald-700">Answer: {question.answer}</p>
+                    ) : null}
                     <p className="mt-1 text-sm text-slate-500">{question.explanation}</p>
                   </article>
                 ))}

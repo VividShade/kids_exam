@@ -3,8 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { ExamBuilder } from '@/components/exam-builder';
 import { env } from '@/lib/env';
-import { listOpenAiLogsByExamSet } from '@/lib/repository';
-import { getOwnedExamSetById } from '@/lib/repository';
+import { getActiveExamGenerationJobByExamSet, getOwnedExamSetById, listOpenAiLogsByExamSet } from '@/lib/repository';
 import { createSignedImageUrl } from '@/lib/storage';
 
 export default async function EditExamSetPage({ params }: { params: Promise<{ id: string }> }) {
@@ -36,6 +35,16 @@ export default async function EditExamSetPage({ params }: { params: Promise<{ id
     })),
   );
 
-  const logs = await listOpenAiLogsByExamSet(id, session.user.id, 30);
-  return <ExamBuilder generateLimit={env.examSetGenerateLimit} initialExamSet={{ ...examSet, sourceImages }} initialGenerateHistory={logs} />;
+  const [logs, activeGenerationJob] = await Promise.all([
+    listOpenAiLogsByExamSet(id, session.user.id, 30),
+    getActiveExamGenerationJobByExamSet(id, session.user.id),
+  ]);
+  return (
+    <ExamBuilder
+      generateLimit={env.examSetGenerateLimit}
+      initialExamSet={{ ...examSet, sourceImages }}
+      initialGenerateHistory={logs}
+      initialGenerationJobId={activeGenerationJob?.id ?? null}
+    />
+  );
 }

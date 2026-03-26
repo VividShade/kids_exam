@@ -96,6 +96,25 @@ const schemaStatements = [
   )`,
   `CREATE INDEX IF NOT EXISTS openai_logs_user_idx ON openai_logs(user_id, created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS openai_logs_exam_idx ON openai_logs(exam_set_id, created_at DESC)`,
+  `CREATE TABLE IF NOT EXISTS exam_generation_jobs (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    exam_set_id TEXT,
+    status TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    result_json TEXT,
+    error_message TEXT,
+    retry_count INTEGER NOT NULL DEFAULT 0,
+    run_after TEXT NOT NULL,
+    started_at TEXT,
+    completed_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES users(id),
+    FOREIGN KEY(exam_set_id) REFERENCES exam_sets(id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS exam_generation_jobs_user_idx ON exam_generation_jobs(user_id, created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS exam_generation_jobs_status_idx ON exam_generation_jobs(status, run_after)`,
 ];
 
 let initPromise: Promise<void> | null = null;
