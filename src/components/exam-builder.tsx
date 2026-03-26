@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { createBuilderSignature, type BuilderSignatureInput } from '@/lib/exam-builder-signature';
 import { extractGeneratedExamSetFromResponseJson } from '@/lib/generated-exam-parser';
 import type {
   ExamBuilderConfig,
@@ -438,22 +439,6 @@ async function compressImage(file: File) {
   };
 }
 
-function createSignature(input: {
-  title: string;
-  gradeBand: string;
-  notes: string;
-  uiLanguage: UILanguage;
-  promptLanguage: UILanguage;
-  sourceLanguage: string;
-  examLanguage: string;
-  selectedShortcutId: string;
-  imageIds: string[];
-  blueprints: QuestionBlueprint[];
-  generatedQuestionCount: number;
-}) {
-  return JSON.stringify(input);
-}
-
 function parseGeneratedFromLog(log: OpenAiLogRecord): GeneratedExamSet | null {
   return extractGeneratedExamSetFromResponseJson(log.responseJson);
 }
@@ -585,20 +570,25 @@ export function ExamBuilder({
     [blueprints, examLanguage, gradeBand, notes, sourceLanguage, title, uiLanguage]
   );
 
+  function buildSignatureInput(generatedQuestionCount: number, overrides?: Partial<BuilderSignatureInput>): BuilderSignatureInput {
+    return {
+      title,
+      gradeBand,
+      notes,
+      uiLanguage,
+      promptLanguage: uiLanguage,
+      sourceLanguage,
+      examLanguage,
+      selectedShortcutId,
+      imageIds: images.map((image) => image.id),
+      blueprints,
+      generatedQuestionCount,
+      ...overrides,
+    };
+  }
+
   const totalQuestions = blueprints.reduce((sum, blueprint) => sum + blueprint.count, 0);
-  const currentSignature = createSignature({
-    title,
-    gradeBand,
-    notes,
-    uiLanguage,
-    promptLanguage: uiLanguage,
-    sourceLanguage,
-    examLanguage,
-    selectedShortcutId,
-    imageIds: images.map((image) => image.id),
-    blueprints,
-    generatedQuestionCount: generated?.questions.length ?? 0,
-  });
+  const currentSignature = createBuilderSignature(buildSignatureInput(generated?.questions.length ?? 0));
   const hasUnsavedChanges = lastSavedSignature.length > 0 && currentSignature !== lastSavedSignature;
   const canGenerate = currentExamSetId ? generateCount < generateLimit : true;
   const showManualRefreshButton = !!activeGenerationJobId && !autoPollingEnabled;
@@ -700,19 +690,7 @@ export function ExamBuilder({
       });
       setGenerateCount((value) => value + 1);
       setLastSavedSignature(
-        createSignature({
-          title: result.title,
-          gradeBand,
-          notes,
-          uiLanguage,
-          promptLanguage: uiLanguage,
-          sourceLanguage,
-          examLanguage,
-          selectedShortcutId,
-          imageIds: images.map((image) => image.id),
-          blueprints,
-          generatedQuestionCount: nextGenerated.questions.length,
-        })
+        createBuilderSignature(buildSignatureInput(nextGenerated.questions.length, { title: result.title })),
       );
       setStatusMessage('Generated and auto-saved draft.');
       setIsGenerating(false);
@@ -982,21 +960,7 @@ export function ExamBuilder({
       setGenerateCount(1);
     }
     setCurrentExamSetId(payload.examSetId);
-    setLastSavedSignature(
-      createSignature({
-        title,
-        gradeBand,
-        notes,
-        uiLanguage,
-        promptLanguage: uiLanguage,
-        sourceLanguage,
-        examLanguage,
-        selectedShortcutId,
-        imageIds: images.map((image) => image.id),
-        blueprints,
-        generatedQuestionCount: generatedPayload.questions.length,
-      })
-    );
+    setLastSavedSignature(createBuilderSignature(buildSignatureInput(generatedPayload.questions.length)));
     if (!options?.auto) {
       router.push('/dashboard');
       router.refresh();
