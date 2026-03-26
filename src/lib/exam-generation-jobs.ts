@@ -1,7 +1,5 @@
 import 'server-only';
 
-import { z } from 'zod';
-
 import { generateExamSetFromImages } from '@/lib/openai';
 import {
   attachOpenAiLogToExamSet,
@@ -13,77 +11,10 @@ import {
   markExamGenerationJobFailed,
   saveExamSet,
 } from '@/lib/repository';
+import { examGenerationJobPayloadSchema } from '@/lib/schemas';
 import type { ExamGenerationJobRecord } from '@/lib/types';
 
 const DEFAULT_EXAM_SET_TITLE = 'Untitled Quiz';
-
-const questionSchema = z.object({
-  id: z.string().min(1),
-  kind: z.enum(['multiple_choice', 'true_false', 'short_answer']),
-  prompt: z.string().min(1),
-  choices: z.array(z.string()),
-  answer: z.string().min(1),
-  explanation: z.string().min(1),
-});
-
-const generatedExamSetSchema = z.object({
-  title: z.string().min(1),
-  summary: z.string().min(1),
-  gradeBand: z.string().min(1),
-  sourceSummary: z.string().min(1),
-  outputSummary: z.string().min(1),
-  sourceKeywords: z.array(z.string()),
-  outputKeywords: z.array(z.string()),
-  recommendedPrompts: z.array(z.string()),
-  questions: z.array(questionSchema).min(1),
-});
-
-const configSchema = z.object({
-  title: z.string().default(''),
-  gradeBand: z.string().min(1),
-  notes: z.string().default(''),
-  uiLanguage: z.enum(['en', 'ko', 'es']).default('en'),
-  promptLanguage: z.enum(['en', 'ko', 'es']).default('en'),
-  sourceLanguage: z.string().default('auto'),
-  examLanguage: z.string().min(1),
-  blueprints: z.array(
-    z.object({
-      label: z.string().min(1),
-      format: z.enum(['multiple_choice', 'true_false', 'short_answer']),
-      count: z.number().int().positive(),
-      focus: z.string().min(1),
-    }),
-  ),
-});
-
-const sourceImageSchema = z.object({
-  id: z.string(),
-  originalPath: z.string(),
-  thumbnailPath: z.string(),
-  width: z.number(),
-  height: z.number(),
-  thumbWidth: z.number(),
-  thumbHeight: z.number(),
-  sizeBytes: z.number(),
-  uploadedAt: z.string(),
-});
-
-export const examGenerationJobPayloadSchema = z.object({
-  examSetId: z.string().optional(),
-  imageDataUrls: z.array(z.string().min(1)).min(1).max(6),
-  selectedShortcutId: z.string().min(1),
-  customPrompt: z.string().default(''),
-  title: z.string().min(1),
-  sourceImages: z.array(sourceImageSchema).max(6),
-  config: configSchema,
-});
-
-export const examGenerationJobResultSchema = z.object({
-  examSetId: z.string().min(1),
-  generationLogId: z.string().min(1),
-  title: z.string().min(1),
-  generated: generatedExamSetSchema,
-});
 
 async function processClaimedExamGenerationJob(job: ExamGenerationJobRecord) {
   try {

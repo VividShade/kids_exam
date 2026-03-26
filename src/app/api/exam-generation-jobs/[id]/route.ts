@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 
 import { auth } from '@/auth';
-import { examGenerationJobResultSchema } from '@/lib/exam-generation-jobs';
 import { getExamGenerationJobById } from '@/lib/repository';
+import { examGenerationJobResultSchema } from '@/lib/schemas';
 
 export async function GET(_: Request, context: { params: Promise<{ id: string }> }) {
   const session = await auth();

@@ -1,25 +1,8 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 
 import { auth } from '@/auth';
+import { uploadExamSourceImagesRequestSchema } from '@/lib/schemas';
 import { uploadExamSourceImages } from '@/lib/storage';
-
-const requestSchema = z.object({
-  images: z
-    .array(
-      z.object({
-        originalBase64: z.string().min(1),
-        thumbnailBase64: z.string().min(1),
-        width: z.number().positive(),
-        height: z.number().positive(),
-        thumbWidth: z.number().positive(),
-        thumbHeight: z.number().positive(),
-        sizeBytes: z.number().int().positive(),
-      }),
-    )
-    .min(1)
-    .max(6),
-});
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -28,7 +11,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const payload = requestSchema.parse(await request.json());
+    const payload = uploadExamSourceImagesRequestSchema.parse(await request.json());
     const uploaded = await uploadExamSourceImages(session.user.id, payload.images);
     return NextResponse.json({ images: uploaded });
   } catch (error) {
