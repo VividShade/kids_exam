@@ -599,6 +599,16 @@ export async function getActiveExamGenerationJobByExamSet(examSetId: string, use
   return row ? parseExamGenerationJob(row) : null;
 }
 
+export async function listActiveExamGenerationJobsByUser(userId: string) {
+  const rows = await dbAll<ExamGenerationJobRow>(
+    `SELECT * FROM exam_generation_jobs
+     WHERE user_id = ? AND exam_set_id IS NOT NULL AND status IN ('queued', 'running')
+     ORDER BY created_at DESC`,
+    [userId],
+  );
+  return rows.map(parseExamGenerationJob);
+}
+
 export async function claimExamGenerationJobById(jobId: string) {
   const now = new Date().toISOString();
   const row = await dbGet<ExamGenerationJobRow>(

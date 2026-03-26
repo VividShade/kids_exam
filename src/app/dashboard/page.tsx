@@ -4,8 +4,9 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { deleteAttemptAction, publishExamSetAction } from '@/app/dashboard/actions';
 import { SignOutButton } from '@/components/auth-buttons';
+import { DashboardGeneratingPoller } from '@/components/dashboard-generating-poller';
 import { adminEmailList } from '@/lib/env';
-import { listDashboardData } from '@/lib/repository';
+import { listActiveExamGenerationJobsByUser, listDashboardData } from '@/lib/repository';
 
 function formatPercent(correctCount: number, totalCount: number) {
   if (totalCount <= 0) {
@@ -24,8 +25,12 @@ export default async function DashboardPage() {
     redirect('/');
   }
 
-  const { examSets, attempts } = await listDashboardData(session.user.id);
+  const [{ examSets, attempts }, activeGenerationJobs] = await Promise.all([
+    listDashboardData(session.user.id),
+    listActiveExamGenerationJobsByUser(session.user.id),
+  ]);
   const isAdmin = !!session.user.email && adminEmailList.includes(session.user.email.toLowerCase());
+  const activeJobByExamSetId = new Map(activeGenerationJobs.map((job) => [job.examSetId, job]));
   const attemptsByExamSetId = attempts.reduce<Record<string, typeof attempts>>((acc, attempt) => {
     if (!acc[attempt.examSetId]) {
       acc[attempt.examSetId] = [];
@@ -36,6 +41,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fff7d6,0,#f8fafc_45%,#e2e8f0_100%)] px-4 py-8 md:px-8">
+      <DashboardGeneratingPoller enabled={activeGenerationJobs.length > 0} />
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <section className="rounded-[2.5rem] border border-white/70 bg-white/80 p-6 shadow-[0_32px_120px_rgba(15,23,42,0.12)] backdrop-blur md:p-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -72,6 +78,13 @@ export default async function DashboardPage() {
             <div className="space-y-4">
               {examSets.length > 0 ? (
                 examSets.map((examSet) => {
+                  const activeGenerationJob = activeJobByExamSetId.get(examSet.id) ?? null;
+                  const visualStatus = activeGenerationJob ? 'generating' : examSet.status;
+                  const visualStatusClass = activeGenerationJob
+                    ? 'bg-sky-100 text-sky-800'
+                    : examSet.status === 'published'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-amber-100 text-amber-800';
                   const attemptsByExamSet = attemptsByExamSetId[examSet.id] ?? [];
                   const editionSnapshots = Array.from(
                     new Set(attemptsByExamSet.map((attempt) => attempt.publishedAtSnapshot).filter((snapshot): snapshot is string => !!snapshot)),
@@ -83,8 +96,11 @@ export default async function DashboardPage() {
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="text-xl font-bold text-slate-950">{examSet.title}</h3>
-                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${examSet.status === 'published' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                              {examSet.status}
+                            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${visualStatusClass}`}>
+                              {activeGenerationJob ? (
+                                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                              ) : null}
+                              {visualStatus}
                             </span>
                           </div>
                           <p className="mt-2 max-w-2xl text-sm text-slate-600">{examSet.summary}</p>

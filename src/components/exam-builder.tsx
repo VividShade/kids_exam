@@ -27,6 +27,7 @@ const THUMB_LONG_EDGE = 480;
 const QUALITY_STEPS = [0.86, 0.8, 0.74, 0.68];
 const LAST_GRADE_BAND_KEY = 'exam_builder_last_grade_band';
 const APP_UI_LANGUAGE_KEY = 'app_ui_language';
+const DEFAULT_EXAM_SET_TITLE = 'Untitled Quiz';
 const INITIAL_POLL_DELAY_MS = 12_000;
 const QUEUED_POLL_DELAY_MS = 10_000;
 const RUNNING_POLL_DELAY_MS = 5_000;
@@ -158,6 +159,7 @@ type EnqueueGenerationJobPayload = {
 type GenerationJobResult = {
   examSetId: string;
   generationLogId: string;
+  title: string;
   generated: GeneratedExamSet;
 };
 
@@ -663,6 +665,7 @@ export function ExamBuilder({
     if (payload.status === 'completed' && payload.result) {
       const result = payload.result;
       const nextGenerated = result.generated;
+      setTitle(result.title);
       setGenerated(nextGenerated);
       setCurrentExamSetId(result.examSetId);
       setGenerationLogId(result.generationLogId);
@@ -694,7 +697,7 @@ export function ExamBuilder({
       setGenerateCount((value) => value + 1);
       setLastSavedSignature(
         createSignature({
-          title: nextGenerated.title,
+          title: result.title,
           gradeBand,
           notes,
           uiLanguage,
@@ -874,13 +877,7 @@ export function ExamBuilder({
   }
 
   function getUntitledTitle() {
-    const defaultLabelByShortcutId: Record<string, string> = {
-      vocabulary_mix: 'Vocabulary',
-      reading_check: 'Reading',
-      grammar_practice: 'Grammar',
-    };
-    const label = defaultLabelByShortcutId[selectedShortcutId] ?? 'Practice';
-    return `Untitled ${label} Quiz`;
+    return DEFAULT_EXAM_SET_TITLE;
   }
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {

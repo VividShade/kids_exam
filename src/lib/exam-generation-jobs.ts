@@ -15,6 +15,8 @@ import {
 } from '@/lib/repository';
 import type { ExamGenerationJobRecord } from '@/lib/types';
 
+const DEFAULT_EXAM_SET_TITLE = 'Untitled Quiz';
+
 const questionSchema = z.object({
   id: z.string().min(1),
   kind: z.enum(['multiple_choice', 'true_false', 'short_answer']),
@@ -79,6 +81,7 @@ export const examGenerationJobPayloadSchema = z.object({
 export const examGenerationJobResultSchema = z.object({
   examSetId: z.string().min(1),
   generationLogId: z.string().min(1),
+  title: z.string().min(1),
   generated: generatedExamSetSchema,
 });
 
@@ -97,10 +100,16 @@ async function processClaimedExamGenerationJob(job: ExamGenerationJobRecord) {
       ...result.log,
     });
 
+    const requestedTitle = payload.title.trim();
+    const resolvedTitle =
+      requestedTitle.length === 0 || requestedTitle === DEFAULT_EXAM_SET_TITLE
+        ? result.generated.title
+        : requestedTitle;
+
     const examSetId = await saveExamSet({
       id: payload.examSetId,
       ownerId: job.userId,
-      title: payload.title,
+      title: resolvedTitle,
       summary: result.generated.summary,
       promptText: payload.promptText,
       sourceImages: payload.sourceImages,
@@ -119,6 +128,7 @@ async function processClaimedExamGenerationJob(job: ExamGenerationJobRecord) {
       JSON.stringify({
         examSetId,
         generationLogId,
+        title: resolvedTitle,
         generated: result.generated,
       }),
     );
