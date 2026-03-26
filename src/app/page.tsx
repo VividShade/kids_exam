@@ -36,7 +36,7 @@ export default async function HomePage() {
                     <SignOutButton />
                   </>
                 ) : (
-                  <SignInButton />
+                  <SignInButton isConfigured={isGoogleAuthConfigured} />
                 )}
               </div>
             </div>
