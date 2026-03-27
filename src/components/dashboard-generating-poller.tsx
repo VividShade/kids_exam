@@ -3,9 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
-const QUEUED_POLL_DELAY_MS = 10_000;
-const RUNNING_POLL_DELAY_MS = 5_000;
-const MAX_AUTO_POLL_DURATION_MS = 3 * 60 * 1000;
+import { getInitialJobPollDelayMs, getJobPollDelayMs, isJobAutoPollingTimedOut } from '@/lib/job-polling';
 
 type ActiveJobStatusPayload = {
   jobs?: Array<{
@@ -39,8 +37,7 @@ export function DashboardGeneratingPoller({ enabled }: { enabled: boolean }) {
       if (stopped) {
         return;
       }
-      const elapsed = Date.now() - startedAt;
-      if (elapsed >= MAX_AUTO_POLL_DURATION_MS) {
+      if (isJobAutoPollingTimedOut(startedAt)) {
         return;
       }
 
@@ -62,13 +59,13 @@ export function DashboardGeneratingPoller({ enabled }: { enabled: boolean }) {
 
         router.refresh();
         const hasRunning = activeJobs.some((job) => job.status === 'running');
-        schedule(hasRunning ? RUNNING_POLL_DELAY_MS : QUEUED_POLL_DELAY_MS);
+        schedule(getJobPollDelayMs(hasRunning ? 'running' : 'queued'));
       } catch {
-        schedule(QUEUED_POLL_DELAY_MS);
+        schedule(getJobPollDelayMs('queued'));
       }
     };
 
-    schedule(QUEUED_POLL_DELAY_MS);
+    schedule(getInitialJobPollDelayMs('dashboard'));
 
     return () => {
       stopped = true;

@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createBuilderSignature, type BuilderSignatureInput } from '@/lib/exam-builder-signature';
 import { extractGeneratedExamSetFromResponseJson } from '@/lib/generated-exam-parser';
 import { compressImageForUpload, IMAGE_UPLOAD_LIMITS, type UploadImagePayload } from '@/lib/image-processing';
+import { getInitialJobPollDelayMs, getJobPollDelayMs, isJobAutoPollingTimedOut } from '@/lib/job-polling';
 import type {
   ExamBuilderConfig,
   ExamSetRecord,
@@ -25,10 +26,6 @@ const LAST_GRADE_BAND_KEY = 'exam_builder_last_grade_band';
 const LAST_SHORTCUT_ID_KEY = 'exam_builder_last_shortcut_id';
 const APP_UI_LANGUAGE_KEY = 'app_ui_language';
 const DEFAULT_EXAM_SET_TITLE = 'Untitled Quiz';
-const INITIAL_POLL_DELAY_MS = 12_000;
-const QUEUED_POLL_DELAY_MS = 10_000;
-const RUNNING_POLL_DELAY_MS = 5_000;
-const MAX_AUTO_POLL_DURATION_MS = 3 * 60 * 1000;
 
 type BuilderImage = {
   id: string;
@@ -608,8 +605,7 @@ export function ExamBuilder({
       try {
         const startedAt = autoPollingStartedAtRef.current ?? Date.now();
         autoPollingStartedAtRef.current = startedAt;
-        const elapsed = Date.now() - startedAt;
-        if (elapsed >= MAX_AUTO_POLL_DURATION_MS) {
+        if (isJobAutoPollingTimedOut(startedAt)) {
           setAutoPollingEnabled(false);
           setIsGenerating(false);
           setStatusMessage(
@@ -634,7 +630,7 @@ export function ExamBuilder({
         if (payload.status === 'completed' || payload.status === 'failed') {
           return;
         }
-        schedule(payload.status === 'running' ? RUNNING_POLL_DELAY_MS : QUEUED_POLL_DELAY_MS);
+        schedule(getJobPollDelayMs(payload.status));
       } catch (error) {
         if (!stopped) {
           setStatusMessage(error instanceof Error ? error.message : 'Failed to poll generation job.');
@@ -646,7 +642,7 @@ export function ExamBuilder({
       }
     };
 
-    schedule(INITIAL_POLL_DELAY_MS);
+    schedule(getInitialJobPollDelayMs('builder'));
 
     return () => {
       stopped = true;
