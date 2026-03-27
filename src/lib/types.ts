@@ -1,58 +1,36 @@
-export type QuestionKind = 'multiple_choice' | 'true_false' | 'short_answer';
-export type UILanguage = 'en' | 'ko' | 'es';
+import type { z } from 'zod';
 
-export type ExamQuestion = {
-  id: string;
-  kind: QuestionKind;
-  prompt: string;
-  choices: string[];
-  answer: string;
-  explanation: string;
-};
+import type {
+  directGenerateExamSetRequestSchema,
+  examBuilderConfigSchema,
+  examGenerationJobPayloadSchema,
+  examGenerationJobResultSchema,
+  examQuestionSchema,
+  examSourceImageSchema,
+  generatedExamSetSchema,
+  questionBlueprintSchema,
+  questionKindSchema,
+  saveExamSetRequestSchema,
+  uiLanguageSchema,
+  uploadExamSourceImagesRequestSchema,
+} from '@/lib/schemas';
 
-export type QuestionBlueprint = {
-  label: string;
-  format: QuestionKind;
-  count: number;
-  focus: string;
-};
-
-export type ExamBuilderConfig = {
-  title: string;
-  gradeBand: string;
-  notes: string;
-  uiLanguage: UILanguage;
-  promptLanguage: UILanguage;
-  sourceLanguage: string;
-  examLanguage: string;
-  blueprints: QuestionBlueprint[];
-};
-
-export type ExamSourceImage = {
-  id: string;
-  originalPath: string;
-  thumbnailPath: string;
-  width: number;
-  height: number;
-  thumbWidth: number;
-  thumbHeight: number;
-  sizeBytes: number;
-  uploadedAt: string;
+export type QuestionKind = z.infer<typeof questionKindSchema>;
+export type UILanguage = z.infer<typeof uiLanguageSchema>;
+export type ExamQuestion = z.infer<typeof examQuestionSchema>;
+export type QuestionBlueprint = z.infer<typeof questionBlueprintSchema>;
+export type ExamBuilderConfig = z.infer<typeof examBuilderConfigSchema>;
+export type GeneratedExamSet = z.infer<typeof generatedExamSetSchema>;
+export type ExamSourceImage = z.infer<typeof examSourceImageSchema> & {
   originalSignedUrl?: string;
   thumbnailSignedUrl?: string;
 };
 
-export type GeneratedExamSet = {
-  title: string;
-  summary: string;
-  gradeBand: string;
-  sourceSummary: string;
-  outputSummary: string;
-  sourceKeywords: string[];
-  outputKeywords: string[];
-  recommendedPrompts: string[];
-  questions: ExamQuestion[];
-};
+export type ExamGenerationJobPayload = z.infer<typeof examGenerationJobPayloadSchema>;
+export type ExamGenerationJobResult = z.infer<typeof examGenerationJobResultSchema>;
+export type SaveExamSetRequest = z.infer<typeof saveExamSetRequestSchema>;
+export type DirectGenerateExamSetRequest = z.infer<typeof directGenerateExamSetRequestSchema>;
+export type UploadExamSourceImagesRequest = z.infer<typeof uploadExamSourceImagesRequestSchema>;
 
 export type ExamSetRecord = {
   id: string;
