@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 
 import { auth } from '@/auth';
+import { apiErrorFromUnknown, apiErrorResponse } from '@/lib/api-response';
 import { attachOpenAiLogToExamSet, saveExamSet } from '@/lib/repository';
 import { saveExamSetRequestSchema } from '@/lib/schemas';
 
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return apiErrorResponse(401, 'Unauthorized', 'UNAUTHORIZED');
   }
 
   try {
@@ -23,7 +24,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ examSetId });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to save exam set.';
-    return NextResponse.json({ error: message }, { status: 400 });
+    return apiErrorFromUnknown(error, {
+      fallbackMessage: 'Failed to save exam set.',
+      code: 'EXAM_SET_SAVE_FAILED',
+    });
   }
 }

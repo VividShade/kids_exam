@@ -1,19 +1,20 @@
 import { NextResponse } from 'next/server';
 
 import { auth } from '@/auth';
+import { apiErrorResponse } from '@/lib/api-response';
 import { getExamGenerationJobById } from '@/lib/repository';
 import { examGenerationJobResultSchema } from '@/lib/schemas';
 
 export async function GET(_: Request, context: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return apiErrorResponse(401, 'Unauthorized', 'UNAUTHORIZED');
   }
 
   const { id } = await context.params;
   const job = await getExamGenerationJobById(id, session.user.id);
   if (!job) {
-    return NextResponse.json({ error: 'Job not found.' }, { status: 404 });
+    return apiErrorResponse(404, 'Job not found.', 'JOB_NOT_FOUND');
   }
 
   let parsedResult: ReturnType<typeof examGenerationJobResultSchema.safeParse> | null = null;

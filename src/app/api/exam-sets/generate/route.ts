@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { auth } from '@/auth';
+import { apiErrorFromUnknown, apiErrorResponse } from '@/lib/api-response';
 import { env } from '@/lib/env';
 import { generateExamSetFromImages } from '@/lib/openai';
 import { createOpenAiLog, getOwnedExamSetGenerateCount, incrementExamSetGenerateCount } from '@/lib/repository';
@@ -9,7 +10,7 @@ import { directGenerateExamSetRequestSchema } from '@/lib/schemas';
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return apiErrorResponse(401, 'Unauthorized', 'UNAUTHORIZED');
   }
 
   try {
@@ -18,9 +19,10 @@ export async function POST(request: Request) {
     if (parsed.examSetId) {
       const count = await getOwnedExamSetGenerateCount(parsed.examSetId, session.user.id);
       if (count >= env.examSetGenerateLimit) {
-        return NextResponse.json(
-          { error: `Generation limit reached for this exam set (${env.examSetGenerateLimit}).` },
-          { status: 400 },
+        return apiErrorResponse(
+          400,
+          `Generation limit reached for this exam set (${env.examSetGenerateLimit}).`,
+          'GENERATION_LIMIT_REACHED',
         );
       }
     }
@@ -43,7 +45,9 @@ export async function POST(request: Request) {
       generationLogId,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to generate exam set.';
-    return NextResponse.json({ error: message }, { status: 400 });
+    return apiErrorFromUnknown(error, {
+      fallbackMessage: 'Failed to generate exam set.',
+      code: 'EXAM_SET_GENERATION_FAILED',
+    });
   }
 }
