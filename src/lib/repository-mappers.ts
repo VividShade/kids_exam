@@ -1,6 +1,7 @@
 import { createId } from '@/lib/id';
 import {
   type AttemptRecord,
+  type AdminCleanupRunRecord,
   type CleanupJobRecord,
   type ExamBuilderConfig,
   type ExamGenerationJobRecord,
@@ -56,7 +57,11 @@ export type OpenAiLogRow = {
   id: string;
   user_id: string;
   exam_set_id: string | null;
+  correlation_id: string | null;
   model: string;
+  route: string | null;
+  status: 'success' | 'failed';
+  error_type: string | null;
   prompt_text: string;
   response_text: string | null;
   response_json: string | null;
@@ -78,6 +83,20 @@ export type CleanupJobRow = {
   last_error: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type AdminCleanupRunRow = {
+  id: string;
+  run_type: 'scheduled' | 'manual';
+  status: 'success' | 'failed';
+  triggered_by: string | null;
+  dry_run: number | boolean;
+  orphan_count: number | string;
+  removed_count: number | string;
+  failed_count: number | string;
+  duration_ms: number | string | null;
+  error_message: string | null;
+  created_at: string;
 };
 
 export type ExamGenerationJobRow = {
@@ -211,7 +230,11 @@ export function parseOpenAiLog(row: OpenAiLogRow): OpenAiLogRecord {
     id: row.id,
     userId: row.user_id,
     examSetId: row.exam_set_id,
+    correlationId: row.correlation_id,
     model: row.model,
+    route: row.route,
+    status: row.status ?? 'success',
+    errorType: row.error_type,
     promptText: row.prompt_text,
     responseText: row.response_text,
     responseJson: row.response_json,
@@ -220,6 +243,22 @@ export function parseOpenAiLog(row: OpenAiLogRow): OpenAiLogRecord {
     outputTokens: toNullableNumber(row.output_tokens),
     totalTokens: toNullableNumber(row.total_tokens),
     estimatedCostUsd: toNullableNumber(row.estimated_cost_usd),
+    createdAt: row.created_at,
+  };
+}
+
+export function parseAdminCleanupRun(row: AdminCleanupRunRow): AdminCleanupRunRecord {
+  return {
+    id: row.id,
+    runType: row.run_type,
+    status: row.status,
+    triggeredBy: row.triggered_by,
+    dryRun: Boolean(row.dry_run),
+    orphanCount: toNullableNumber(row.orphan_count) ?? 0,
+    removedCount: toNullableNumber(row.removed_count) ?? 0,
+    failedCount: toNullableNumber(row.failed_count) ?? 0,
+    durationMs: toNullableNumber(row.duration_ms),
+    errorMessage: row.error_message,
     createdAt: row.created_at,
   };
 }

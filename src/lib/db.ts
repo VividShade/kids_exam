@@ -80,11 +80,29 @@ const schemaStatements = [
     updated_at TEXT NOT NULL
   )`,
   `CREATE INDEX IF NOT EXISTS cleanup_jobs_status_idx ON cleanup_jobs(status, run_after)`,
+  `CREATE TABLE IF NOT EXISTS admin_cleanup_runs (
+    id TEXT PRIMARY KEY,
+    run_type TEXT NOT NULL,
+    status TEXT NOT NULL,
+    triggered_by TEXT,
+    dry_run INTEGER NOT NULL DEFAULT 0,
+    orphan_count INTEGER NOT NULL DEFAULT 0,
+    removed_count INTEGER NOT NULL DEFAULT 0,
+    failed_count INTEGER NOT NULL DEFAULT 0,
+    duration_ms INTEGER,
+    error_message TEXT,
+    created_at TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS admin_cleanup_runs_created_idx ON admin_cleanup_runs(created_at DESC)`,
   `CREATE TABLE IF NOT EXISTS openai_logs (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
     exam_set_id TEXT,
+    correlation_id TEXT,
     model TEXT NOT NULL,
+    route TEXT,
+    status TEXT NOT NULL DEFAULT 'success',
+    error_type TEXT,
     prompt_text TEXT NOT NULL,
     response_text TEXT,
     response_json TEXT,
@@ -99,6 +117,28 @@ const schemaStatements = [
   )`,
   `CREATE INDEX IF NOT EXISTS openai_logs_user_idx ON openai_logs(user_id, created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS openai_logs_exam_idx ON openai_logs(exam_set_id, created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS openai_logs_status_idx ON openai_logs(status, created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS openai_logs_route_idx ON openai_logs(route, created_at DESC)`,
+  `CREATE TABLE IF NOT EXISTS user_admin_events (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    action TEXT NOT NULL,
+    reason TEXT,
+    actor_id TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS user_admin_events_user_idx ON user_admin_events(user_id, created_at DESC)`,
+  `CREATE TABLE IF NOT EXISTS user_feedback (
+    id TEXT PRIMARY KEY,
+    user_id TEXT,
+    category TEXT NOT NULL,
+    message TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'new',
+    created_at TEXT NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS user_feedback_created_idx ON user_feedback(created_at DESC)`,
   `CREATE TABLE IF NOT EXISTS exam_generation_jobs (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
@@ -178,6 +218,10 @@ async function initialize() {
       await client.unsafe("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS exam_title_snapshot TEXT NOT NULL DEFAULT ''");
       await client.unsafe("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS questions_snapshot_json TEXT NOT NULL DEFAULT '[]'");
       await client.unsafe('ALTER TABLE attempts ADD COLUMN IF NOT EXISTS published_at_snapshot TEXT');
+      await client.unsafe('ALTER TABLE openai_logs ADD COLUMN IF NOT EXISTS correlation_id TEXT');
+      await client.unsafe('ALTER TABLE openai_logs ADD COLUMN IF NOT EXISTS route TEXT');
+      await client.unsafe("ALTER TABLE openai_logs ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'success'");
+      await client.unsafe('ALTER TABLE openai_logs ADD COLUMN IF NOT EXISTS error_type TEXT');
       return;
     }
 
@@ -230,6 +274,23 @@ async function initialize() {
     const hasPublishedAtSnapshot = attemptColumns.some((column) => column.name === 'published_at_snapshot');
     if (!hasPublishedAtSnapshot) {
       db.exec('ALTER TABLE attempts ADD COLUMN published_at_snapshot TEXT');
+    }
+    const openAiLogColumns = db.prepare('PRAGMA table_info(openai_logs)').all() as Array<{ name: string }>;
+    const hasCorrelationId = openAiLogColumns.some((column) => column.name === 'correlation_id');
+    if (!hasCorrelationId) {
+      db.exec('ALTER TABLE openai_logs ADD COLUMN correlation_id TEXT');
+    }
+    const hasRoute = openAiLogColumns.some((column) => column.name === 'route');
+    if (!hasRoute) {
+      db.exec('ALTER TABLE openai_logs ADD COLUMN route TEXT');
+    }
+    const hasStatus = openAiLogColumns.some((column) => column.name === 'status');
+    if (!hasStatus) {
+      db.exec("ALTER TABLE openai_logs ADD COLUMN status TEXT NOT NULL DEFAULT 'success'");
+    }
+    const hasErrorType = openAiLogColumns.some((column) => column.name === 'error_type');
+    if (!hasErrorType) {
+      db.exec('ALTER TABLE openai_logs ADD COLUMN error_type TEXT');
     }
   })();
 

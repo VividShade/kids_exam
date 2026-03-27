@@ -81,7 +81,11 @@ export type OpenAiLogRecord = {
   id: string;
   userId: string;
   examSetId: string | null;
+  correlationId: string | null;
   model: string;
+  route: string | null;
+  status: 'success' | 'failed';
+  errorType: string | null;
   promptText: string;
   responseText: string | null;
   responseJson: string | null;
@@ -105,6 +109,20 @@ export type CleanupJobRecord = {
   updatedAt: string;
 };
 
+export type AdminCleanupRunRecord = {
+  id: string;
+  runType: 'scheduled' | 'manual';
+  status: 'success' | 'failed';
+  triggeredBy: string | null;
+  dryRun: boolean;
+  orphanCount: number;
+  removedCount: number;
+  failedCount: number;
+  durationMs: number | null;
+  errorMessage: string | null;
+  createdAt: string;
+};
+
 export type ExamGenerationJobRecord = {
   id: string;
   userId: string;
@@ -119,4 +137,13 @@ export type ExamGenerationJobRecord = {
   updatedAt: string;
   startedAt: string | null;
   completedAt: string | null;
+};
+
+export type AdminUserSummaryRecord = {
+  userId: string;
+  email: string;
+  createdAt: string;
+  status: 'active' | 'suspended';
+  recentRequestCount: number;
+  recentAttemptCount: number;
 };

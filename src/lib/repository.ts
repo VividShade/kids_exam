@@ -8,11 +8,13 @@ import {
 } from '@/lib/generated-exam-parser';
 import {
   type AttemptRow,
+  type AdminCleanupRunRow,
   type CleanupJobRow,
   type ExamGenerationJobRow,
   type ExamSetRow,
   type OpenAiLogRow,
   parseAttempt,
+  parseAdminCleanupRun,
   parseCleanupJob,
   parseExamGenerationJob,
   parseExamSet,
@@ -20,6 +22,7 @@ import {
   toNullableNumber,
 } from '@/lib/repository-mappers';
 import type {
+  AdminCleanupRunRecord,
   DashboardData,
   ExamBuilderConfig,
   ExamGenerationJobRecord,
@@ -373,7 +376,11 @@ export async function deleteAttempt(attemptId: string, userId: string) {
 export async function createOpenAiLog(input: {
   userId: string;
   examSetId?: string | null;
+  correlationId?: string | null;
   model: string;
+  route?: string | null;
+  status?: 'success' | 'failed';
+  errorType?: string | null;
   promptText: string;
   responseText?: string | null;
   responseJson?: string | null;
@@ -388,14 +395,18 @@ export async function createOpenAiLog(input: {
 
   await dbRun(
     `INSERT INTO openai_logs (
-     id, user_id, exam_set_id, model, prompt_text, response_text, response_json,
+     id, user_id, exam_set_id, correlation_id, model, route, status, error_type, prompt_text, response_text, response_json,
       latency_ms, input_tokens, output_tokens, total_tokens, estimated_cost_usd, created_at
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       input.userId,
       input.examSetId ?? null,
+      input.correlationId ?? null,
       input.model,
+      input.route ?? null,
+      input.status ?? 'success',
+      input.errorType ?? null,
       input.promptText,
       input.responseText ?? null,
       input.responseJson ?? null,
@@ -620,4 +631,138 @@ export async function listReferencedStoragePaths() {
   }
 
   return Array.from(set);
+}
+
+export async function createAdminCleanupRun(input: {
+  runType: 'scheduled' | 'manual';
+  status: 'success' | 'failed';
+  triggeredBy?: string | null;
+  dryRun: boolean;
+  orphanCount: number;
+  removedCount: number;
+  failedCount: number;
+  durationMs?: number | null;
+  errorMessage?: string | null;
+}) {
+  const id = createId('clrun');
+  const now = new Date().toISOString();
+  await dbRun(
+    `INSERT INTO admin_cleanup_runs (
+      id, run_type, status, triggered_by, dry_run, orphan_count, removed_count, failed_count,
+      duration_ms, error_message, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      input.runType,
+      input.status,
+      input.triggeredBy ?? null,
+      input.dryRun ? 1 : 0,
+      input.orphanCount,
+      input.removedCount,
+      input.failedCount,
+      input.durationMs ?? null,
+      input.errorMessage ?? null,
+      now,
+    ],
+  );
+  return id;
+}
+
+export async function listAdminCleanupRuns(limit = 30): Promise<AdminCleanupRunRecord[]> {
+  const rows = await dbAll<AdminCleanupRunRow>(
+    `SELECT * FROM admin_cleanup_runs
+     ORDER BY created_at DESC
+     LIMIT ?`,
+    [limit],
+  );
+  return rows.map(parseAdminCleanupRun);
+}
+
+export async function listRecentCleanupJobs(limit = 30) {
+  const rows = await dbAll<CleanupJobRow>(
+    `SELECT * FROM cleanup_jobs
+     ORDER BY updated_at DESC
+     LIMIT ?`,
+    [limit],
+  );
+  return rows.map(parseCleanupJob);
+}
+
+export async function listAdminUserSummaries(limit = 100) {
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const rows = await dbAll<{
+    user_id: string;
+    email: string;
+    created_at: string;
+    status: string;
+    recent_request_count: number | string;
+    recent_attempt_count: number | string;
+  }>(
+    `SELECT
+       u.id as user_id,
+       u.email as email,
+       u.created_at as created_at,
+       COALESCE(
+         (
+          SELECT CASE
+            WHEN EXISTS (
+              SELECT 1 FROM user_admin_events e
+              WHERE e.user_id = u.id AND e.action = 'suspend'
+            ) THEN 'suspended'
+            ELSE 'active'
+          END
+         ),
+         'active'
+       ) as status,
+       (SELECT COUNT(*) FROM openai_logs l WHERE l.user_id = u.id AND l.created_at >= ?) as recent_request_count,
+       (SELECT COUNT(*) FROM attempts a WHERE a.user_id = u.id AND a.updated_at >= ?) as recent_attempt_count
+     FROM users u
+     ORDER BY u.created_at DESC
+     LIMIT ?`,
+    [since, since, limit],
+  );
+
+  return rows.map((row) => ({
+    userId: row.user_id,
+    email: row.email,
+    createdAt: row.created_at,
+    status: row.status === 'suspended' ? 'suspended' : 'active',
+    recentRequestCount: Number(row.recent_request_count),
+    recentAttemptCount: Number(row.recent_attempt_count),
+  }));
+}
+
+export async function suspendUser(input: { userId: string; actorId: string; reason?: string | null }) {
+  const id = createId('uae');
+  const now = new Date().toISOString();
+  await dbRun(
+    `INSERT INTO user_admin_events (id, user_id, action, reason, actor_id, created_at)
+     VALUES (?, ?, 'suspend', ?, ?, ?)`,
+    [id, input.userId, input.reason ?? null, input.actorId, now],
+  );
+}
+
+export async function listRecentFeedback(limit = 50) {
+  const rows = await dbAll<{
+    id: string;
+    user_id: string | null;
+    category: string;
+    message: string;
+    status: string;
+    created_at: string;
+  }>(
+    `SELECT * FROM user_feedback
+     ORDER BY created_at DESC
+     LIMIT ?`,
+    [limit],
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    userId: row.user_id,
+    category: row.category,
+    message: row.message,
+    status: row.status,
+    createdAt: row.created_at,
+  }));
 }

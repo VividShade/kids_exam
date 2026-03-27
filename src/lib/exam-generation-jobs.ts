@@ -1,6 +1,9 @@
 import 'server-only';
 
+import { env } from '@/lib/env';
+import { createId } from '@/lib/id';
 import { generateExamSetFromImages } from '@/lib/openai';
+import { buildExamGenerationPrompt } from '@/lib/prompt-builder';
 import {
   attachOpenAiLogToExamSet,
   claimExamGenerationJobById,
@@ -17,6 +20,7 @@ import type { ExamGenerationJobRecord } from '@/lib/types';
 const DEFAULT_EXAM_SET_TITLE = 'Untitled Quiz';
 
 async function processClaimedExamGenerationJob(job: ExamGenerationJobRecord) {
+  const correlationId = createId('trace');
   try {
     const payload = examGenerationJobPayloadSchema.parse(JSON.parse(job.payloadJson));
     const defaultPromptByCategory: Record<string, string> = {
@@ -38,6 +42,9 @@ async function processClaimedExamGenerationJob(job: ExamGenerationJobRecord) {
     const generationLogId = await createOpenAiLog({
       userId: job.userId,
       examSetId: payload.examSetId ?? null,
+      correlationId,
+      route: payload.examSetId ? '/api/cron/exam-generation' : '/api/exam-generation-jobs',
+      status: 'success',
       ...result.log,
     });
 
@@ -77,6 +84,32 @@ async function processClaimedExamGenerationJob(job: ExamGenerationJobRecord) {
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to process generation job.';
+    const rawPayload = JSON.parse(job.payloadJson) as unknown;
+    const parsedPayload = examGenerationJobPayloadSchema.safeParse(rawPayload);
+    if (parsedPayload.success) {
+      const mergedNotes = [
+        parsedPayload.data.selectedShortcutId === 'vocabulary_mix'
+          ? 'Create a vocabulary-focused quiz based on the source material.'
+          : parsedPayload.data.selectedShortcutId === 'grammar_practice'
+            ? 'Create a grammar practice quiz related to the source material.'
+            : 'Create a reading comprehension quiz from the source material.',
+        parsedPayload.data.customPrompt,
+      ]
+        .map((value) => value.trim())
+        .filter(Boolean)
+        .join('\n\n');
+      await createOpenAiLog({
+        userId: job.userId,
+        examSetId: parsedPayload.data.examSetId ?? null,
+        correlationId,
+        route: parsedPayload.data.examSetId ? '/api/cron/exam-generation' : '/api/exam-generation-jobs',
+        status: 'failed',
+        errorType: 'internal_processing_failure',
+        model: env.openAiModel,
+        promptText: buildExamGenerationPrompt(parsedPayload.data.config, mergedNotes),
+        responseText: message,
+      }).catch(() => undefined);
+    }
     await markExamGenerationJobFailed(job.id, job.retryCount + 1, message);
   }
 }
