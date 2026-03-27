@@ -103,6 +103,8 @@ export function ExamRunner({ examSet, initialAttempt }: RunnerProps) {
     if (action === 'complete' && typeof payload.score === 'number') {
       setResult({ score: payload.score, wrongQuestionIds: payload.wrongQuestionIds ?? [] });
     }
+
+    return id;
   }
 
   useEffect(() => {
@@ -181,8 +183,8 @@ export function ExamRunner({ examSet, initialAttempt }: RunnerProps) {
     setStatusMessage('Submitting your answers...');
 
     try {
-      await persist('complete');
-      setStatusMessage('Attempt completed. The dashboard history is now updated.');
+      const completedAttemptId = await persist('complete');
+      router.replace(`/dashboard/reviews/${completedAttemptId}`);
       router.refresh();
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Submit failed.');

@@ -25,6 +25,9 @@ export default async function ExamSolvePage({
   }
 
   const attempt = attemptId ? await getAttemptById(attemptId, session.user.id) : null;
+  if (attempt?.status === 'completed') {
+    redirect('/dashboard');
+  }
   const examSetForAttempt =
     attempt && attempt.questionsSnapshot.length > 0
       ? {
