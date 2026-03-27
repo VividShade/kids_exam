@@ -111,6 +111,10 @@ function normalizeConfig(config: ExamBuilderConfig) {
     promptLanguage: config.promptLanguage ?? 'en',
     sourceLanguage: config.sourceLanguage ?? 'auto',
     examLanguage: config.examLanguage ?? 'English',
+    blueprints: (config.blueprints ?? []).map((blueprint) => ({
+      ...blueprint,
+      enabled: blueprint.enabled ?? true,
+    })),
   };
 }
 
@@ -154,7 +158,7 @@ export function parseExamSet(row: ExamSetRow): ExamSetRecord {
     generateCount: toNullableNumber(row.generate_count) ?? 0,
     lastGeneratedAt: row.last_generated_at,
     promptText: row.prompt_text,
-    selectedShortcutId: row.selected_shortcut_id ?? 'vocabulary_mix',
+    selectedShortcutId: row.selected_shortcut_id ?? 'reading_check',
     customPrompt: row.custom_prompt ?? row.source_notes ?? row.prompt_text ?? null,
     outputKeywords: row.output_keywords_json ? (JSON.parse(row.output_keywords_json) as string[]) : [],
     config: normalizeConfig(JSON.parse(row.config_json) as ExamBuilderConfig),

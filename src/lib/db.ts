@@ -29,7 +29,7 @@ const schemaStatements = [
     summary TEXT NOT NULL,
     status TEXT NOT NULL,
     prompt_text TEXT NOT NULL,
-    selected_shortcut_id TEXT NOT NULL DEFAULT 'vocabulary_mix',
+    selected_shortcut_id TEXT NOT NULL DEFAULT 'reading_check',
     custom_prompt TEXT,
     output_keywords_json TEXT,
     config_json TEXT NOT NULL,
@@ -171,7 +171,7 @@ async function initialize() {
       await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS source_images_json TEXT');
       await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS generate_count INTEGER NOT NULL DEFAULT 0');
       await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS last_generated_at TEXT');
-      await client.unsafe("ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS selected_shortcut_id TEXT NOT NULL DEFAULT 'vocabulary_mix'");
+      await client.unsafe("ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS selected_shortcut_id TEXT NOT NULL DEFAULT 'reading_check'");
       await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS custom_prompt TEXT');
       await client.unsafe('ALTER TABLE exam_sets ADD COLUMN IF NOT EXISTS output_keywords_json TEXT');
       await client.unsafe("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS shuffle_seed TEXT NOT NULL DEFAULT ''");
@@ -204,7 +204,7 @@ async function initialize() {
     }
     const hasSelectedShortcutId = columns.some((column) => column.name === 'selected_shortcut_id');
     if (!hasSelectedShortcutId) {
-      db.exec("ALTER TABLE exam_sets ADD COLUMN selected_shortcut_id TEXT NOT NULL DEFAULT 'vocabulary_mix'");
+      db.exec("ALTER TABLE exam_sets ADD COLUMN selected_shortcut_id TEXT NOT NULL DEFAULT 'reading_check'");
     }
     const hasCustomPrompt = columns.some((column) => column.name === 'custom_prompt');
     if (!hasCustomPrompt) {

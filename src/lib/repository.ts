@@ -46,6 +46,10 @@ function normalizeConfig(config: ExamBuilderConfig) {
     promptLanguage: config.promptLanguage ?? 'en',
     sourceLanguage: config.sourceLanguage ?? 'auto',
     examLanguage: config.examLanguage ?? 'English',
+    blueprints: (config.blueprints ?? []).map((blueprint) => ({
+      ...blueprint,
+      enabled: blueprint.enabled ?? true,
+    })),
   };
 }
 

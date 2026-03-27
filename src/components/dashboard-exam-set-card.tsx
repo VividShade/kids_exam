@@ -9,8 +9,8 @@ import type { AttemptRecord, ExamGenerationJobRecord, ExamSetRecord } from '@/li
 
 const examActionButtonClass = 'inline-flex h-10 items-center justify-center rounded-full px-4 !text-sm !font-semibold leading-none';
 const categoryLabelByShortcutId: Record<string, string> = {
-  vocabulary_mix: 'Vocabulary',
   reading_check: 'Reading',
+  vocabulary_mix: 'Vocabulary',
   grammar_practice: 'Grammar',
 };
 
@@ -59,7 +59,7 @@ export function DashboardExamSetCard({
           </div>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">{highlightText(examSet.summary, searchSpec)}</p>
           <p className="mt-1 text-xs text-slate-500">Keywords: {highlightText(keywordsText, searchSpec)}</p>
-          <p className="mt-1 text-xs text-slate-500">Category {categoryLabel} · Editions {editionCount}</p>
+          <p className="mt-1 text-xs text-slate-500">Exam category {categoryLabel} · Editions {editionCount}</p>
           <p className="mt-1 text-xs text-slate-500">Generated {examSet.generateCount} time(s)</p>
           <p className="mt-2 text-xs text-slate-500">Updated {new Date(examSet.updatedAt).toLocaleString()}</p>
           <div className="mt-4 flex flex-wrap gap-2">

@@ -13,10 +13,13 @@ export const examQuestionSchema = z.object({
 });
 
 export const questionBlueprintSchema = z.object({
+  presetId: z.string().min(1).optional(),
   label: z.string().min(1),
+  description: z.string().min(1).optional(),
   format: questionKindSchema,
   count: z.number().int().positive(),
   focus: z.string().min(1),
+  enabled: z.boolean().default(true),
 });
 
 export const examBuilderConfigSchema = z.object({

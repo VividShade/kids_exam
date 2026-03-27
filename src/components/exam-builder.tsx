@@ -45,12 +45,12 @@ const gradeBandOptions = [
 
 const quickOptionsByLanguage: Record<UILanguage, Array<{ id: string; label: string; prompt: string }>> = {
   en: [
+    { id: 'reading_check', label: 'Reading', prompt: 'Create a reading comprehension quiz from the source material.' },
     {
       id: 'vocabulary_mix',
       label: 'Vocabulary',
       prompt: 'Create a vocabulary-focused quiz based on the source material.',
     },
-    { id: 'reading_check', label: 'Reading', prompt: 'Create a reading comprehension quiz from the source material.' },
     {
       id: 'grammar_practice',
       label: 'Grammar',
@@ -58,17 +58,17 @@ const quickOptionsByLanguage: Record<UILanguage, Array<{ id: string; label: stri
     },
   ],
   ko: [
-    { id: 'vocabulary_mix', label: '어휘', prompt: 'Create a vocabulary-focused quiz based on the source material.' },
     { id: 'reading_check', label: '독해', prompt: 'Create a reading comprehension quiz from the source material.' },
+    { id: 'vocabulary_mix', label: '어휘', prompt: 'Create a vocabulary-focused quiz based on the source material.' },
     { id: 'grammar_practice', label: '문법', prompt: 'Create a grammar practice quiz related to the source material.' },
   ],
   es: [
+    { id: 'reading_check', label: 'Lectura', prompt: 'Create a reading comprehension quiz from the source material.' },
     {
       id: 'vocabulary_mix',
       label: 'Vocabulario',
       prompt: 'Create a vocabulary-focused quiz based on the source material.',
     },
-    { id: 'reading_check', label: 'Lectura', prompt: 'Create a reading comprehension quiz from the source material.' },
     {
       id: 'grammar_practice',
       label: 'Gramática',
@@ -78,53 +78,168 @@ const quickOptionsByLanguage: Record<UILanguage, Array<{ id: string; label: stri
 };
 
 const blueprintPresetsByCategory: Record<string, QuestionBlueprint[]> = {
+  reading_check: [
+    {
+      presetId: 'reading_main_idea',
+      label: 'Main Idea (MCQ)',
+      description: '글의 중심 생각이나 핵심 주제를 고르는 문제로, 독해의 큰 줄기 파악에 사용합니다.',
+      format: 'multiple_choice',
+      count: 6,
+      focus: 'Identify the main idea or central theme of the passage.',
+      enabled: true,
+    },
+    {
+      presetId: 'reading_detail_check',
+      label: 'Detail Check (MCQ)',
+      description: '본문에 직접 나온 세부 정보를 묻는 문제로, 정확한 내용 이해를 확인합니다.',
+      format: 'multiple_choice',
+      count: 6,
+      focus: 'Ask about specific details that are explicitly stated in the passage.',
+      enabled: true,
+    },
+    {
+      presetId: 'reading_true_false',
+      label: 'True / False',
+      description: '본문 내용과 일치하는지 판단하는 문제로, 사실 확인에 효율적입니다.',
+      format: 'true_false',
+      count: 4,
+      focus: 'Determine whether each statement is true or false based on the passage.',
+      enabled: true,
+    },
+    {
+      presetId: 'reading_inference',
+      label: 'Inference (MCQ)',
+      description: '직접 제시되지 않은 내용을 문맥상 추론하는 문제로, 독해 난이도를 높입니다.',
+      format: 'multiple_choice',
+      count: 4,
+      focus: 'Infer information that is implied by the passage but not directly stated.',
+      enabled: true,
+    },
+    {
+      presetId: 'reading_vocab_context',
+      label: 'Vocabulary in Context (MCQ)',
+      description: '지문 속 단어/표현의 뜻을 문맥으로 해석하는 문제로, 독해와 어휘를 연결합니다.',
+      format: 'multiple_choice',
+      count: 4,
+      focus: 'Interpret the meaning of a word or phrase using context clues in the passage.',
+      enabled: true,
+    },
+  ],
   vocabulary_mix: [
     {
+      presetId: 'vocab_word_to_meaning',
       label: 'Word -> Meaning (MCQ)',
+      description: '주어진 단어에 맞는 뜻을 고르는 기본 어휘 인지 확인 문제입니다.',
       format: 'multiple_choice',
-      count: 10,
-      focus: 'Choose the best meaning for each word.',
+      count: 6,
+      focus: 'Choose the best meaning for the given word.',
+      enabled: true,
     },
     {
+      presetId: 'vocab_meaning_to_word',
       label: 'Meaning -> Word (MCQ)',
+      description: '뜻을 보고 단어를 고르는 문제로, 단순 인식이 아닌 회상 능력을 확인합니다.',
       format: 'multiple_choice',
-      count: 10,
-      focus: 'Choose the correct word from the meaning clue.',
+      count: 6,
+      focus: 'Choose the correct word that matches the provided meaning.',
+      enabled: true,
     },
-    { label: 'Context Fill-in (Short)', format: 'short_answer', count: 5, focus: 'Write the missing word in context.' },
-  ],
-  reading_check: [
-    { label: 'Main Idea (MCQ)', format: 'multiple_choice', count: 6, focus: 'Identify central ideas and key details.' },
-    { label: 'True/False Check', format: 'true_false', count: 8, focus: 'Verify factual understanding from the text.' },
-    { label: 'Inference (MCQ)', format: 'multiple_choice', count: 6, focus: 'Choose the best inference from context.' },
+    {
+      presetId: 'vocab_context_mcq',
+      label: 'Context Vocabulary (MCQ)',
+      description: '예문 빈칸에 들어갈 단어를 고르는 문제로, 문맥 기반 어휘 사용을 평가합니다.',
+      format: 'multiple_choice',
+      count: 4,
+      focus: 'Select the most appropriate vocabulary word for a sentence context.',
+      enabled: true,
+    },
+    {
+      presetId: 'vocab_context_short',
+      label: 'Context Vocabulary (Short Answer)',
+      description: '문맥 속 빈칸 단어를 직접 쓰는 문제로, 철자와 회상을 동시에 점검합니다.',
+      format: 'short_answer',
+      count: 3,
+      focus: 'Write the missing vocabulary word that best completes the sentence context.',
+      enabled: true,
+    },
+    {
+      presetId: 'vocab_syn_ant',
+      label: 'Synonym / Antonym (MCQ)',
+      description: '유의어/반의어를 묻는 문제로, 어휘망 확장에 유용합니다.',
+      format: 'multiple_choice',
+      count: 3,
+      focus: 'Choose the correct synonym or antonym for the target word.',
+      enabled: true,
+    },
+    {
+      presetId: 'vocab_spelling_recall',
+      label: 'Spelling Recall (Short Answer)',
+      description: '뜻이나 예문을 보고 단어를 직접 입력해 철자 정확도를 확인합니다.',
+      format: 'short_answer',
+      count: 3,
+      focus: 'Write the exact target word from a meaning clue or sentence prompt.',
+      enabled: true,
+    },
   ],
   grammar_practice: [
     {
+      presetId: 'grammar_choice',
       label: 'Grammar Choice (MCQ)',
+      description: '문법적으로 올바른 표현을 고르는 가장 범용적인 문제입니다.',
       format: 'multiple_choice',
-      count: 10,
-      focus: 'Choose grammatically correct options.',
+      count: 6,
+      focus: 'Choose the grammatically correct option.',
+      enabled: true,
     },
-    { label: 'Error Spotting (MCQ)', format: 'multiple_choice', count: 6, focus: 'Find and fix grammar mistakes.' },
     {
-      label: 'Sentence Rewrite (Short)',
-      format: 'short_answer',
+      presetId: 'grammar_error_spotting',
+      label: 'Error Spotting (MCQ)',
+      description: '문장 내 틀린 부분을 고르는 문제로, 학교 시험 유형과 유사합니다.',
+      format: 'multiple_choice',
       count: 4,
-      focus: 'Rewrite to satisfy grammar constraints.',
+      focus: 'Identify the incorrect or most inappropriate grammar usage in the sentence.',
+      enabled: true,
+    },
+    {
+      presetId: 'grammar_error_correction',
+      label: 'Error Correction (Short Answer)',
+      description: '틀린 문장을 바르게 고쳐 쓰며 실제 문법 적용 능력을 확인합니다.',
+      format: 'short_answer',
+      count: 3,
+      focus: 'Correct the grammatical error and rewrite the sentence accurately.',
+      enabled: true,
+    },
+    {
+      presetId: 'grammar_rewrite',
+      label: 'Sentence Rewrite (Short Answer)',
+      description: '시제/수동태/비교급 등 조건에 맞게 문장을 변환하는 문제입니다.',
+      format: 'short_answer',
+      count: 3,
+      focus: 'Rewrite the sentence to meet a grammar condition such as tense, voice, or comparison.',
+      enabled: true,
+    },
+    {
+      presetId: 'grammar_context_mcq',
+      label: 'Grammar in Context (MCQ)',
+      description: '짧은 문맥에서 적절한 문법 형태를 고르는 문제로, 실제 사용에 가깝습니다.',
+      format: 'multiple_choice',
+      count: 4,
+      focus: 'Choose the best grammar form within a short context.',
+      enabled: true,
+    },
+    {
+      presetId: 'grammar_fill_short',
+      label: 'Grammar Fill by Writing (Short Answer)',
+      description: '빈칸에 알맞은 문법 형태를 직접 입력하는 문제입니다.',
+      format: 'short_answer',
+      count: 3,
+      focus: 'Write the correct grammar form to complete the blank.',
+      enabled: true,
     },
   ],
 };
 
-const starterBlueprints: QuestionBlueprint[] = [
-  { label: 'Meaning match', format: 'multiple_choice', count: 10, focus: 'Match a word with the correct meaning.' },
-  {
-    label: 'Sentence clue',
-    format: 'multiple_choice',
-    count: 10,
-    focus: 'Choose the best word for a blank in a sentence.',
-  },
-  { label: 'Short answer recall', format: 'short_answer', count: 5, focus: 'Write the missing word directly.' },
-];
+const starterBlueprints = blueprintPresetsByCategory.reading_check;
 
 const outputLanguageOptions = ['English', 'Korean', 'Spanish', 'Japanese', 'Chinese'] as const;
 const sourceLanguageOptions = ['auto', 'English', 'Korean', 'Spanish', 'Japanese', 'Chinese'] as const;
@@ -161,7 +276,6 @@ type SortableBlueprintRowProps = {
   blueprint: QuestionBlueprint;
   index: number;
   onUpdate: (index: number, patch: Partial<QuestionBlueprint>) => void;
-  onRemove: (index: number) => void;
 };
 
 const uiLabel = {
@@ -169,30 +283,26 @@ const uiLabel = {
     assistant: 'Assistant',
     uploadHelp: 'Upload up to 6 images. They are compressed in-browser before upload.',
     sourceImage: 'Source images (max 6)',
-    shortcuts: 'Exam type',
+    shortcuts: 'Exam category',
     uiLanguage: 'Builder language',
     sourceLanguage: 'Source language',
     examLanguage: 'Exam output language',
     gradeBand: 'Grade band',
-    questionBlueprint: 'Question blueprint',
-    addSection: 'Add section',
-    addPreset: 'Add preset sections',
-    dragHint: 'Drag by handle to reorder sections.',
+    questionBlueprint: 'Preset sections',
+    dragHint: 'Drag by handle to reorder section order.',
     teacherNotes: 'Teacher custom instructions (optional)',
   },
   ko: {
     assistant: '도우미',
     uploadHelp: '이미지를 최대 6장까지 업로드할 수 있고, 브라우저에서 먼저 압축됩니다.',
     sourceImage: '기초 이미지 (최대 6장)',
-    shortcuts: '시험 유형',
+    shortcuts: '시험 카테고리',
     uiLanguage: '빌더 언어',
     sourceLanguage: '원문 언어',
     examLanguage: '문제 출력 언어',
     gradeBand: '난이도 범위',
-    questionBlueprint: '문항 blueprint',
-    addSection: '섹션 추가',
-    addPreset: '프리셋 섹션 추가',
-    dragHint: '핸들을 잡고 드래그해서 순서를 바꿔요.',
+    questionBlueprint: '프리셋 문제 유형',
+    dragHint: '핸들을 잡고 드래그해서 문제 유형 순서를 바꿔요.',
     teacherNotes: '교사 맞춤 지침 (선택)',
   },
   es: {
@@ -204,10 +314,8 @@ const uiLabel = {
     sourceLanguage: 'Idioma de origen',
     examLanguage: 'Idioma de salida del examen',
     gradeBand: 'Rango de nivel',
-    questionBlueprint: 'Blueprint de preguntas',
-    addSection: 'Agregar sección',
-    addPreset: 'Agregar presets',
-    dragHint: 'Arrastra con el handle para reordenar.',
+    questionBlueprint: 'Secciones predefinidas',
+    dragHint: 'Arrastra desde el handle para reordenar.',
     teacherNotes: 'Instrucciones personalizadas del docente (opcional)',
   },
 } as const;
@@ -219,7 +327,53 @@ function moveItem<T>(array: T[], fromIndex: number, toIndex: number) {
   return next;
 }
 
-function SortableBlueprintRow({ id, blueprint, index, onUpdate, onRemove }: SortableBlueprintRowProps) {
+function cloneBlueprints(items: QuestionBlueprint[]) {
+  return items.map((item) => ({ ...item, enabled: item.enabled ?? true }));
+}
+
+function getPresetBlueprintsForCategory(shortcutId: string) {
+  const presets = blueprintPresetsByCategory[shortcutId] ?? blueprintPresetsByCategory.reading_check;
+  return cloneBlueprints(presets);
+}
+
+function mergeSavedBlueprintsWithPresets(shortcutId: string, savedBlueprints: QuestionBlueprint[] | null | undefined) {
+  const presets = getPresetBlueprintsForCategory(shortcutId);
+  if (!savedBlueprints || savedBlueprints.length === 0) {
+    return presets;
+  }
+
+  const savedByPresetId = new Map(
+    savedBlueprints.filter((item) => item.presetId).map((item) => [item.presetId as string, item]),
+  );
+  const knownPresetIds = new Set(presets.map((item) => item.presetId));
+  const orderedPresetIds = savedBlueprints
+    .filter((item) => item.presetId && knownPresetIds.has(item.presetId))
+    .map((item) => item.presetId as string);
+  const remainingPresetIds = presets.map((item) => item.presetId as string).filter((id) => !orderedPresetIds.includes(id));
+  const orderedIds = [...orderedPresetIds, ...remainingPresetIds];
+
+  return orderedIds.map((presetId) => {
+    const preset = presets.find((item) => item.presetId === presetId)!;
+    const saved = savedByPresetId.get(presetId);
+    return {
+      ...preset,
+      count: saved?.count ?? preset.count,
+      enabled: saved?.enabled ?? preset.enabled ?? true,
+    };
+  });
+}
+
+function questionKindLabel(kind: QuestionKind) {
+  if (kind === 'multiple_choice') {
+    return 'Multiple choice';
+  }
+  if (kind === 'true_false') {
+    return 'True / False';
+  }
+  return 'Short answer';
+}
+
+function SortableBlueprintRow({ id, blueprint, index, onUpdate }: SortableBlueprintRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -229,7 +383,7 @@ function SortableBlueprintRow({ id, blueprint, index, onUpdate, onRemove }: Sort
   return (
     <div
       ref={setNodeRef}
-      className={`grid gap-3 rounded-3xl bg-white p-4 md:grid-cols-[auto_1.15fr_0.9fr_0.6fr_1.4fr_auto] ${
+      className={`grid gap-3 rounded-3xl bg-white p-4 md:grid-cols-[auto_1.15fr_0.8fr_0.5fr_0.6fr_1.4fr] ${
         isDragging ? 'z-10 ring-1 ring-slate-300/70 ring-offset-1 shadow-[0_10px_24px_rgba(15,23,42,0.12)]' : ''
       }`}
       style={style}
@@ -243,23 +397,12 @@ function SortableBlueprintRow({ id, blueprint, index, onUpdate, onRemove }: Sort
       >
         ::
       </button>
-      <input
-        className="rounded-2xl border border-slate-300 px-3 py-2 text-sm"
-        onChange={(event) => onUpdate(index, { label: event.target.value })}
-        placeholder="Section title"
-        title="Section title"
-        value={blueprint.label}
-      />
-      <select
-        className="rounded-2xl border border-slate-300 px-3 py-2 text-sm"
-        onChange={(event) => onUpdate(index, { format: event.target.value as QuestionKind })}
-        title="Question type"
-        value={blueprint.format}
-      >
-        <option value="multiple_choice">Multiple choice</option>
-        <option value="true_false">True / False</option>
-        <option value="short_answer">Short answer</option>
-      </select>
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-900">
+        {blueprint.label}
+      </div>
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+        {questionKindLabel(blueprint.format)}
+      </div>
       <input
         className="rounded-2xl border border-slate-300 px-3 py-2 text-sm"
         min={1}
@@ -268,21 +411,20 @@ function SortableBlueprintRow({ id, blueprint, index, onUpdate, onRemove }: Sort
         title="Question count"
         type="number"
         value={blueprint.count}
+        disabled={blueprint.enabled === false}
       />
-      <input
-        className="rounded-2xl border border-slate-300 px-3 py-2 text-sm"
-        onChange={(event) => onUpdate(index, { focus: event.target.value })}
-        placeholder="Focus / pattern"
-        title="Question intent or pattern"
-        value={blueprint.focus}
-      />
-      <button
-        className="rounded-2xl border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700"
-        onClick={() => onRemove(index)}
-        type="button"
-      >
-        Delete
-      </button>
+      <label className="flex items-center justify-between rounded-2xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
+        Enabled
+        <input
+          checked={blueprint.enabled ?? true}
+          className="h-4 w-4 accent-slate-900"
+          onChange={(event) => onUpdate(index, { enabled: event.target.checked })}
+          type="checkbox"
+        />
+      </label>
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+        {blueprint.description ?? '-'}
+      </div>
     </div>
   );
 }
@@ -352,7 +494,8 @@ export function ExamBuilder({
 }: BuilderProps) {
   const router = useRouter();
   const initialConfig = initialExamSet?.config;
-  const initialBlueprintValues = initialConfig?.blueprints ?? starterBlueprints;
+  const initialShortcutId = initialExamSet?.selectedShortcutId ?? quickOptionsByLanguage[initialConfig?.uiLanguage ?? 'en'][0].id;
+  const initialBlueprintValues = mergeSavedBlueprintsWithPresets(initialShortcutId, initialConfig?.blueprints ?? starterBlueprints);
   const initialPublishedEdition = findPublishedEditionFromHistory(initialExamSet, initialGenerateHistory);
   const initialSelectedEdition = initialPublishedEdition ?? findLatestGeneratedEditionFromHistory(initialGenerateHistory);
   const [currentExamSetId, setCurrentExamSetId] = useState<string | null>(initialExamSet?.id ?? null);
@@ -371,7 +514,7 @@ export function ExamBuilder({
   const [gradeBand, setGradeBand] = useState(initialConfig?.gradeBand ?? gradeBandOptions[1]);
   const [notes, setNotes] = useState(initialExamSet?.sourceNotes ?? '');
   const [selectedShortcutId, setSelectedShortcutId] = useState(
-    initialExamSet?.selectedShortcutId ?? quickOptionsByLanguage[uiLanguage][0].id
+    initialShortcutId
   );
   const [blueprints, setBlueprints] = useState<QuestionBlueprint[]>(initialBlueprintValues);
   const [blueprintIds, setBlueprintIds] = useState<string[]>(() =>
@@ -401,7 +544,6 @@ export function ExamBuilder({
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   const quickOptions = quickOptionsByLanguage[uiLanguage];
-  const selectedShortcut = quickOptions.find((option) => option.id === selectedShortcutId) ?? quickOptions[0];
   const labels = uiLabel[uiLanguage];
 
   const config: ExamBuilderConfig = useMemo(
@@ -435,7 +577,8 @@ export function ExamBuilder({
     };
   }
 
-  const totalQuestions = blueprints.reduce((sum, blueprint) => sum + blueprint.count, 0);
+  const enabledBlueprints = blueprints.filter((blueprint) => blueprint.enabled ?? true);
+  const totalQuestions = enabledBlueprints.reduce((sum, blueprint) => sum + blueprint.count, 0);
   const currentSignature = createBuilderSignature(buildSignatureInput(generated?.questions.length ?? 0));
   const hasUnsavedChanges = lastSavedSignature.length > 0 && currentSignature !== lastSavedSignature;
   const canGenerate = currentExamSetId ? generateCount < generateLimit : true;
@@ -444,17 +587,25 @@ export function ExamBuilder({
   const showGeneratingState = isGenerating || (!!activeGenerationJobId && autoPollingEnabled);
 
   useEffect(() => {
+    if (initialExamSet) {
+      return;
+    }
     const preferredLanguage = window.localStorage.getItem(APP_UI_LANGUAGE_KEY) as UILanguage | null;
     if (preferredLanguage && ['en', 'ko', 'es'].includes(preferredLanguage)) {
       setUiLanguage(preferredLanguage);
       const savedShortcutId = window.localStorage.getItem(LAST_SHORTCUT_ID_KEY);
       if (savedShortcutId && quickOptionsByLanguage[preferredLanguage].some((option) => option.id === savedShortcutId)) {
         setSelectedShortcutId(savedShortcutId);
-      } else if (!initialExamSet?.selectedShortcutId) {
-        setSelectedShortcutId(quickOptionsByLanguage[preferredLanguage][0].id);
+        setBlueprints(getPresetBlueprintsForCategory(savedShortcutId));
+        setBlueprintIds(getPresetBlueprintsForCategory(savedShortcutId).map(() => crypto.randomUUID()));
+      } else {
+        const defaultShortcutId = quickOptionsByLanguage[preferredLanguage][0].id;
+        setSelectedShortcutId(defaultShortcutId);
+        setBlueprints(getPresetBlueprintsForCategory(defaultShortcutId));
+        setBlueprintIds(getPresetBlueprintsForCategory(defaultShortcutId).map(() => crypto.randomUUID()));
       }
     }
-  }, [initialExamSet?.selectedShortcutId]);
+  }, [initialExamSet]);
 
   useEffect(() => {
     if (quickOptionsByLanguage[uiLanguage].some((option) => option.id === selectedShortcutId)) {
@@ -463,9 +614,14 @@ export function ExamBuilder({
     const savedShortcutId = window.localStorage.getItem(LAST_SHORTCUT_ID_KEY);
     if (savedShortcutId && quickOptionsByLanguage[uiLanguage].some((option) => option.id === savedShortcutId)) {
       setSelectedShortcutId(savedShortcutId);
+      setBlueprints(getPresetBlueprintsForCategory(savedShortcutId));
+      setBlueprintIds(getPresetBlueprintsForCategory(savedShortcutId).map(() => crypto.randomUUID()));
       return;
     }
-    setSelectedShortcutId(quickOptionsByLanguage[uiLanguage][0].id);
+    const defaultShortcutId = quickOptionsByLanguage[uiLanguage][0].id;
+    setSelectedShortcutId(defaultShortcutId);
+    setBlueprints(getPresetBlueprintsForCategory(defaultShortcutId));
+    setBlueprintIds(getPresetBlueprintsForCategory(defaultShortcutId).map(() => crypto.randomUUID()));
   }, [selectedShortcutId, uiLanguage]);
 
   useEffect(() => {
@@ -667,28 +823,14 @@ export function ExamBuilder({
     setBlueprints((current) => current.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)));
   }
 
-  function addBlueprint() {
-    setBlueprints((current) => [
-      ...current,
-      {
-        label: `Section ${current.length + 1}`,
-        format: 'multiple_choice',
-        count: 5,
-        focus: 'Check understanding of the main ideas.',
-      },
-    ]);
-    setBlueprintIds((current) => [...current, crypto.randomUUID()]);
-  }
-
-  function addPresetBlueprints() {
-    const presets = blueprintPresetsByCategory[selectedShortcut.id] ?? [];
-    setBlueprints((current) => [...current, ...presets.map((preset) => ({ ...preset }))]);
-    setBlueprintIds((current) => [...current, ...presets.map(() => crypto.randomUUID())]);
-  }
-
-  function removeBlueprint(index: number) {
-    setBlueprints((current) => current.filter((_, itemIndex) => itemIndex !== index));
-    setBlueprintIds((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  function applyShortcut(shortcutId: string) {
+    if (shortcutId === selectedShortcutId) {
+      return;
+    }
+    setSelectedShortcutId(shortcutId);
+    const nextBlueprints = getPresetBlueprintsForCategory(shortcutId);
+    setBlueprints(nextBlueprints);
+    setBlueprintIds(nextBlueprints.map(() => crypto.randomUUID()));
   }
 
   function handleBlueprintDragEnd(event: DragEndEvent) {
@@ -824,6 +966,10 @@ export function ExamBuilder({
     }
     if (images.length === 0) {
       setStatusMessage('At least one image is required before generation.');
+      return;
+    }
+    if (enabledBlueprints.length === 0) {
+      setStatusMessage('Enable at least one preset section before generation.');
       return;
     }
     const imageInputs = images.map((image) => image.originalInput).filter(Boolean);
@@ -1029,7 +1175,7 @@ export function ExamBuilder({
                         ? 'border-slate-900 bg-slate-900 text-white'
                         : 'border-slate-300 bg-white text-slate-700'
                     }`}
-                    onClick={() => setSelectedShortcutId(option.id)}
+                    onClick={() => applyShortcut(option.id)}
                     type="button"
                   >
                     {option.label}
@@ -1098,24 +1244,8 @@ export function ExamBuilder({
             </label>
 
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-4">
                 <h3 className="text-sm font-bold text-slate-950">{labels.questionBlueprint}</h3>
-                <div className="flex gap-2">
-                  <button
-                    className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700"
-                    onClick={addPresetBlueprints}
-                    type="button"
-                  >
-                    {labels.addPreset}
-                  </button>
-                  <button
-                    className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700"
-                    onClick={addBlueprint}
-                    type="button"
-                  >
-                    {labels.addSection}
-                  </button>
-                </div>
               </div>
               <p className="mb-3 text-xs text-slate-500">{labels.dragHint}</p>
               <DndContext collisionDetection={closestCenter} onDragEnd={handleBlueprintDragEnd} sensors={sensors}>
@@ -1132,7 +1262,6 @@ export function ExamBuilder({
                           id={id}
                           index={index}
                           key={id}
-                          onRemove={removeBlueprint}
                           onUpdate={updateBlueprint}
                         />
                       );

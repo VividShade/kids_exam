@@ -3,7 +3,8 @@ import type { ExamBuilderConfig } from '@/lib/types';
 const promptStartLine = 'Create an exam set from the attached image materials.';
 
 export function buildExamGenerationPrompt(config: ExamBuilderConfig, notes: string) {
-  const blueprintLines = config.blueprints
+  const enabledBlueprints = config.blueprints.filter((blueprint) => blueprint.enabled ?? true);
+  const blueprintLines = enabledBlueprints
     .map((blueprint, index) => {
       return `${index + 1}. ${blueprint.label}: ${blueprint.count} questions, format=${blueprint.format}, focus=${blueprint.focus}`;
     })
@@ -18,7 +19,7 @@ export function buildExamGenerationPrompt(config: ExamBuilderConfig, notes: stri
     `Output language for exam questions and answers: ${config.examLanguage}.`,
     '',
     'Question blueprint:',
-    blueprintLines,
+    blueprintLines || 'No enabled blueprint sections were provided.',
     '',
     'Output rules:',
     `- Write the full exam in ${config.examLanguage}.`,
