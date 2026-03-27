@@ -1,5 +1,6 @@
 'use client';
 
+import { Circle, CheckCircle2, XCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import type { ExamQuestion } from '@/lib/types';
@@ -77,35 +78,56 @@ export function ReviewDetailClient({ questions, answers, wrongQuestionIds }: Rev
                       const isAnswerChoice = normalizedChoice === normalizedCorrectAnswer;
                       const isWrongSelectedChoice = !isCorrect && normalizedChoice === normalizedUserAnswer;
                       return (
-                      <li
-                        key={choice}
-                        className={[
-                          isAnswerChoice ? 'font-semibold text-emerald-700' : '',
-                          isWrongSelectedChoice ? 'font-semibold text-rose-700' : '',
-                        ]
-                          .filter(Boolean)
-                          .join(' ')}
-                      >
-                        {isAnswerChoice ? '✅ ' : isWrongSelectedChoice ? '🚫 ' : '⚪️ '}
-                        {choice}
-                      </li>
+                        <li
+                          key={choice}
+                          className={[
+                            isAnswerChoice ? 'font-semibold text-emerald-700' : '',
+                            isWrongSelectedChoice ? 'font-semibold text-rose-700' : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
+                        >
+                          {isAnswerChoice ? (
+                            <CheckCircle2 aria-hidden className="mr-1 inline h-4 w-4 text-emerald-600" />
+                          ) : isWrongSelectedChoice ? (
+                            <XCircle aria-hidden className="mr-1 inline h-4 w-4 text-rose-600" />
+                          ) : (
+                            <Circle aria-hidden className="mr-1 inline h-4 w-4 text-slate-400" />
+                          )}
+                          {choice}
+                        </li>
                       );
                     })}
                     {!isCorrect && !hasUserAnswer ? (
-                      <li className="font-semibold text-rose-700">🚫 (not answered)</li>
+                      <li className="font-semibold text-rose-700">
+                        <XCircle aria-hidden className="mr-1 inline h-4 w-4 text-rose-600" />
+                        (not answered)
+                      </li>
                     ) : null}
                     {!isCorrect && hasUserAnswer && !hasMatchedChoice ? (
-                      <li className="font-semibold text-rose-700">🚫 사용자 답: {userAnswer}</li>
+                      <li className="font-semibold text-rose-700">
+                        <XCircle aria-hidden className="mr-1 inline h-4 w-4 text-rose-600" />
+                        사용자 답: {userAnswer}
+                      </li>
                     ) : null}
                   </ul>
                 ) : null}
                 <div className="mt-3 space-y-1 text-sm">
                   {isMultipleChoice ? null : isCorrect ? (
-                    <p className="font-semibold text-emerald-700">✅ 정답: {question.answer}</p>
+                    <p className="font-semibold text-emerald-700">
+                      <CheckCircle2 aria-hidden className="mr-1 inline h-4 w-4 text-emerald-600" />
+                      정답: {question.answer}
+                    </p>
                   ) : (
                     <>
-                      <p className="font-semibold text-rose-700">🚫 사용자 답: {userAnswer || '(not answered)'}</p>
-                      <p className="font-semibold text-emerald-700">✅ 정답: {question.answer}</p>
+                      <p className="font-semibold text-rose-700">
+                        <XCircle aria-hidden className="mr-1 inline h-4 w-4 text-rose-600" />
+                        사용자 답: {userAnswer || '(not answered)'}
+                      </p>
+                      <p className="font-semibold text-emerald-700">
+                        <CheckCircle2 aria-hidden className="mr-1 inline h-4 w-4 text-emerald-600" />
+                        정답: {question.answer}
+                      </p>
                     </>
                   )}
                   <p className="text-slate-500">풀이: {renderInlineBold(question.explanation)}</p>

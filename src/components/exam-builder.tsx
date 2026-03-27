@@ -3,6 +3,24 @@
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import {
+  ArrowLeft,
+  Circle,
+  CheckCircle2,
+  FileText,
+  GraduationCap,
+  GripVertical,
+  History,
+  ImagePlus,
+  Info,
+  Languages,
+  ListChecks,
+  MessageSquare,
+  RefreshCcw,
+  Save,
+  Sparkles,
+  X,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -395,7 +413,7 @@ function SortableBlueprintRow({ id, blueprint, index, onUpdate }: SortableBluepr
         {...attributes}
         {...listeners}
       >
-        ::
+        <GripVertical aria-hidden className="h-4 w-4" />
       </button>
       <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-900">
         {blueprint.label}
@@ -1096,13 +1114,17 @@ export function ExamBuilder({
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Exam builder</p>
-          <h1 className="text-3xl font-black text-slate-950">Chat-style exam generation</h1>
+          <h1 className="flex items-center gap-2 text-3xl font-black text-slate-950">
+            <Sparkles aria-hidden className="h-7 w-7" />
+            Chat-style exam generation
+          </h1>
         </div>
         <Link
-          className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
+          className="inline-flex items-center rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
           href="/dashboard"
           onClick={handleBackToDashboard}
         >
+          <ArrowLeft aria-hidden className="mr-1.5 h-4 w-4" />
           Back to dashboard
         </Link>
       </div>
@@ -1110,7 +1132,10 @@ export function ExamBuilder({
       <div className="flex flex-col gap-6">
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-slate-950">Builder conversation</h2>
+            <h2 className="flex items-center gap-2 text-xl font-bold text-slate-950">
+              <MessageSquare aria-hidden className="h-5 w-5" />
+              Builder conversation
+            </h2>
             <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
               {totalQuestions} questions planned
             </span>
@@ -1133,7 +1158,10 @@ export function ExamBuilder({
             </label>
 
             <label className="block rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-700">
-              <span className="mb-3 block font-semibold text-slate-950">{labels.sourceImage}</span>
+              <span className="mb-3 flex items-center gap-2 font-semibold text-slate-950">
+                <ImagePlus aria-hidden className="h-4 w-4" />
+                {labels.sourceImage}
+              </span>
               <input
                 accept="image/*"
                 className="block w-full text-sm"
@@ -1153,10 +1181,11 @@ export function ExamBuilder({
                       src={image.thumbnailPreview}
                     />
                     <button
-                      className="absolute right-2 top-2 rounded-full bg-slate-950 px-2 py-1 text-xs font-semibold text-white"
+                      className="absolute right-2 top-2 inline-flex items-center rounded-full bg-slate-950 px-2 py-1 text-xs font-semibold text-white"
                       onClick={() => removeImage(index)}
                       type="button"
                     >
+                      <X aria-hidden className="mr-1 h-3 w-3" />
                       Remove
                     </button>
                   </div>
@@ -1165,7 +1194,10 @@ export function ExamBuilder({
             ) : null}
 
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-              <p className="font-semibold text-slate-950">{labels.shortcuts}</p>
+              <p className="flex items-center gap-2 font-semibold text-slate-950">
+                <Sparkles aria-hidden className="h-4 w-4" />
+                {labels.shortcuts}
+              </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {quickOptions.map((option) => (
                   <button
@@ -1186,7 +1218,10 @@ export function ExamBuilder({
 
             <div className="grid gap-4 md:grid-cols-3">
               <label className="text-sm font-semibold text-slate-800">
-                {labels.sourceLanguage}
+                <span className="flex items-center gap-1.5">
+                  <Languages aria-hidden className="h-4 w-4 text-slate-600" />
+                  {labels.sourceLanguage}
+                </span>
                 <select
                   className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm"
                   onChange={(event) => setSourceLanguage(event.target.value)}
@@ -1201,7 +1236,10 @@ export function ExamBuilder({
                 </select>
               </label>
               <label className="text-sm font-semibold text-slate-800">
-                {labels.examLanguage}
+                <span className="flex items-center gap-1.5">
+                  <Languages aria-hidden className="h-4 w-4 text-slate-600" />
+                  {labels.examLanguage}
+                </span>
                 <select
                   className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm"
                   onChange={(event) => setExamLanguage(event.target.value)}
@@ -1216,7 +1254,10 @@ export function ExamBuilder({
                 </select>
               </label>
               <label className="text-sm font-semibold text-slate-800">
-                {labels.gradeBand}
+                <span className="flex items-center gap-1.5">
+                  <GraduationCap aria-hidden className="h-4 w-4 text-slate-600" />
+                  {labels.gradeBand}
+                </span>
                 <select
                   className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm"
                   onChange={(event) => setGradeBand(event.target.value)}
@@ -1245,7 +1286,10 @@ export function ExamBuilder({
 
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
               <div className="mb-4">
-                <h3 className="text-sm font-bold text-slate-950">{labels.questionBlueprint}</h3>
+                <h3 className="flex items-center gap-2 text-sm font-bold text-slate-950">
+                  <ListChecks aria-hidden className="h-4 w-4" />
+                  {labels.questionBlueprint}
+                </h3>
               </div>
               <p className="mb-3 text-xs text-slate-500">{labels.dragHint}</p>
               <DndContext collisionDetection={closestCenter} onDragEnd={handleBlueprintDragEnd} sensors={sensors}>
@@ -1281,17 +1325,20 @@ export function ExamBuilder({
                 >
                   {showGeneratingState ? (
                     <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  ) : null}
+                  ) : (
+                    <Sparkles aria-hidden className="h-4 w-4" />
+                  )}
                   {showGeneratingState ? 'Generating...' : 'Generate exam set'}
                 </button>
               ) : null}
               {showManualRefreshButton ? (
                 <button
-                  className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={isCheckingJobStatus}
                   onClick={checkGenerationJobStatusNow}
                   type="button"
                 >
+                  <RefreshCcw aria-hidden className={`h-4 w-4 ${isCheckingJobStatus ? 'animate-spin' : ''}`} />
                   {isCheckingJobStatus ? 'Checking...' : 'Manual refresh'}
                 </button>
               ) : null}
@@ -1302,24 +1349,34 @@ export function ExamBuilder({
                   : `0/${generateLimit} (applies after first save)`}
               </span>
               <button
-                className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={isSaving || !generated}
                 onClick={handleSave}
                 type="button"
               >
+                <Save aria-hidden className="mr-1.5 h-4 w-4" />
                 {isSaving ? 'Saving...' : currentExamSetId ? 'Save draft' : 'Create draft'}
               </button>
             </div>
-            <p className="rounded-3xl bg-amber-50 px-4 py-3 text-sm text-amber-900">{statusMessage}</p>
+            <p className="rounded-3xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <Info aria-hidden className="mr-1.5 inline h-4 w-4" />
+              {statusMessage}
+            </p>
           </div>
         </section>
 
         <section className="rounded-[2rem] border border-slate-200 bg-[#fffef8] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
-          <h2 className="text-xl font-bold text-slate-950">Generated preview</h2>
+          <h2 className="flex items-center gap-2 text-xl font-bold text-slate-950">
+            <FileText aria-hidden className="h-5 w-5" />
+            Generated preview
+          </h2>
           {generated ? (
             <div className="mt-4 space-y-5">
               <div className="rounded-3xl bg-white p-4">
-                <p className="text-sm font-bold text-slate-950">Generated exam history</p>
+                <p className="flex items-center gap-2 text-sm font-bold text-slate-950">
+                  <History aria-hidden className="h-4 w-4" />
+                  Generated exam history
+                </p>
                 <div className="mt-3 space-y-2">
                   {generatedHistory.length > 0 ? (
                     generatedHistory.map((history, index) => {
@@ -1428,7 +1485,13 @@ export function ExamBuilder({
                             key={choice}
                             className={choice === question.answer ? 'font-semibold text-emerald-700' : undefined}
                           >
-                            <span className="inline-block w-5">{choice === question.answer ? '✅' : '⚪️'}</span>
+                            <span className="inline-flex w-5 items-center">
+                              {choice === question.answer ? (
+                                <CheckCircle2 aria-hidden className="h-4 w-4 text-emerald-600" />
+                              ) : (
+                                <Circle aria-hidden className="h-4 w-4 text-slate-400" />
+                              )}
+                            </span>
                             {choice}
                           </li>
                         ))}

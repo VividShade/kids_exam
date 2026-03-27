@@ -1,5 +1,6 @@
 'use client';
 
+import { Files, Search } from 'lucide-react';
 import { useMemo, useState, useTransition } from 'react';
 
 import { DashboardExamSetCard } from '@/components/dashboard-exam-set-card';
@@ -53,18 +54,22 @@ export function DashboardExamSetsSection({
     <section>
       <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-slate-950">Your exam sets</h2>
+          <h2 className="flex items-center gap-2 text-2xl font-bold text-slate-950">
+            <Files aria-hidden className="h-5 w-5" />
+            Your exam sets
+          </h2>
           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
             {filteredExamSets.length} / {examSets.length}
           </span>
         </div>
 
-        <div className="mb-4">
+        <div className="mb-4 relative">
           <label className="sr-only" htmlFor="dashboard-search">
             Search exam sets
           </label>
+          <Search aria-hidden className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
-            className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800"
+            className="w-full rounded-2xl border border-slate-300 bg-white py-3 pl-10 pr-4 text-sm text-slate-800"
             id="dashboard-search"
             onChange={(event) => handleSearchChange(event.target.value)}
             placeholder="Search by title, summary, or keywords"

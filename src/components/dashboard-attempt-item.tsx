@@ -1,5 +1,6 @@
 'use client';
 
+import { RotateCcw, SearchCheck, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 import { deleteAttemptAction } from '@/app/dashboard/actions';
@@ -53,16 +54,19 @@ export function DashboardAttemptItem({ attempt, totalCount, editionNumber }: Das
       <div className="mt-3 flex flex-wrap gap-2">
         {attempt.status === 'completed' ? (
           <Link className={`${trialActionButtonClass} border-slate-300 bg-white text-slate-700`} href={`/dashboard/reviews/${attempt.id}`}>
+            <SearchCheck aria-hidden className="mr-1 inline h-3.5 w-3.5" />
             Review details
           </Link>
         ) : (
           <>
             <Link className={`${trialActionButtonClass} border-slate-300 bg-white text-slate-700`} href={`/exams/${attempt.examSetId}?attempt=${attempt.id}`}>
+              <RotateCcw aria-hidden className="mr-1 inline h-3.5 w-3.5" />
               Resume
             </Link>
             <form action={deleteAttemptAction}>
               <input name="attemptId" type="hidden" value={attempt.id} />
               <button className={`${trialActionButtonClass} border-rose-200 bg-rose-50 !text-xs text-rose-700`} type="submit">
+                <Trash2 aria-hidden className="mr-1 inline h-3.5 w-3.5" />
                 Delete trial
               </button>
             </form>

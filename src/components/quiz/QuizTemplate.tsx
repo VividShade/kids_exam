@@ -1,5 +1,6 @@
 'use client';
 
+import { CheckCircle2, XCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 
@@ -107,8 +108,8 @@ export const quizTextKo: QuizText = {
   checkLabel: '정답 확인',
   nextLabel: '다음 문제',
   seeResultsLabel: '결과 보기',
-  correctFeedbackLabel: '✅ 정답입니다!',
-  incorrectFeedbackPrefix: '🚫 오답입니다. 정답은',
+  correctFeedbackLabel: '정답입니다!',
+  incorrectFeedbackPrefix: '오답입니다. 정답은',
   inputPlaceholder: '정답을 입력하세요',
   questionLabel: '문제',
 };
@@ -489,16 +490,24 @@ export default function QuizTemplate({
                   <>
                     {isMultipleChoice(currentQuestion) ? (
                       selectedOption === currentQuestion.correctIndex ? (
-                        <span style={{ color: '#16a34a', fontWeight: 600 }}>{text.correctFeedbackLabel}</span>
+                        <span style={{ color: '#16a34a', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <CheckCircle2 aria-hidden size={16} />
+                          {text.correctFeedbackLabel}
+                        </span>
                       ) : (
-                        <span style={{ color: '#ef4444', fontWeight: 600 }}>
+                        <span style={{ color: '#ef4444', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <XCircle aria-hidden size={16} />
                           {text.incorrectFeedbackPrefix} {getCorrectLabel(currentQuestion)}.
                         </span>
                       )
                     ) : isCorrectAnswer(currentQuestion, answers[currentIndex]) ? (
-                      <span style={{ color: '#16a34a', fontWeight: 600 }}>{text.correctFeedbackLabel}</span>
+                      <span style={{ color: '#16a34a', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <CheckCircle2 aria-hidden size={16} />
+                        {text.correctFeedbackLabel}
+                      </span>
                     ) : (
-                      <span style={{ color: '#ef4444', fontWeight: 600 }}>
+                      <span style={{ color: '#ef4444', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <XCircle aria-hidden size={16} />
                         {text.incorrectFeedbackPrefix} {getCorrectLabel(currentQuestion)}.
                       </span>
                     )}

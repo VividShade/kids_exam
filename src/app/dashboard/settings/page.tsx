@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ArrowLeft, Settings } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
 import { auth } from '@/auth';
@@ -17,9 +18,13 @@ export default async function DashboardSettingsPage() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Settings</p>
-              <h1 className="text-3xl font-black text-slate-950">User preferences</h1>
+              <h1 className="flex items-center gap-2 text-3xl font-black text-slate-950">
+                <Settings aria-hidden className="h-7 w-7" />
+                User preferences
+              </h1>
             </div>
-            <Link className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700" href="/dashboard">
+            <Link className="inline-flex items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700" href="/dashboard">
+              <ArrowLeft aria-hidden className="mr-1.5 h-4 w-4" />
               Back to dashboard
             </Link>
           </div>

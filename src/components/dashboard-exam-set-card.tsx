@@ -1,5 +1,6 @@
 'use client';
 
+import { Clock3, Pencil, Play, Sparkles, Tags } from 'lucide-react';
 import Link from 'next/link';
 
 import { publishExamSetAction } from '@/app/dashboard/actions';
@@ -58,22 +59,31 @@ export function DashboardExamSetCard({
             </span>
           </div>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">{highlightText(examSet.summary, searchSpec)}</p>
-          <p className="mt-1 text-xs text-slate-500">Keywords: {highlightText(keywordsText, searchSpec)}</p>
+          <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+            <Tags aria-hidden className="h-3.5 w-3.5" />
+            Keywords: {highlightText(keywordsText, searchSpec)}
+          </p>
           <p className="mt-1 text-xs text-slate-500">Exam category {categoryLabel} · Editions {editionCount}</p>
           <p className="mt-1 text-xs text-slate-500">Generated {examSet.generateCount} time(s)</p>
-          <p className="mt-2 text-xs text-slate-500">Updated {new Date(examSet.updatedAt).toLocaleString()}</p>
+          <p className="mt-2 flex items-center gap-1 text-xs text-slate-500">
+            <Clock3 aria-hidden className="h-3.5 w-3.5" />
+            Updated {new Date(examSet.updatedAt).toLocaleString()}
+          </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link className={`${examActionButtonClass} border border-slate-300 bg-white text-slate-700`} href={`/dashboard/exams/${examSet.id}/edit`}>
+              <Pencil aria-hidden className="mr-1.5 h-3.5 w-3.5" />
               Edit draft
             </Link>
             {examSet.status === 'published' ? (
               <Link className={`${examActionButtonClass} bg-slate-950 text-white`} href={`/exams/${examSet.id}`}>
+                <Play aria-hidden className="mr-1.5 h-3.5 w-3.5" />
                 Solve published set
               </Link>
             ) : (
               <form action={publishExamSetAction}>
                 <input name="examSetId" type="hidden" value={examSet.id} />
                 <button className={`${examActionButtonClass} cursor-pointer bg-slate-950 text-white`} type="submit">
+                  <Sparkles aria-hidden className="mr-1.5 h-3.5 w-3.5" />
                   Publish
                 </button>
               </form>

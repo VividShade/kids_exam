@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AlertTriangle, CheckCircle2, LayoutDashboard } from 'lucide-react';
 
 import { auth } from '@/auth';
 import { SignInButton, SignOutButton } from '@/components/auth-buttons';
@@ -32,6 +33,7 @@ export default async function HomePage() {
                 {session?.user ? (
                   <>
                     <Link className="rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white" href="/dashboard">
+                      <LayoutDashboard aria-hidden className="mr-2 inline h-4 w-4" />
                       Open dashboard
                     </Link>
                     <SignOutButton />
@@ -49,6 +51,11 @@ export default async function HomePage() {
                   <div key={item.label} className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3">
                     <span className="text-sm font-semibold">{item.label}</span>
                     <span className={`rounded-full px-3 py-1 text-xs font-bold ${item.ready ? 'bg-emerald-400/20 text-emerald-200' : 'bg-amber-400/20 text-amber-100'}`}>
+                      {item.ready ? (
+                        <CheckCircle2 aria-hidden className="mr-1 inline h-3.5 w-3.5" />
+                      ) : (
+                        <AlertTriangle aria-hidden className="mr-1 inline h-3.5 w-3.5" />
+                      )}
                       {item.ready ? 'Ready' : 'Needs env'}
                     </span>
                   </div>

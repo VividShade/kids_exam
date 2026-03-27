@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { FilePlus2, LayoutDashboard, Settings, Shield } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
 import { auth } from '@/auth';
@@ -29,20 +30,26 @@ export default async function DashboardPage() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Teacher dashboard</p>
-              <h1 className="mt-2 text-4xl font-black text-slate-950">Exam creation, publishing, and review</h1>
+              <h1 className="mt-2 flex items-center gap-2 text-4xl font-black text-slate-950">
+                <LayoutDashboard aria-hidden className="h-8 w-8" />
+                Exam creation, publishing, and review
+              </h1>
               <p className="mt-3 max-w-3xl text-sm text-slate-600">
                 Create new sets from photos, revise existing drafts, publish ready sets, and track every trial with score and wrong-question review.
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <Link className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700" href="/dashboard/settings">
+              <Link className="inline-flex items-center rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700" href="/dashboard/settings">
+                <Settings aria-hidden className="mr-2 h-4 w-4" />
                 Settings
               </Link>
-              <Link className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white" href="/dashboard/exams/new">
+              <Link className="inline-flex items-center rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white" href="/dashboard/exams/new">
+                <FilePlus2 aria-hidden className="mr-2 h-4 w-4" />
                 New exam set
               </Link>
               {isAdmin ? (
-                <Link className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700" href="/admin/ai-logs">
+                <Link className="inline-flex items-center rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700" href="/admin/ai-logs">
+                  <Shield aria-hidden className="mr-2 h-4 w-4" />
                   Admin AI Logs
                 </Link>
               ) : null}

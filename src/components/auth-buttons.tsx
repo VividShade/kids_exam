@@ -1,5 +1,6 @@
 'use client';
 
+import { LogIn, LogOut, ShieldAlert } from 'lucide-react';
 import { signIn, signOut } from 'next-auth/react';
 
 const buttonClassName =
@@ -13,6 +14,7 @@ export function SignInButton({ isConfigured }: SignInButtonProps) {
   if (!isConfigured) {
     return (
       <button className={`${buttonClassName} cursor-not-allowed opacity-50`} disabled>
+        <ShieldAlert aria-hidden className="mr-2 h-4 w-4" />
         Configure Google OAuth first
       </button>
     );
@@ -26,6 +28,7 @@ export function SignInButton({ isConfigured }: SignInButtonProps) {
       }}
       type="button"
     >
+      <LogIn aria-hidden className="mr-2 h-4 w-4" />
       Sign in with Google
     </button>
   );
@@ -40,6 +43,7 @@ export function SignOutButton() {
       }}
       type="button"
     >
+      <LogOut aria-hidden className="mr-2 h-4 w-4" />
       Sign out
     </button>
   );
