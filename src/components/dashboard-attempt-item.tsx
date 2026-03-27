@@ -42,8 +42,11 @@ export function DashboardAttemptItem({ attempt, totalCount, editionNumber }: Das
           )}
         </div>
         {attempt.status === 'completed' ? (
-          <span className="text-right text-[11px] font-semibold text-slate-700">
-            {correctCount} / {totalCount} ({percent})
+          <span className="inline-flex items-baseline text-right text-xs font-semibold text-slate-700">
+            <span>
+              {correctCount} / {totalCount}
+            </span>
+            <span className="ml-1 text-[10px] font-normal text-slate-500">({percent})</span>
           </span>
         ) : null}
       </div>
